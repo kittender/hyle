@@ -1,26 +1,50 @@
 # Hylé
 
-> **LLM and agentic setup manager** Package your hard-won AI setup. Pull it anywhere. One command.
+Hylé is a **blueprint manager** for LLM powered projects.  
+Pull the best community blueprints, one command:
 
 ```bash
-hyle pull claude-java-springboot
+hyle pull claude-java-springboot # Install latest in current directory
 ```
-
-The AI/LLM ecosystem moves fast. Every new project requires rebuilding from scratch — CLAUDE.md, agent definitions, Cedar policies, MCP configs, specs — with a lot of trial and error. When a setup finally works well, it lives in one repo and dies there. 
-
-Hylé ends that. It lets you **package entire AI workflow contexts** — CLAUDE.md, agent definitions, Cedar policies, MCP configs, model fallback chains, compliance evals — into an open-source **substrate** and publish it to a registry. And pull community substrates instead of starting cold !
-
+Or manage your own blueprints:
 ```bash
-hyle search java spring tdd           # Find community substrates
-hyle pull claude-java-springboot      # Pull: shows diff, verifies SHA-256, installs deps
-hyle push                             # Publish your own (requires an account)
+hyle push # Auto increment version, push to the registry
 ```
-
-A substrate is a `hyle.yaml` manifest + all the files it references. On pull: Hylé shows a full diff before touching anything, verifies the checksum, auto-detects your OS and installs declared dependencies. No surprises.
-
-Core CLI is **programmatic only — no LLM required**, no network call to an AI on every command. Fast and scriptable.
 
 <img src="design/hylé-lotus.png" width="468" height="468" alt="A golden lotus on green waterlilies leaves, emitting a soft light, on a soft forest green background">
+
+As the AI/LLM ecosystem evolves rapidly, projects require recreating or copying foundational documents (CLAUDE.md, agent definitions, policies, configs, MCP setups) from scratch or across projects. When a working setup is finally achieved, it remains tied to that project and requires extra effort to extract and package as reusable boilerplate.
+
+Hylé does the extra work for you, and let's you smartly package the relevant folders and files, at the time when everything's ready. You **package entire AI workflow contexts** with or without boilerplate code, into an open-source **blueprint** and publish it to a registry. Push a first draft, update later !
+
+
+```bash
+hyle init                             # Initialize the blueprint
+nano hyle.yaml                        # Check and refine blueprint definition
+
+hyle push --new my-bp                 # Name and publish to your account: me/my-bp@0.1.0
+hyle snapshot                         # Publish minor changes v0.1.1 (auto-increment)
+hyle push                             # Publish major changes v0.2.0 (auto-increment)
+hyle release                          # Publish breaking changes v1.0.0 (auto-increment)
+```
+
+Not feeling creative ? Pull community blueprints instead of starting cold !  
+
+```bash
+hyle search java spring tdd           # Find community blueprints
+hyle pull claude-java-springboot      # Pull: shows diff, verifies SHA-256, installs deps
+hyle pull username/starter            # Disambiguous pull when several blueprints have the same name
+```
+
+You can fork another blueprint any time, and push the fork to the registry.
+
+```bash
+hyle fork username/starter@1.0.12 my-boilerplate  # Fork any blueprint and make it your own
+```
+
+A blueprint is a `hyle.yaml` manifest + all the files it references. On pull: Hylé shows a full diff before touching anything, verifies the checksum, auto-detects your OS and installs declared dependencies. No surprises.
+
+Core CLI is **programmatic only — no LLM required**, no network call to an AI on every command. Fast and scriptable.
 
 ---
 
@@ -36,7 +60,7 @@ brew install hyle
 choco install hyle
 
 # Linux
-curl -fsSL https://get.hyle.eu | sh
+curl -fsSL https://get.hylé.com | sh
 # or: cargo install hyle-cli
 ```
 
@@ -47,16 +71,16 @@ hyle search java spring tdd
 ```
 
 Full-text search across name, description, and tags.
-You can also look into https://www.hyle.eu/ for a full UI experience with advanced filters.
+You can also look into https://www.hylé.com/ for a full UI experience with advanced filters.
 
-### Pull a substrate into your project
+### Pull a blueprint into your project
 
 ```bash
 hyle pull claude-java-springboot
 hyle pull cursor-react-boilerplate
-hyle pull research-paper-base          # A substrate doesn't have to be about coding ;)
+hyle pull research-paper-base          # A blueprint doesn't have to be about coding ;)
 hyle pull fantasy-book-writing         # Remember LLM are about all languages
-hyle pull dnd-masterai-with-sounds     # And a substrate isn't only for business
+hyle pull dnd-masterai-with-sounds     # And a blueprint isn't only for business
 ```
 
 On pull, Hylé will:
@@ -67,7 +91,7 @@ On pull, Hylé will:
 5. Check which declared dependencies are installed (PATH lookup + semver check)
 6. Detect your OS and resolve the correct install command per dependency — no manual adaptation needed. Install on your confirmation.
 7. Guide you through anything requiring manual steps, with links
-8. Warn upfront about any paid services or SaaS models declared in the substrate
+8. Warn upfront about any paid services or SaaS models declared in the blueprint
 
 #### What more could it be ?
 
@@ -132,14 +156,14 @@ config/local.*
 
 #### 3. Review the manifest
 
-Open `hyle.yaml` and refine it. Every document or path you want to include in the packaged substrate can be added manually.
+Open `hyle.yaml` and refine it. Every document or path you want to include in the packaged blueprint can be added manually.
 
 ```yaml
 name: claude-java-springboot
 version: 1.0.11
 description: Powers up any Spring Boot project with state-of-the-art practices
 tags: [java, spring, boot, claude, cedar, tdd]
-forks:                                  # Hylé registry link of source substrate with version if forked from one
+forks:                                  # Hylé registry link of source blueprint with version if forked from one
 author: jean-pierre-kowalski
 url: https://github.com/JeanPierreKowalski
 
@@ -188,7 +212,7 @@ dependencies:
       macos: brew install PeonPing/tap/peon-ping
       linux: curl -fsSL peonping.com/install | bash
 
-substrate:
+blueprint:
   ontology:
     - CLAUDE.md                              # Claude Code instruction file
     # - .cursorrules                         # Cursor
@@ -218,7 +242,7 @@ substrate:
 
 ##### Declaring dependencies (publisher guide)
 
-The `url` field is the canonical pointer to a dependency — the official GitHub repo, npm package page, or tool website. **Do not write install commands yourself unless auto-detection fails.** Hylé maintains a shared database of install commands per OS, resolved from known URLs. When a puller installs your substrate, Hylé detects their OS and picks the right command automatically — a macOS user never sees an `apt` command, a Linux user never sees `brew`.
+The `url` field is the canonical pointer to a dependency — the official GitHub repo, npm package page, or tool website. **Do not write install commands yourself unless auto-detection fails.** Hylé maintains a shared database of install commands per OS, resolved from known URLs. When a puller installs your blueprint, Hylé detects their OS and picks the right command automatically — a macOS user never sees an `apt` command, a Linux user never sees `brew`.
 
 | Field | Required | Purpose |
 |---|---|---|
@@ -242,7 +266,7 @@ When Hylé resolves a new install command (steps 2–4), it saves it to local ca
 
 #### 4. Publish to the registry
 
-The default registry is **[registry.hyle.eu](https://registry.hyle.eu)**. 
+The default registry is **[registry.hylé.com](https://registry.hylé.com)**. 
 You can point to your own remote in `.hyle` (must be a public GitHub URL) but it will be marked as "unverified".
 
 Three publish tiers — no version numbers to remember or type:
@@ -250,7 +274,7 @@ Three publish tiers — no version numbers to remember or type:
 | Command | Version bump | Listed as stable | When to use |
 |---|---|---|---|
 | `hyle snapshot` | patch `x.x.+1` | No | WIP sharing, no SLA — fast and low-commitment |
-| `hyle push` | minor `x.+1.0` | Yes | Tested, working substrate |
+| `hyle push` | minor `x.+1.0` | Yes | Tested, working blueprint |
 | `hyle release` | major `+1.0.0` | Yes | Breaking changes to structure or file layout |
 
 Lower positions reset to zero on each bump (`push` resets patch, `release` resets minor+patch). All three accept an explicit version override as an optional arg: `hyle push 1.5.0`.
@@ -269,22 +293,23 @@ On any publish, Hylé:
 | Command | Description |
 |---|---|
 | `hyle init` | Interactive setup, generates `hyle.yaml` |
-| `hyle pull <name>` | Pull substrate: show diff, verify checksum, check+install deps |
+| `hyle pull <name>` | Pull blueprint: show diff, verify checksum, check+install deps |
 | `hyle pull <name>@<version>` | Pull specific version (checksum-pinned) |
 | `hyle pull <name> --dry-run` | Preview diff without applying |
 | `hyle snapshot` | Patch bump, unstable — for WIP sharing, no SLA |
 | `hyle push` | Minor bump, listed as stable |
-| `hyle release` | Major bump, listed as stable, lower numbers reset |
+| `hyle push --new name` | Create a blueprint "name" in your registry |
+| `hyle release` | Major bump, listed as stable |
 | `hyle ontology [path]` | Scan and add ontology files to `hyle.yaml` |
 | `hyle craft [path]` | Scan and add craft files to `hyle.yaml` |
 | `hyle identities [path]` | Scan and add identity files to `hyle.yaml` |
 | `hyle ethics [path]` | Scan and add ethics files to `hyle.yaml` |
-| `hyle search <query>` | Search the substrate registry |
-| `hyle audit verify` | Verify chain integrity of a `hyle-audit.log` file |
+| `hyle search <query>` | Search the blueprint registry |
 | `hyle config get <key>` | Read a config value |
 | `hyle config set <key> <value>` | Write a config value |
 
-All core commands are **programmatic only** — no LLM required, lightweight, fast.
+All core commands are **programmatic only** — no LLM required, lightweight, fast.  
+The removal of a published blueprint can be made through UI only, with confirmation steps.
 
 ---
 
@@ -295,7 +320,7 @@ Hylé uses a two-layer config system: global defaults at `~/.hyle`, local overri
 ```yaml
 # ~/.hyle or <project>/.hyle
 
-remote_url: https://registry.hyle.eu    # Default registry
+remote_url: https://registry.hylé.com    # Default registry
 currency: EUR                           # Cost estimates in hyle watch (EUR or USD)
 default_llm: fallback                   # Model key from hyle.yaml to use for extensions
 auto_inject: true                       # Inject file refs into agent instruction file on pull (CLAUDE.md, .cursorrules, etc.)
@@ -336,7 +361,7 @@ Writes one `hyle-audit-<session_id>.log` file per session. Each line is a JSON e
 
 | Event | What is recorded |
 |---|---|
-| `session_start` | Session ID, substrate name+version, model config (provider, model, model_pin, role) |
+| `session_start` | Session ID, blueprint name+version, model config (provider, model, model_pin, role) |
 | `mcp_call` | Tool name, SHA-256 of sanitized args (no raw secrets), SHA-256 of response, tokens in/out |
 | `model_switch` | Reason (`quota_exhausted` or `unreachable`), previous model, new model |
 | `threshold_event` | Token count, % consumed, action taken (`split_offered` / `split_confirmed` / `dismissed`) |
@@ -356,23 +381,23 @@ Threshold can be set as `80%` (percentage of the active model's context limit) o
 
 ### Registry — safety, trust, and community
 
-Every substrate on the registry carries:
+Every blueprint on the registry carries:
 
 - **Pull count** — how many times it has been installed
-- **Stars** — from the linked GitHub repo if declared, otherwise registry-specific (user favorite on hyle.eu)
-- **Likes + reviews** — per-user like (one per substrate) and written reviews with a 1–5 rating
+- **Stars** — from the linked GitHub repo if declared, otherwise registry-specific (user favorite on hylé.com)
+- **Likes + reviews** — per-user like (one per blueprint) and written reviews with a 1–5 rating
 - **Version diff** — "Changes" tab on the website shows a unified diff between any two versions
-- **Community flags** — factual, non-qualitative warning tags applied by registered users and reviewed by the Hylé team: `[skips-confirmations]`, `[uses-curl-pipe]`, `[requires-paid-model]`, `[unverified-deps]`, `[ollama-required]` (a button allow registered user to raise a flag on any substrate, it submits the request to Hylé team).
+- **Community flags** — factual, non-qualitative warning tags applied by registered users and reviewed by the Hylé team: `[skips-confirmations]`, `[uses-curl-pipe]`, `[requires-paid-model]`, `[unverified-deps]`, `[ollama-required]` (a button allow registered user to raise a flag on any blueprint, it submits the request to Hylé team).
 
 **Security scan on every publish:** Hylé automatically scans each pushed version for red flags (curl-pipe install patterns, hardcoded credential shapes, skip-confirmation flags, suspicious network calls in agent instructions). Flagged versions are marked `[flagged:<tags>]` — not pullable, content hidden, only flag tags visible. **The full publish history is always public**, including flagged versions with their reason tags.
 
-**Publisher portfolio:** every author gets a public profile at `https://registry.hyle.eu/u/<author>` — all their substrates, stats, and fork chains in one place. Add a badge to your GitHub profile:
+**Publisher portfolio:** every author gets a public profile at `https://registry.hylé.com/u/<author>` — all their blueprints, stats, and fork chains in one place. Add a badge to your GitHub profile:
 
 ```markdown
-[![Hylé substrates](https://registry.hyle.eu/badge/u/your-username)](https://registry.hyle.eu/u/your-username)
+[![Hylé blueprints](https://registry.hylé.com/badge/u/your-username)](https://registry.hylé.com/u/your-username)
 ```
 
-**Model update notifications:** if your substrate declares `model_pin`, Hylé emails you monthly when a newer checkpoint is available for that model — with a one-click "update model_pin" link. No manual tracking required.
+**Model update notifications:** if your blueprint declares `model_pin`, Hylé emails you monthly when a newer checkpoint is available for that model — with a one-click "update model_pin" link. No manual tracking required.
 
 ---
 
@@ -393,7 +418,7 @@ For each file, the index captures:
 | `tags` | Semantic keywords extracted from the document |
 | `scopes` | Domains or subsystems the document applies to |
 | `weight` | Relevance score (0–1) relative to other documents in the same domain |
-| `domain` | Which of the four substrate domains the file belongs to |
+| `domain` | Which of the four blueprint domains the file belongs to |
 
 #### Example `hyle.json`
 
@@ -452,7 +477,7 @@ For each file, the index captures:
 
 LLMs with limited context or no RAG pipeline can receive `hyle.json` as a single compact file and immediately understand the full map of available knowledge — what documents exist, what they cover, and how relevant each is. This lets agents decide which files to actually read rather than loading everything blindly.
 
-`hyle.json` is excluded from the substrate bundle by default (it is local state, not source). Add it to `.hyleignore` explicitly if needed.
+`hyle.json` is excluded from the blueprint bundle by default (it is local state, not source). Add it to `.hyleignore` explicitly if needed.
 
 ---
 
@@ -463,4 +488,4 @@ In the *hylomorphism doctrine*, developed by the Ancient Greek philosopher Arist
 Projects developed with the assistance of LLM, mimic this potency of matter becoming its own physical entity through actions: LLM allow humans to digest large amounts of information, and arrange its extracted essence and knowledge into a project form meant to be used in the real-world.
 
 In the spirit of hylomorphism, Hylé CLI helps humans act upon a compound of documents (raw matter), hence the name "hylé" which designates this mass of potency, may it be already structured or spread out and chaotic.
-Hylé is a simple substrate manager in a world of *hylomorphic* emergent architecture.
+Hylé is a simple blueprint manager in a world of *hylomorphic* emergent architecture.

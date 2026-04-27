@@ -54,10 +54,10 @@ Often you'll find inside stuff that helps write CLAUDE.md AGENTS.md and other co
 
 | Command | Description |
 |---|---|
-| `hyle init` | Initialize a substrate interactively |
-| `hyle init <name>` | Initialize from a named registry substrate |
+| `hyle init` | Initialize a blueprint interactively |
+| `hyle init <name>` | Initialize from a named registry blueprint |
 | `hyle init --yes` | Initialize blank without prompts |
-| `hyle init --force` | Re-initialize, overwriting existing substrate |
+| `hyle init --force` | Re-initialize, overwriting existing blueprint |
 
 #### Work sessions
 
@@ -114,27 +114,27 @@ Often you'll find inside stuff that helps write CLAUDE.md AGENTS.md and other co
 | `hyle topology trace <agent> <doc>` | Can this agent access this document? |
 | `hyle topology validate-delegation <A> <B> <scope>` | Can A delegate this scope to B? |
 
-#### Substrate lifecycle
+#### Blueprint lifecycle
 
 | Command | Description |
 |---|---|
-| `hyle substrate list` | List local substrate library |
-| `hyle substrate pull <name>` | Clone from registry |
-| `hyle substrate commit <name>` | Promote `.hyle/` to local library |
-| `hyle substrate publish <name>` | Publish local substrate to registry |
-| `hyle substrate tag <version>` | Freeze weights + create reproducibility snapshot |
-| `hyle substrate diff <v1> <v2>` | What changed between two tags |
-| `hyle substrate reproduce <v> "<prompt>"` | Replay with locked weights from a tag |
-| `hyle substrate test` | Run `substrate.test.yml` regression suite |
-| `hyle substrate check-anchors` | Verify all anchor docs are above `min_weight` |
-| `hyle substrate check-anchors --strict` | Exit non-zero on violation (CI/CD) |
-| `hyle substrate erase --subject <id>` | GDPR right to erasure |
+| `hyle blueprint list` | List local blueprint library |
+| `hyle blueprint pull <name>` | Clone from registry |
+| `hyle blueprint commit <name>` | Promote `.hyle/` to local library |
+| `hyle blueprint publish <name>` | Publish local blueprint to registry |
+| `hyle blueprint tag <version>` | Freeze weights + create reproducibility snapshot |
+| `hyle blueprint diff <v1> <v2>` | What changed between two tags |
+| `hyle blueprint reproduce <v> "<prompt>"` | Replay with locked weights from a tag |
+| `hyle blueprint test` | Run `blueprint.test.yml` regression suite |
+| `hyle blueprint check-anchors` | Verify all anchor docs are above `min_weight` |
+| `hyle blueprint check-anchors --strict` | Exit non-zero on violation (CI/CD) |
+| `hyle blueprint erase --subject <id>` | GDPR right to erasure |
 
 #### Audit and status
 
 | Command | Description |
 |---|---|
-| `hyle status` | Overview: tokens + substrate + budget |
+| `hyle status` | Overview: tokens + blueprint + budget |
 | `hyle status --budget` | Token consumption detail by session |
 | `hyle audit verify` | Verify `audit.log` hash-chain integrity |
 | `hyle security log` | Display `security.log` |
@@ -188,7 +188,7 @@ The app is live! Here's what's built:
 - File tree with color-coded folders (ontology/identities/craft/ethics), click any file to view with syntax highlighting + line numbers
 - Version diff viewer comparing any two release tags
 - Copy buttons on all CLI commands
-- `hyle substrate pull author/name` in the detail header
+- `hyle blueprint pull author/name` in the detail header
 
 **Tweaks panel** (toolbar toggle): density, card style (border/shadow), hero size
 

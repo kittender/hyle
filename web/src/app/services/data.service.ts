@@ -28,7 +28,7 @@ export class DataService {
       name: 'good-java',
       stars: 1234, forks: 89,
       pulls: { month: 980, half: 5100, year: 8700, all: 12300 },
-      description: 'Comprehensive substrate for best Java dev practices — Spring Boot, clean architecture, enterprise patterns.',
+      description: 'Comprehensive blueprint for best Java dev practices — Spring Boot, clean architecture, enterprise patterns.',
       longDesc: 'A production-grade print for Java teams using Spring Boot. Covers domain-driven design principles in the ontology, a structured agent hierarchy for architect/developer/reviewer roles in identities, rich examples of service/repository patterns in craft, and GDPR-aligned ethics policies. Actively maintained.',
       language: 'Java', license: 'MIT', updated: '2026-04-10',
       tags: ['java', 'spring', 'enterprise', 'backend', 'clean-arch'],
@@ -53,7 +53,7 @@ export class DataService {
       stars: 897, forks: 64,
       pulls: { month: 760, half: 3800, year: 6200, all: 9100 },
       description: 'Boilerplate for advanced Python projects — no framework assumptions, focuses on clean domain logic and async patterns.',
-      longDesc: 'A framework-agnostic Python substrate emphasising clean architecture without the overhead. The craft folder contains async service patterns, repository abstractions, and domain event examples. Ethics constraints focus on data handling and PII management in Python codebases.',
+      longDesc: 'A framework-agnostic Python blueprint emphasising clean architecture without the overhead. The craft folder contains async service patterns, repository abstractions, and domain event examples. Ethics constraints focus on data handling and PII management in Python codebases.',
       language: 'Python', license: 'Apache-2.0', updated: '2026-03-28',
       tags: ['python', 'async', 'domain-driven', 'backend'],
       community: true,
@@ -71,7 +71,7 @@ export class DataService {
       stars: 789, forks: 102,
       pulls: { month: 1100, half: 5600, year: 9400, all: 15200 },
       description: 'Language agnostic base for starting any dev project. Minimal assumptions, maximal flexibility.',
-      longDesc: 'The go-to substrate when you want structure without language lock-in. Swisstools defines a lean ontology, a two-role identity system (owner/contributor), and a checklist-driven craft folder that works regardless of language. Used as a base by many other published prints.',
+      longDesc: 'The go-to blueprint when you want structure without language lock-in. Swisstools defines a lean ontology, a two-role identity system (owner/contributor), and a checklist-driven craft folder that works regardless of language. Used as a base by many other published prints.',
       language: 'YAML', license: 'MIT', updated: '2026-04-01',
       tags: ['agnostic', 'base', 'minimal', 'starter'],
       community: true,
@@ -88,7 +88,7 @@ export class DataService {
       name: 'best-front-sub',
       stars: 723, forks: 58,
       pulls: { month: 540, half: 2700, year: 4500, all: 6800 },
-      description: 'A clean and refined substrate for frontend development — React, TypeScript, and design system guidance.',
+      description: 'A clean and refined blueprint for frontend development — React, TypeScript, and design system guidance.',
       longDesc: 'Frontend-specialised print with a focus on component-driven development. The ontology includes a design token spec and component inventory. Craft examples cover React hooks, accessible component patterns, and type-safe API integration. Ethics module includes accessibility constraints.',
       language: 'TypeScript', license: 'MIT', updated: '2026-04-05',
       tags: ['frontend', 'react', 'typescript', 'design-system', 'a11y'],
@@ -100,11 +100,11 @@ export class DataService {
       tree: { ontology: { 'README.md': null, specs: { 'component-spec.md': null }, 'design-tokens.md': null }, identities: { 'README.md': null, 'roles.yaml': null, agents: { 'designer.md': null, 'frontend-dev.md': null } }, craft: { 'README.md': null, 'conventions.md': null, examples: { 'Button.tsx': null, 'useData.ts': null, 'Layout.tsx': null } }, ethics: { 'README.md': null, 'policies.yaml': null, 'accessibility.md': null } },
     },
     {
-      id: 'dataworks/ml-substrate',
+      id: 'dataworks/ml-blueprint',
       author: 'dataworks',
-      name: 'ml-substrate',
+      name: 'ml-blueprint',
       stars: 445, forks: 37,
-      description: 'Machine learning substrate with experiment tracking, data versioning ethics, and MLOps identity roles.',
+      description: 'Machine learning blueprint with experiment tracking, data versioning ethics, and MLOps identity roles.',
       longDesc: 'Purpose-built for ML teams. The ontology covers data schemas and experiment logging conventions. Identities define data scientist and MLOps engineer roles with appropriate scope boundaries. Ethics module includes bias audit templates and GDPR data handling rules for model training data.',
       language: 'Python', license: 'BSD-3', updated: '2026-03-15',
       tags: ['ml', 'python', 'mlops', 'data-science', 'ai'],
@@ -120,7 +120,7 @@ export class DataService {
       name: 'nextjs-print',
       stars: 612, forks: 71,
       description: 'Full-stack Next.js print with App Router, Prisma, and authentication patterns.',
-      longDesc: 'A full-stack substrate for Next.js teams. Covers route architecture in the ontology, a fullstack developer identity, and Prisma + NextAuth examples in craft. Updated for Next.js 15 App Router conventions.',
+      longDesc: 'A full-stack blueprint for Next.js teams. Covers route architecture in the ontology, a fullstack developer identity, and Prisma + NextAuth examples in craft. Updated for Next.js 15 App Router conventions.',
       language: 'TypeScript', license: 'MIT', updated: '2026-04-12',
       tags: ['nextjs', 'fullstack', 'typescript', 'prisma', 'auth'],
       versions: [
@@ -135,8 +135,8 @@ export class DataService {
       author: 'devops-collective',
       name: 'k8s-print',
       stars: 334, forks: 29,
-      description: 'Kubernetes deployment substrate with GitOps workflows, security policies, and SRE identity roles.',
-      longDesc: 'Infrastructure substrate for platform and SRE teams. Ontology covers cluster specifications and runbook conventions. Identities define SRE and platform engineer roles. Craft includes Kubernetes manifest examples and Helm chart conventions. Ethics module enforces security baseline policies.',
+      description: 'Kubernetes deployment blueprint with GitOps workflows, security policies, and SRE identity roles.',
+      longDesc: 'Infrastructure blueprint for platform and SRE teams. Ontology covers cluster specifications and runbook conventions. Identities define SRE and platform engineer roles. Craft includes Kubernetes manifest examples and Helm chart conventions. Ethics module enforces security baseline policies.',
       language: 'YAML', license: 'Apache-2.0', updated: '2026-03-20',
       tags: ['kubernetes', 'devops', 'gitops', 'sre', 'infrastructure'],
       versions: [
@@ -152,7 +152,7 @@ export class DataService {
       stars: 38, forks: 4,
       pulls: { month: 210, half: 890, year: 1340, all: 1340 },
       description: 'Everything you need to start writing your own fantasy book with LLM help — world-building, characters, plot arcs, lore consistency.',
-      longDesc: 'A substrate tailored for writers who want AI assistance in crafting fantasy novels. Covers ontology for world-building and lore, character identity templates, craft prompts for plot and chapter drafting, and ethics guidelines for originality and attribution.',
+      longDesc: 'A blueprint tailored for writers who want AI assistance in crafting fantasy novels. Covers ontology for world-building and lore, character identity templates, craft prompts for plot and chapter drafting, and ethics guidelines for originality and attribution.',
       language: 'Markdown', license: 'CC BY 4.0', updated: '2026-03-14',
       tags: ['writing', 'fantasy', 'creative', 'llm', 'book'],
       versions: [],
@@ -165,7 +165,7 @@ export class DataService {
       stars: 459, forks: 61,
       pulls: { month: 1820, half: 7400, year: 11200, all: 14800 },
       description: 'Turns any model into a coach for practicing your AWS DVA-C02 certification — mock exams, explanations, and spaced repetition.',
-      longDesc: 'A fully structured substrate that transforms an LLM into a rigorous AWS DVA-C02 exam coach. Includes domain ontology aligned to the official exam guide, coaching identity with assessment and feedback roles, craft prompts for scenario generation and spaced repetition, and ethics guidelines for accurate technical content.',
+      longDesc: 'A fully structured blueprint that transforms an LLM into a rigorous AWS DVA-C02 exam coach. Includes domain ontology aligned to the official exam guide, coaching identity with assessment and feedback roles, craft prompts for scenario generation and spaced repetition, and ethics guidelines for accurate technical content.',
       language: 'Markdown', license: 'MIT', updated: '2026-04-02',
       tags: ['aws', 'certification', 'dva-c02', 'study', 'coaching'],
       community: true,
@@ -181,7 +181,7 @@ export class DataService {
       stars: 5, forks: 1,
       pulls: { month: 44, half: 180, year: 250, all: 250 },
       description: 'Prepare your Dungeons & Dragons game sessions with custom scenarios generated and refined with AI — NPCs, maps, encounters, lore.',
-      longDesc: 'A substrate for Dungeon Masters who want AI-powered session prep. Ontology covers D&D rules, setting lore, and adventure hooks. Identities define GM, NPC, and world-builder roles. Craft provides scenario, encounter, and dialogue generation templates. Ethics covers content safety guidelines.',
+      longDesc: 'A blueprint for Dungeon Masters who want AI-powered session prep. Ontology covers D&D rules, setting lore, and adventure hooks. Identities define GM, NPC, and world-builder roles. Craft provides scenario, encounter, and dialogue generation templates. Ethics covers content safety guidelines.',
       language: 'Asciidoc', license: 'GPL-3.0', updated: '2026-01-28',
       tags: ['dnd', 'rpg', 'creative', 'gm', 'tabletop'],
       versions: [
@@ -197,10 +197,10 @@ export class DataService {
     { type: 'verified', print: 'andrej-kirskyn/good-java', version: '1.3.1', date: '2026-04-25', note: 'Congratulations! andrej-kirskyn/good-java @1.3.1 has been verified by the Hylé team.' },
     { type: 'pull', print: 'hyle-org/starter', version: '1.0.4', date: '2026-04-26', note: 'Pulled to project findr-api' },
     { type: 'push', print: 'andrej-kirskyn/good-java', version: '1.3.1', date: '2026-04-22', note: 'Released patch: dependency updates' },
-    { type: 'community', print: 'andrej-kirskyn/good-java', version: '', date: '2026-03-20', note: 'You reached 100+ pulls on andrej-kirskyn/good-java which has no community red flags, a 6+ months existence and more than 50 stars. It\'s now tagged as "Community" verified.' },
     { type: 'pull', print: 'justbob/python-sub', version: '2.1.0', date: '2026-04-19', note: 'Pulled to project ml-pipeline' },
     { type: 'push', print: 'andrej-kirskyn/good-java', version: '1.3.0', date: '2026-04-10', note: 'Added Spring Security identity patterns' },
     { type: 'pull', print: 'hyle-org/starter', version: '1.0.3', date: '2026-03-28', note: 'Pulled to project data-service' },
+    { type: 'community', print: 'andrej-kirskyn/good-java', version: '', date: '2026-03-20', note: 'You reached 100+ pulls on andrej-kirskyn/good-java which has no community red flags, a 6+ months existence and more than 50 stars. It\'s now tagged as "Community" verified.' },
     { type: 'pull', print: 'renaud-duteil/swisstools', version: '0.9.2', date: '2026-03-15', note: 'Pulled to project cli-toolkit' },
     { type: 'push', print: 'andrej-kirskyn/good-java', version: '1.2.2', date: '2026-02-10', note: 'Minor documentation fix' },
   ];
@@ -255,7 +255,7 @@ export class DataService {
     if (this.MOCK_FILES[path]) return this.MOCK_FILES[path];
     const filename = path.split('/').pop() || '';
     const ext = filename.split('.').pop() || '';
-    if (ext === 'md') return `# ${filename.replace('.md', '')}\n\nDocumentation for this file is available in the published print.\n\nPull this print locally to explore:\n\n\`\`\`\nhyle substrate pull ${path.split('/')[0]}\n\`\`\``;
+    if (ext === 'md') return `# ${filename.replace('.md', '')}\n\nDocumentation for this file is available in the published print.\n\nPull this print locally to explore:\n\n\`\`\`\nhyle blueprint pull ${path.split('/')[0]}\n\`\`\``;
     if (ext === 'yaml' || ext === 'yml') return `# ${filename}\n# Pull print to view full content\ncontent: see_local_copy`;
     if (ext === 'java') return `// ${filename}\n// Pull print to view full source\npackage com.example;`;
     if (ext === 'py') return `# ${filename}\n# Pull print to view full source`;

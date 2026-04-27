@@ -60,7 +60,7 @@ All good — verifier confirmed everything looks correct. Let me know if you'd l
 
 Remove the subtitle "prints registry" from the hero section. Change command in "configure" from `edit .hyle/hyle.yaml` to `edit hyle.yaml`
 
-Change `hyle substrate pull hyle-org/starter` to `hyle pull hyle-org/starter`
+Change `hyle blueprint pull hyle-org/starter` to `hyle pull hyle-org/starter`
 
 In the "quickstart" add in parenthesis after the "install" a mention or tag (MacOS detected)
 
@@ -91,9 +91,9 @@ _[tool: fork_verifier_agent]_
 All done! Here's a summary of the changes:
 
 - **Hero** — "prints registry" subtitle removed
-- **Quickstart panel** — "Install" now reads "Install (macOS detected)"; `hyle substrate pull` → `hyle pull`
+- **Quickstart panel** — "Install" now reads "Install (macOS detected)"; `hyle blueprint pull` → `hyle pull`
 - **Configure** — `edit .hyle/hyle.yaml` → `edit hyle.yaml`
-- **All `hyle substrate pull` commands** throughout (detail page, version list, docs, readme) updated to `hyle pull`
+- **All `hyle blueprint pull` commands** throughout (detail page, version list, docs, readme) updated to `hyle pull`
 
 ## User
 

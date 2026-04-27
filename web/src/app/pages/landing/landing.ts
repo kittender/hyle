@@ -34,10 +34,10 @@ export class LandingComponent {
   readonly totalPrints: number;
 
   readonly ANATOMY = [
-    { folder: 'ontology', color: '#8b6914', desc: 'Source material — PDFs, specs, docs, domain glossaries, data models. The epistemic foundation.' },
-    { folder: 'identities', color: '#1a4d2e', desc: 'Agent definitions, role hierarchies, delegation chains, and scope boundaries.' },
-    { folder: 'craft', color: '#5a7a3a', desc: 'Boilerplate code, conventions, naming rules, git workflow, and step-by-step examples.' },
-    { folder: 'ethics', color: '#c4982a', desc: 'Policies, GDPR rules, invariant constraints, and governance rules enforced at runtime.' },
+    { folder: 'ontology', color: '#8b6914', desc: 'The "what" — specifications, goals, features, examples, and data. AI instruction files (CLAUDE.md, .cursorrules, Copilot instructions), specs, PDFs, domain docs, data models, and diagrams.' },
+    { folder: 'identities', color: '#1a4d2e', desc: 'The "who" — agentic personas and model behaviour specs. Agent definitions, role descriptions, and delegation boundaries. e.g. AGENTS.md, .claude/agents/*.md, .cursor/agents/*.md.' },
+    { folder: 'craft', color: '#5a7a3a', desc: 'The "how" — architecture, technical design, practices, and tooling recipes. e.g. SKILLS.md, ARCHITECTURE.md, MCP configs, .cursor/rules/*.md, package.json, pom.xml.' },
+    { folder: 'ethics', color: '#c4982a', desc: 'The limits — behaviour constraints, compliance requirements, security concerns, and privacy design. e.g. Cedar policies, TruLens configs, Ragas eval setups, guardrails.' },
   ];
 
   constructor(

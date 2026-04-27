@@ -15,12 +15,12 @@
           <span style="position:absolute; left:9px; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; display:flex;">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4"/><path d="M11 11l3 3" stroke-linecap="round"/></svg>
           </span>
-          <input [(ngModel)]="query" name="navSearch" placeholder="Search prints…" class="nav-search">
+          <input [(ngModel)]="query" name="navSearch" placeholder="Search blueprints…" class="nav-search">
         </div>
       </form>
 
       @if (authService.isLoggedIn()) {
-        <div class="nav-user-menu" style="position:relative;">
+        <div class="nav-user-menu">
           <button
             (click)="toggleMenu()"
             style="display:flex; align-items:center; gap:7px; padding:3px 8px 3px 4px; border-radius:6px; border:1px solid transparent; transition:background 0.15s; cursor:pointer; background:transparent;"

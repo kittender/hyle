@@ -128,7 +128,7 @@ function Landing({ navigate }) {
         <div className="hero-inner">
           <div className="hero-badge">hylé registry</div>
           <p className="hero-sub">
-            A community-driven registry of AI-ready project substrates — templates for scaffolding, boilerplating, and structuring projects with agent-driven workflows.
+            A community-driven registry of AI-ready project blueprints — templates for scaffolding, boilerplating, and structuring projects with agent-driven workflows.
           </p>
           <form onSubmit={handleSearch} className="hero-search-wrap">
             <span className="hero-search-icon"><Icon name="search" size={16}/></span>
@@ -197,7 +197,7 @@ function Landing({ navigate }) {
           <div style={{ marginTop: 24 }}>
             <div className="qs-title" style={{ marginBottom: 12 }}>Configure</div>
             <div className="qs-cmd">
-              <span className="qs-label">Edit substrate config</span>
+              <span className="qs-label">Edit blueprint config</span>
               <div className="qs-row">
                 <code className="qs-code">edit hyle.yaml</code>
                 <CopyButton text="edit hyle.yaml"/>
@@ -652,13 +652,13 @@ const DOC_SECTIONS = [
 ];
 
 const CLI_GROUPS = [
-  { label: 'Initialization', cmds: [['hyle init','Initialize a substrate interactively'],['hyle init <name>','Initialize from a named registry substrate'],['hyle init --yes','Initialize blank without prompts'],['hyle init --force','Re-initialize, overwriting existing substrate']] },
+  { label: 'Initialization', cmds: [['hyle init','Initialize a blueprint interactively'],['hyle init <name>','Initialize from a named registry blueprint'],['hyle init --yes','Initialize blank without prompts'],['hyle init --force','Re-initialize, overwriting existing blueprint']] },
   { label: 'Work Sessions', cmds: [['hyle prompt "<text>"','Start a work session'],['hyle prompt "<text>" --scope <id>','With a named scope (data access perimeter)'],['hyle prompt "<text>" --agent <label>','With a declared agent identity'],['hyle prompt "<text>" --dry-run','Preview what the Epitomator would inject'],['hyle done','Close the active instance manually']] },
-  { label: 'Substrate Lifecycle', cmds: [['hyle substrate list','List local substrate library'],['hyle substrate pull <name>','Clone from registry'],['hyle substrate commit <name>','Promote .hyle/ to local library'],['hyle substrate publish <name>','Publish local substrate to registry'],['hyle substrate tag <version>','Freeze weights + create reproducibility snapshot'],['hyle substrate diff <v1> <v2>','What changed between two tags'],['hyle substrate test','Run substrate.test.yml regression suite']] },
+  { label: 'Blueprint Lifecycle', cmds: [['hyle blueprint list','List local blueprint library'],['hyle blueprint pull <name>','Clone from registry'],['hyle blueprint commit <name>','Promote .hyle/ to local library'],['hyle blueprint publish <name>','Publish local blueprint to registry'],['hyle blueprint tag <version>','Freeze weights + create reproducibility snapshot'],['hyle blueprint diff <v1> <v2>','What changed between two tags'],['hyle blueprint test','Run blueprint.test.yml regression suite']] },
   { label: 'Index Management', cmds: [['hyle index update','Sync index from filesystem'],['hyle index verify','Check index vs filesystem consistency'],['hyle index rollback [timestamp]','Restore a prior index snapshot'],['hyle index approve <path>','Approve a quarantined document'],['hyle index lineage <path>','Show provenance chain of a synthesis']] },
   { label: 'Scopes', cmds: [['hyle scope list','List all scopes with document counts'],['hyle scope show <id>','Documents accessible in this scope'],['hyle scope add <id> <path>','Assign a document to a scope'],['hyle scope check <id>','Validate: no forbidden data_category leakage'],['hyle scope check <id> --strict','Exit non-zero on violation (CI/CD)']] },
   { label: 'Governance & Topology', cmds: [['hyle governance show','List all active ethics constraints'],['hyle governance check "<prompt>"','Detect conflicts before execution'],['hyle topology show','ASCII delegation graph'],['hyle topology check','Validate consistency + update topology_hash'],['hyle topology trace <agent> <doc>','Can this agent access this document?']] },
-  { label: 'Audit & Status', cmds: [['hyle status','Overview: tokens + substrate + budget'],['hyle audit verify','Verify audit.log hash-chain integrity'],['hyle security log','Display security.log'],['hyle analyze','Quantitative + qualitative maintenance report']] },
+  { label: 'Audit & Status', cmds: [['hyle status','Overview: tokens + blueprint + budget'],['hyle audit verify','Verify audit.log hash-chain integrity'],['hyle security log','Display security.log'],['hyle analyze','Quantitative + qualitative maintenance report']] },
 ];
 
 function DocsPage({ navigate, anchor }) {
@@ -686,7 +686,7 @@ function DocsPage({ navigate, anchor }) {
           <p>Get up and running with Hylé in under 5 minutes.</p>
           <h3>1. Install Hylé <span style={{fontSize:11,fontFamily:'var(--mono)',fontWeight:400,color:'var(--muted)',background:'var(--subtle)',border:'1px solid var(--border)',borderRadius:4,padding:'2px 7px',letterSpacing:'0.02em'}}>(macOS detected)</span></h3>
           <CodeBlock lang="bash">{`brew install hyle\n# or\nnpm install --global hyle`}</CodeBlock>
-          <h3>2. Pull a substrate</h3>
+          <h3>2. Pull a blueprint</h3>
           <CodeBlock lang="bash">{`cd my-project/\nhyle pull hyle-org/starter`}</CodeBlock>
           <h3>3. Start working</h3>
           <CodeBlock lang="bash">{`hyle prompt "generate a REST CRUD boilerplate"\nhyle done`}</CodeBlock>
@@ -705,12 +705,12 @@ function DocsPage({ navigate, anchor }) {
 
         {active === 'configuration' && <DocsSection title="Configuration">
           <p>All configuration lives in <code>.hyle/hyle.yaml</code> at the root of your project.</p>
-          <CodeBlock lang="yaml">{`# .hyle/hyle.yaml\nsubstrate:\n  name: my-project\n  version: 1.0.0\n  registry: hyle-org/starter\n\nbudget:\n  max_tokens_per_session: 50000\n  warn_at: 80\n\nscopes:\n  - id: public\n    description: All non-sensitive documents\n  - id: internal\n    description: Internal specs only\n\ngovernance:\n  ethics_path: ethics/policies.yaml\n  strict: true`}</CodeBlock>
+          <CodeBlock lang="yaml">{`# .hyle/hyle.yaml\nblueprint:\n  name: my-project\n  version: 1.0.0\n  registry: hyle-org/starter\n\nbudget:\n  max_tokens_per_session: 50000\n  warn_at: 80\n\nscopes:\n  - id: public\n    description: All non-sensitive documents\n  - id: internal\n    description: Internal specs only\n\ngovernance:\n  ethics_path: ethics/policies.yaml\n  strict: true`}</CodeBlock>
           <h3>Key fields</h3>
           <table className="docs-table">
             <thead><tr><th>Field</th><th>Description</th></tr></thead>
             <tbody>
-              {[['substrate.name','Project identifier used in audit logs'],['budget.max_tokens_per_session','Hard cap on token usage per hyle prompt call'],['governance.strict','Exit non-zero on any ethics violation'],['scopes','Named data access perimeters for agents']].map(([f,d]) => (
+              {[['blueprint.name','Project identifier used in audit logs'],['budget.max_tokens_per_session','Hard cap on token usage per hyle prompt call'],['governance.strict','Exit non-zero on any ethics violation'],['scopes','Named data access perimeters for agents']].map(([f,d]) => (
                 <tr key={f}><td><code>{f}</code></td><td>{d}</td></tr>
               ))}
             </tbody>
@@ -737,29 +737,29 @@ function DocsPage({ navigate, anchor }) {
           <h3>Use scopes for data isolation</h3>
           <CodeBlock lang="bash">{`hyle scope add internal ontology/specs/secret-api.md\nhyle prompt "generate client code" --scope public`}</CodeBlock>
           <h3>Run governance checks in CI</h3>
-          <CodeBlock lang="bash">{`hyle scope check all --strict\nhyle topology check\nhyle substrate check-anchors --strict`}</CodeBlock>
+          <CodeBlock lang="bash">{`hyle scope check all --strict\nhyle topology check\nhyle blueprint check-anchors --strict`}</CodeBlock>
           <h3>Tag before publishing</h3>
-          <p>Always run <code>hyle substrate tag &lt;version&gt;</code> before publishing. Tags freeze model weights and create a reproducibility snapshot, allowing other users to replay prompts with identical conditions.</p>
-          <Callout>Use <code>hyle substrate reproduce &lt;tag&gt; "your prompt"</code> to verify reproducibility before releasing a new version.</Callout>
+          <p>Always run <code>hyle blueprint tag &lt;version&gt;</code> before publishing. Tags freeze model weights and create a reproducibility snapshot, allowing other users to replay prompts with identical conditions.</p>
+          <Callout>Use <code>hyle blueprint reproduce &lt;tag&gt; "your prompt"</code> to verify reproducibility before releasing a new version.</Callout>
         </DocsSection>}
 
         {active === 'publishing' && <DocsSection title="Publishing a Print">
           <p>Anyone can publish a print to the Hylé Prints registry. Prints are backed by public GitHub repositories.</p>
-          <h3>1. Author your substrate</h3>
+          <h3>1. Author your blueprint</h3>
           <CodeBlock lang="bash">{`mkdir my-print && cd my-print\nhyle init --yes\n# populate ontology/, identities/, craft/, ethics/`}</CodeBlock>
           <h3>2. Test it</h3>
-          <CodeBlock lang="bash">{`hyle substrate test\nhyle substrate check-anchors --strict\nhyle governance check "scaffold a feature"`}</CodeBlock>
+          <CodeBlock lang="bash">{`hyle blueprint test\nhyle blueprint check-anchors --strict\nhyle governance check "scaffold a feature"`}</CodeBlock>
           <h3>3. Tag and publish</h3>
-          <CodeBlock lang="bash">{`hyle substrate tag 1.0.0\nhyle substrate publish myuser/my-print`}</CodeBlock>
+          <CodeBlock lang="bash">{`hyle blueprint tag 1.0.0\nhyle blueprint publish myuser/my-print`}</CodeBlock>
           <h3>4. Push new versions</h3>
-          <CodeBlock lang="bash">{`# after making changes:\nhyle substrate tag 1.1.0\nhyle substrate publish myuser/my-print`}</CodeBlock>
+          <CodeBlock lang="bash">{`# after making changes:\nhyle blueprint tag 1.1.0\nhyle blueprint publish myuser/my-print`}</CodeBlock>
           <Callout>The registry links directly to the GitHub repository. Ensure your repo is public before publishing.</Callout>
         </DocsSection>}
 
         {active === 'philosophy' && <DocsSection title="Philosophy">
           <p>Hylé (from the Greek ὕλη, <em>matter</em> or <em>material</em>) is built on the idea that AI agents should work <em>within</em> structure, not instead of it.</p>
-          <h3>Substrates over prompts</h3>
-          <p>A one-off prompt is ephemeral. A substrate is persistent, versioned, and reviewable. Hylé treats the agent's working context as a first-class artifact — one that can be audited, diffed, and reproduced.</p>
+          <h3>blueprints over prompts</h3>
+          <p>A one-off prompt is ephemeral. A blueprint is persistent, versioned, and reviewable. Hylé treats the agent's working context as a first-class artifact — one that can be audited, diffed, and reproduced.</p>
           <h3>The four folders</h3>
           <p>Every print is structured around four orthogonal concerns: <strong>ontology</strong> (what the agent knows), <strong>identities</strong> (who the agent is), <strong>craft</strong> (how the agent works), and <strong>ethics</strong> (what the agent must never do). This separation makes prints composable and auditable.</p>
           <h3>Reproducibility</h3>
@@ -1018,7 +1018,7 @@ function PublicPrintCard({ print, navigate, idx }) {
 function ProfilePage({ navigate, authUser, isPublic }) {
   const myPrints = (window.PRINTS || []).filter(p => p.author === authUser.username);
   const [tab, setTab] = useState('published');
-  const [bio, setBio] = useState('Senior engineer. Loves clean code and well-structured AI workflows. Building the future of substrate-driven development.');
+  const [bio, setBio] = useState('Senior engineer. Loves clean code and well-structured AI workflows. Building the future of blueprint-driven development.');
   const [editingBio, setEditingBio] = useState(false);
   const [bioDraft, setBioDraft] = useState(bio);
   const [socials, setSocials] = useState({ github:'andrej-kirskyn', linkedin:'andrej-kirskyn', x:'andrej_dev', mastodon:'', bluesky:'', instagram:'', facebook:'' });

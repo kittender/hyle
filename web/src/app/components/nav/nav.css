@@ -1,3 +1,5 @@
+.nav-user-menu { position: relative; }
+
 .nav-dropdown-item {
   display: block;
   width: 100%;

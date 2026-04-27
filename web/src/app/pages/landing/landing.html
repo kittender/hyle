@@ -3,7 +3,7 @@
   <div class="hero-inner">
     <div class="hero-badge">hylé registry</div>
     <p class="hero-sub">
-      A community-driven registry of AI-ready project substrates — templates for scaffolding, boilerplating, and structuring projects with agent-driven workflows.
+      A community-driven registry of AI-ready project blueprints — templates for scaffolding, boilerplating, and structuring projects with agent-driven workflows.
     </p>
     <form (submit)="handleSearch($event)" class="hero-search-wrap">
       <span class="hero-search-icon">
@@ -13,7 +13,7 @@
       <button type="submit" class="hero-search-btn">Search</button>
     </form>
     <div class="hero-stats">
-      <span><strong>{{ totalPrints }}</strong> prints</span>
+      <span><strong>{{ totalPrints }}</strong> blueprints</span>
       <span class="dot">·</span>
       <span><strong>{{ totalStars.toLocaleString() }}</strong> stars</span>
       <span class="dot">·</span>
@@ -27,7 +27,7 @@
   <div>
     <!-- Featured -->
     <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:20px;">
-      <h2 class="section-heading">Featured prints</h2>
+      <h2 class="section-heading">Featured blueprints</h2>
       <button class="link-btn" (click)="navigateTo('/search')">Browse all →</button>
     </div>
     <div class="featured-grid">
@@ -148,7 +148,7 @@
 
     <!-- Anatomy -->
     <div style="margin-top:48px;">
-      <h2 class="section-heading" style="margin-bottom:16px;">Anatomy of a print</h2>
+      <h2 class="section-heading" style="margin-bottom:16px;">Anatomy of a blueprint</h2>
       <div class="anatomy-grid">
         @for (item of ANATOMY; track item.folder) {
           <div class="anatomy-card">
@@ -167,19 +167,26 @@
   <div>
     <app-quickstart-panel></app-quickstart-panel>
     <div style="margin-top:24px;">
-      <div class="qs-title" style="margin-bottom:12px;">Configure</div>
+      <div class="qs-title" style="margin-bottom:12px;">Publish</div>
       <div class="qs-cmd">
-        <span class="qs-label">Edit substrate config</span>
+        <span class="qs-label">Minor release (stable)</span>
         <div class="qs-row">
-          <code class="qs-code">edit hyle.yaml</code>
-          <app-copy-button text="edit hyle.yaml"></app-copy-button>
+          <code class="qs-code">hyle push</code>
+          <app-copy-button text="hyle push"></app-copy-button>
         </div>
       </div>
       <div class="qs-cmd" style="margin-top:8px;">
-        <span class="qs-label">Check topology</span>
+        <span class="qs-label">WIP / snapshot</span>
         <div class="qs-row">
-          <code class="qs-code">hyle topology check</code>
-          <app-copy-button text="hyle topology check"></app-copy-button>
+          <code class="qs-code">hyle snapshot</code>
+          <app-copy-button text="hyle snapshot"></app-copy-button>
+        </div>
+      </div>
+      <div class="qs-cmd" style="margin-top:8px;">
+        <span class="qs-label">Major / breaking release</span>
+        <div class="qs-row">
+          <code class="qs-code">hyle release</code>
+          <app-copy-button text="hyle release"></app-copy-button>
         </div>
       </div>
     </div>

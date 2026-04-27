@@ -2,7 +2,7 @@
 <div style="background:linear-gradient(160deg,var(--hero-bg) 0%,var(--hero-bg2) 100%); border-bottom:1px solid rgba(255,255,255,0.06); padding:48px 0;">
   <div class="container">
     <div class="hero-badge">Enterprise</div>
-    <h1 style="font-family:var(--mono); font-size:32px; font-weight:700; color:#fff; margin:16px 0 16px; letter-spacing:-0.02em;">Hylé for teams and organizations</h1>
+    <h1 style="font-family:var(--mono); font-size:32px; font-weight:700; color:#fff; margin:16px 0 16px; letter-spacing:-0.02em;">Blueprints for teams and organizations</h1>
     <p style="font-size:15px; color:rgba(255,255,255,0.6); max-width:560px; line-height:1.65;">
       Run Hylé at scale — private registries, self-hosted deployments, and org-scoped namespaces for your entire engineering org.
     </p>
@@ -11,80 +11,52 @@
 
 <!-- Solutions -->
 <div class="container" style="padding-top:56px; padding-bottom:64px;">
-  <h2 class="section-heading" style="margin-bottom:32px;">Three ways to deploy</h2>
-  <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:24px; margin-bottom:56px;">
+  <!-- Roadmap intro -->
+  <div style="margin-bottom:40px;">
+    <div style="display:inline-flex; align-items:center; gap:8px; background:rgba(196,152,42,0.08); border:1px solid rgba(196,152,42,0.2); border-radius:20px; padding:5px 14px; margin-bottom:20px;">
+      <span style="width:6px; height:6px; border-radius:50%; background:var(--gold); display:inline-block;"></span>
+      <span style="font-size:12px; font-weight:600; color:var(--gold); letter-spacing:0.05em; text-transform:uppercase;">On the roadmap</span>
+    </div>
+    <h2 class="section-heading" style="margin-bottom:16px;">Deployment options, coming soon</h2>
+    <p style="font-size:15px; color:var(--muted-text); max-width:580px; line-height:1.7; margin:0;">
+      Enterprise-grade deployment is in active development. Here's what's coming — built for teams that need full control over where their substrates live and who can access them.
+    </p>
+  </div>
+
+  <!-- Feature list -->
+  <div style="display:flex; flex-direction:column; gap:2px; margin-bottom:56px;">
 
     <!-- Private Registry -->
-    <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:28px; display:flex; flex-direction:column; gap:16px;">
-      <div style="width:40px; height:40px; border-radius:8px; background:rgba(196,152,42,0.12); border:1px solid rgba(196,152,42,0.25); display:flex; align-items:center; justify-content:center;">
-        <svg width="20" height="20" viewBox="0 0 16 16" fill="var(--gold)"><path d="M2 2.5A2.5 2.5 0 014.5 0h8.75a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75h-2.5a.75.75 0 110-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75 0 01-1.072 1.05A2.495 2.495 0 012 11.5z"/></svg>
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:24px 28px; display:flex; align-items:flex-start; gap:20px;">
+      <div style="width:36px; height:36px; flex-shrink:0; border-radius:8px; background:rgba(196,152,42,0.10); border:1px solid rgba(196,152,42,0.22); display:flex; align-items:center; justify-content:center; margin-top:2px;">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="var(--gold)"><path d="M2 2.5A2.5 2.5 0 014.5 0h8.75a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75h-2.5a.75.75 0 110-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75 0 01-1.072 1.05A2.495 2.495 0 012 11.5z"/></svg>
       </div>
       <div>
-        <h3 style="font-size:16px; font-weight:600; color:var(--text); margin-bottom:8px;">Private Registry</h3>
-        <p style="font-size:13px; color:var(--muted-text); line-height:1.6; margin:0 0 16px;">Host your own print registry behind your firewall. Keep proprietary substrates private while still using the Hylé toolchain.</p>
+        <h3 style="font-size:15px; font-weight:600; color:var(--text); margin:0 0 6px;">Private Registry</h3>
+        <p style="font-size:13px; color:var(--muted-text); line-height:1.65; margin:0;">Host your own substrate registry behind your firewall — with SSO, RBAC, audit logs, and a custom domain. Your proprietary blueprints never touch the public registry.</p>
       </div>
-      <div style="background:#1a1a1a; border-radius:var(--radius); padding:14px 16px; overflow-x:auto;">
-        <pre style="font-family:var(--mono); font-size:12px; color:#ccc; margin:0; white-space:pre;"># .hyle/hyle.yaml
-registry:
-  url: https://registry.acme.corp
-  auth: env:HYLE_REGISTRY_TOKEN</pre>
-      </div>
-      <ul style="padding-left:18px; margin:0; display:flex; flex-direction:column; gap:6px;">
-        <li style="font-size:13px; color:var(--muted-text);">SSO / SAML authentication</li>
-        <li style="font-size:13px; color:var(--muted-text);">Role-based access control</li>
-        <li style="font-size:13px; color:var(--muted-text);">Audit logging to your SIEM</li>
-        <li style="font-size:13px; color:var(--muted-text);">Custom domain + TLS</li>
-      </ul>
     </div>
 
     <!-- Self-hostable -->
-    <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:28px; display:flex; flex-direction:column; gap:16px;">
-      <div style="width:40px; height:40px; border-radius:8px; background:rgba(26,77,46,0.12); border:1px solid rgba(26,77,46,0.25); display:flex; align-items:center; justify-content:center;">
-        <svg width="20" height="20" viewBox="0 0 16 16" fill="#1a4d2e"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:24px 28px; display:flex; align-items:flex-start; gap:20px;">
+      <div style="width:36px; height:36px; flex-shrink:0; border-radius:8px; background:rgba(26,77,46,0.10); border:1px solid rgba(26,77,46,0.22); display:flex; align-items:center; justify-content:center; margin-top:2px;">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="#4a9e6a"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
       </div>
       <div>
-        <h3 style="font-size:16px; font-weight:600; color:var(--text); margin-bottom:8px;">Self-hostable</h3>
-        <p style="font-size:13px; color:var(--muted-text); line-height:1.6; margin:0 0 16px;">Deploy the full Hylé registry stack as a single binary or Docker container. Air-gapped deployments supported.</p>
+        <h3 style="font-size:15px; font-weight:600; color:var(--text); margin:0 0 6px;">Self-hostable</h3>
+        <p style="font-size:13px; color:var(--muted-text); line-height:1.65; margin:0;">Deploy the full Hylé registry stack as a single binary or Docker container — no external dependencies. Designed for air-gapped and regulated environments.</p>
       </div>
-      <div style="background:#1a1a1a; border-radius:var(--radius); padding:14px 16px; overflow-x:auto;">
-        <pre style="font-family:var(--mono); font-size:12px; color:#ccc; margin:0; white-space:pre;"># Binary
-hyle-registry serve --port 8080
-
-# Docker
-docker run -p 8080:8080 \
-  hyleorg/registry:latest</pre>
-      </div>
-      <ul style="padding-left:18px; margin:0; display:flex; flex-direction:column; gap:6px;">
-        <li style="font-size:13px; color:var(--muted-text);">Single binary, no runtime deps</li>
-        <li style="font-size:13px; color:var(--muted-text);">SQLite or Postgres storage</li>
-        <li style="font-size:13px; color:var(--muted-text);">Air-gapped / offline support</li>
-        <li style="font-size:13px; color:var(--muted-text);">Docker Compose examples</li>
-      </ul>
     </div>
 
     <!-- Org Namespace -->
-    <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:28px; display:flex; flex-direction:column; gap:16px;">
-      <div style="width:40px; height:40px; border-radius:8px; background:rgba(90,122,58,0.12); border:1px solid rgba(90,122,58,0.25); display:flex; align-items:center; justify-content:center;">
-        <svg width="20" height="20" viewBox="0 0 16 16" fill="#5a7a3a"><path d="M1.5 0A1.5 1.5 0 000 1.5V14.5A1.5 1.5 0 001.5 16H14.5A1.5 1.5 0 0016 14.5V1.5A1.5 1.5 0 0014.5 0z"/></svg>
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:24px 28px; display:flex; align-items:flex-start; gap:20px;">
+      <div style="width:36px; height:36px; flex-shrink:0; border-radius:8px; background:rgba(90,122,58,0.10); border:1px solid rgba(90,122,58,0.22); display:flex; align-items:center; justify-content:center; margin-top:2px;">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="#7aaa4a"><path d="M1.5 0A1.5 1.5 0 000 1.5V14.5A1.5 1.5 0 001.5 16H14.5A1.5 1.5 0 0016 14.5V1.5A1.5 1.5 0 0014.5 0z"/></svg>
       </div>
       <div>
-        <h3 style="font-size:16px; font-weight:600; color:var(--text); margin-bottom:8px;">Org Namespace</h3>
-        <p style="font-size:13px; color:var(--muted-text); line-height:1.6; margin:0 0 16px;">Claim your org namespace on the public registry. All prints published under <code style="font-family:var(--mono); font-size:12px; background:var(--subtle); border:1px solid var(--border); border-radius:3px; padding:1px 5px;">&#64;acme/</code> are verified as belonging to your org.</p>
+        <h3 style="font-size:15px; font-weight:600; color:var(--text); margin:0 0 6px;">Org Namespace</h3>
+        <p style="font-size:13px; color:var(--muted-text); line-height:1.65; margin:0;">Claim a verified <code style="font-family:var(--mono); font-size:12px; background:var(--subtle); border:1px solid var(--border); border-radius:3px; padding:1px 5px;">&#64;org/</code> namespace on the public registry. Publish, discover, and govern substrates across your entire engineering org — with member management and pull analytics built in.</p>
       </div>
-      <div style="background:#1a1a1a; border-radius:var(--radius); padding:14px 16px; overflow-x:auto;">
-        <pre style="font-family:var(--mono); font-size:12px; color:#ccc; margin:0; white-space:pre;"># Publish under org namespace
-hyle substrate publish \
-  &#64;acme/my-print
-
-# Pull from org
-hyle pull &#64;acme/my-print</pre>
-      </div>
-      <ul style="padding-left:18px; margin:0; display:flex; flex-direction:column; gap:6px;">
-        <li style="font-size:13px; color:var(--muted-text);">Verified org badge on all prints</li>
-        <li style="font-size:13px; color:var(--muted-text);">Member management via GitHub org</li>
-        <li style="font-size:13px; color:var(--muted-text);">Org-wide pull analytics</li>
-        <li style="font-size:13px; color:var(--muted-text);">Custom branding support</li>
-      </ul>
     </div>
   </div>
 

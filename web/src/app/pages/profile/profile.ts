@@ -33,7 +33,7 @@ const CARD_ACCENTS = [
 export class ProfileComponent implements OnInit {
   isPublic = false;
   tab = signal('published');
-  bio = signal('Senior engineer. Loves clean code and well-structured AI workflows. Building the future of substrate-driven development.');
+  bio = signal('Senior engineer. Loves clean code and well-structured AI workflows. Building the future of blueprint-driven development.');
   editingBio = signal(false);
   bioDraft = '';
   editingSocials = signal(false);

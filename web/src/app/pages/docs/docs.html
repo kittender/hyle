@@ -15,61 +15,71 @@
     @if (active() === 'quickstart') {
       <h1>Quickstart</h1>
       <p>Get up and running with Hylé in under 5 minutes.</p>
-      <h3>1. Install Hylé <code style="font-size:11px; letter-spacing:0.02em;">(macOS detected)</code></h3>
-      <pre class="docs-code"><code class="language-bash">brew install hyle
-# or
-npm install --global hyle</code></pre>
-      <h3>2. Pull a substrate</h3>
+      <h3>1. Install Hylé</h3>
+      <pre class="docs-code"><code class="language-bash"># macOS
+brew install hyle
+
+# Windows
+choco install hyle
+
+# Linux
+curl -fsSL https://get.hylé.com | sh
+# or: cargo install hyle-cli</code></pre>
+      <h3>2. Pull a community blueprint</h3>
+      <pre class="docs-code"><code class="language-bash">hyle search java spring tdd
+hyle pull claude-java-springboot</code></pre>
+      <h3>3. Publish your own</h3>
       <pre class="docs-code"><code class="language-bash">cd my-project/
-hyle pull hyle-org/starter</code></pre>
-      <h3>3. Start working</h3>
-      <pre class="docs-code"><code class="language-bash">hyle prompt "generate a REST CRUD boilerplate"
-hyle done</code></pre>
-      <div class="callout">Use <code>hyle prompt --dry-run</code> to preview what context the Epitomator will inject before running.</div>
+hyle init
+hyle ontology   # scan for CLAUDE.md, specs, diagrams…
+hyle craft      # scan for ARCHITECTURE.md, package.json…
+hyle push --new my-blueprint   # publish as me/my-blueprint&#64;0.1.0</code></pre>
+      <div class="callout">Core CLI is programmatic only — no LLM required, no network call to an AI on every command. Fast and scriptable.</div>
     }
 
     @if (active() === 'installation') {
       <h1>Installation</h1>
-      <h3>Homebrew (macOS / Linux)</h3>
+      <h3>macOS</h3>
       <pre class="docs-code"><code class="language-bash">brew install hyle</code></pre>
-      <h3>npm (global)</h3>
-      <pre class="docs-code"><code class="language-bash">npm install --global hyle</code></pre>
+      <h3>Windows</h3>
+      <pre class="docs-code"><code class="language-bash">choco install hyle</code></pre>
+      <h3>Linux</h3>
+      <pre class="docs-code"><code class="language-bash">curl -fsSL https://get.hylé.com | sh
+# or
+cargo install hyle-cli</code></pre>
       <h3>Verify</h3>
-      <pre class="docs-code"><code class="language-bash">hyle --version
-hyle status</code></pre>
-      <div class="callout">Hylé requires Node ≥ 20 or a compatible runtime. No other runtime dependencies.</div>
+      <pre class="docs-code"><code class="language-bash">hyle --version</code></pre>
     }
 
     @if (active() === 'configuration') {
       <h1>Configuration</h1>
-      <p>All configuration lives in <code>.hyle/hyle.yaml</code> at the root of your project.</p>
-      <pre class="docs-code"><code class="language-yaml"># .hyle/hyle.yaml
-substrate:
-  name: my-project
-  version: 1.0.0
-  registry: hyle-org/starter
+      <p>Hylé uses a two-layer config system: global defaults at <code>~/.hyle</code>, local overrides at <code>&lt;project&gt;/.hyle</code>. Local values take precedence field by field.</p>
+      <pre class="docs-code"><code class="language-yaml"># ~/.hyle or &lt;project&gt;/.hyle
 
-budget:
-  max_tokens_per_session: 50000
-  warn_at: 80
+remote_url: https://registry.hylé.com    # Default registry
+currency: EUR                            # Cost estimates in hyle watch (EUR or USD)
+default_llm: fallback                    # Model key from hyle.yaml for extensions
+auto_inject: true                        # Inject file refs into agent instruction file on pull
+contribute_deps: true                    # Share resolved dep install commands with registry
 
-scopes:
-  - id: public
-    description: All non-sensitive documents
-  - id: internal
-    description: Internal specs only
+split_threshold: "80%"                   # hyle watch --split threshold (% or abs token count)
+split_action: ask                        # ask | link | clipboard
+audit_retention_days: 90                 # Days to keep hyle-audit-*.log files
 
-governance:
-  ethics_path: ethics/policies.yaml
-  strict: true</code></pre>
+scan:
+  ontology: [.md, .pdf, .docx, .feature, .csv, .ts]
+  craft: [package.json, pom.xml, angular.json, .md]
+  identities: [.md]
+  ethics: [.cedar, trulens.yaml, ragas.yaml, guardrails.yaml]</code></pre>
       <h3>Key fields</h3>
       <table class="docs-table">
         <thead><tr><th>Field</th><th>Description</th></tr></thead>
         <tbody>
-          <tr><td><code>substrate.name</code></td><td>Project identifier used in audit logs</td></tr>
-          <tr><td><code>budget.max_tokens_per_session</code></td><td>Hard cap on token usage per hyle prompt call</td></tr>
-          <tr><td><code>governance.strict</code></td><td>Exit non-zero on any ethics violation</td></tr>
-          <tr><td><code>scopes</code></td><td>Named data access perimeters for agents</td></tr>
+          <tr><td><code>remote_url</code></td><td>Registry endpoint — default is registry.hylé.com; set a public GitHub URL for a custom remote</td></tr>
+          <tr><td><code>auto_inject</code></td><td>Automatically add pulled file references to your agent instruction file (CLAUDE.md, .cursorrules, etc.) when line is not already present</td></tr>
+          <tr><td><code>contribute_deps</code></td><td>Share resolved dependency install commands back to the registry so future pullers benefit</td></tr>
+          <tr><td><code>split_threshold</code></td><td>Token threshold for hyle watch --split: percentage of model context limit or absolute count</td></tr>
+          <tr><td><code>audit_retention_days</code></td><td>How long hyle-audit-*.log files are kept (default 90 days)</td></tr>
         </tbody>
       </table>
     }
@@ -89,54 +99,85 @@ governance:
           </table>
         </div>
       }
+      <div class="callout">All core commands are programmatic only — no LLM required, lightweight, fast. Removal of a published blueprint can be done through the UI only, with confirmation steps.</div>
     }
 
     @if (active() === 'best-practices') {
       <h1>Best Practices</h1>
-      <h3>Structure your ontology first</h3>
-      <p>Before prompting agents, ensure <code>ontology/</code> contains high-weight anchor documents. The Epitomator weights documents during injection — sparse ontologies lead to unfocused output.</p>
-      <h3>Use scopes for data isolation</h3>
-      <pre class="docs-code"><code class="language-bash">hyle scope add internal ontology/specs/secret-api.md
-hyle prompt "generate client code" --scope public</code></pre>
-      <h3>Run governance checks in CI</h3>
-      <pre class="docs-code"><code class="language-bash">hyle scope check all --strict
-hyle topology check
-hyle substrate check-anchors --strict</code></pre>
-      <h3>Tag before publishing</h3>
-      <p>Always run <code>hyle substrate tag &lt;version&gt;</code> before publishing. Tags freeze model weights and create a reproducibility snapshot, allowing other users to replay prompts with identical conditions.</p>
-      <div class="callout">Use <code>hyle substrate reproduce &lt;tag&gt; "your prompt"</code> to verify reproducibility before releasing a new version.</div>
+      <h3>Scan before publishing</h3>
+      <p>Run all four scan commands before your first push. Hylé auto-detects common files; use the optional path argument to cherry-pick extras.</p>
+      <pre class="docs-code"><code class="language-bash">hyle ontology    # CLAUDE.md, specs, features, diagrams
+hyle craft       # ARCHITECTURE.md, MCP configs, package.json
+hyle identities  # AGENTS.md, .claude/agents/*.md
+hyle ethics      # *.cedar policies, TruLens, Ragas configs</code></pre>
+      <h3>Use .hyleignore to protect secrets</h3>
+      <pre class="docs-code"><code class="language-bash"># .hyleignore
+.env
+*.pem
+*.key
+secrets/
+config/local.*</code></pre>
+      <h3>Use snapshots for WIP, push for stable</h3>
+      <pre class="docs-code"><code class="language-bash">hyle snapshot    # patch bump, not listed as stable — low commitment
+hyle push        # minor bump, listed as stable
+hyle release     # major bump, breaking changes</code></pre>
+      <h3>Pin models for reproducibility</h3>
+      <p>Declare <code>model_pin</code> in your blueprint's <code>hyle.yaml</code> to freeze the exact model checkpoint. Hylé emails you monthly when a newer checkpoint is available — with a one-click update link.</p>
+      <h3>Provide dependency URLs, not raw install commands</h3>
+      <p>Set the <code>url</code> field to the official GitHub repo or package page. Hylé resolves the correct install command per OS automatically — a macOS user never sees an <code>apt</code> command. Only override with <code>install.macos</code> / <code>install.linux</code> if auto-detection fails.</p>
     }
 
     @if (active() === 'publishing') {
-      <h1>Publishing a Print</h1>
-      <p>Anyone can publish a print to the Hylé Prints registry. Prints are backed by public GitHub repositories.</p>
-      <h3>1. Author your substrate</h3>
-      <pre class="docs-code"><code class="language-bash">mkdir my-print && cd my-print
-hyle init --yes
-# populate ontology/, identities/, craft/, ethics/</code></pre>
-      <h3>2. Test it</h3>
-      <pre class="docs-code"><code class="language-bash">hyle substrate test
-hyle substrate check-anchors --strict
-hyle governance check "scaffold a feature"</code></pre>
-      <h3>3. Tag and publish</h3>
-      <pre class="docs-code"><code class="language-bash">hyle substrate tag 1.0.0
-hyle substrate publish myuser/my-print</code></pre>
-      <h3>4. Push new versions</h3>
-      <pre class="docs-code"><code class="language-bash"># after making changes:
-hyle substrate tag 1.1.0
-hyle substrate publish myuser/my-print</code></pre>
-      <div class="callout">The registry links directly to the GitHub repository. Ensure your repo is public before publishing.</div>
+      <h1>Publishing a Blueprint</h1>
+      <p>Anyone can publish a blueprint to the Hylé registry. The default registry is <strong>registry.hylé.com</strong>.</p>
+      <h3>1. Initialize Hylé in your project</h3>
+      <pre class="docs-code"><code class="language-bash">cd my-project/
+hyle init</code></pre>
+      <p>Generates a <code>hyle.yaml</code> manifest after asking basic questions. The <code>name + author</code> combination must be unique on the registry — Hylé checks this during init.</p>
+      <h3>2. Scan your project files</h3>
+      <pre class="docs-code"><code class="language-bash">hyle ontology    # Finds CLAUDE.md, .cursorrules, specs, features, diagrams
+hyle craft       # Finds ARCHITECTURE.md, MCP configs, package.json, pom.xml
+hyle identities  # Finds AGENTS.md, .claude/agents/*.md
+hyle ethics      # Finds *.cedar policies, TruLens configs, Ragas configs</code></pre>
+      <h3>3. Review and refine hyle.yaml</h3>
+      <pre class="docs-code"><code class="language-bash">nano hyle.yaml</code></pre>
+      <p>Add a <code>.hyleignore</code> to exclude secrets, API keys, and private configs.</p>
+      <h3>4. Publish</h3>
+      <pre class="docs-code"><code class="language-bash">hyle push --new my-blueprint   # First publish: creates me/my-blueprint&#64;0.1.0
+hyle snapshot                  # Patch bump for WIP — not listed as stable
+hyle push                      # Minor bump — listed as stable
+hyle release                   # Major bump — breaking changes</code></pre>
+      <div class="callout">On any publish, Hylé bundles all referenced files with a SHA-256 checksum and runs an automatic security scan. Flagged versions are marked [flagged] — not pullable, content hidden. Push history is always public.</div>
+      <h3>Three publish tiers</h3>
+      <table class="docs-table">
+        <thead><tr><th>Command</th><th>Version bump</th><th>Listed as stable</th><th>When to use</th></tr></thead>
+        <tbody>
+          <tr><td><code>hyle snapshot</code></td><td>patch x.x.+1</td><td>No</td><td>WIP sharing, no SLA</td></tr>
+          <tr><td><code>hyle push</code></td><td>minor x.+1.0</td><td>Yes</td><td>Tested, working blueprint</td></tr>
+          <tr><td><code>hyle release</code></td><td>major +1.0.0</td><td>Yes</td><td>Breaking changes to structure or file layout</td></tr>
+        </tbody>
+      </table>
+      <p>All three accept an explicit version override as an optional argument: <code>hyle push 1.5.0</code>.</p>
     }
 
     @if (active() === 'philosophy') {
       <h1>Philosophy</h1>
-      <p>Hylé (from the Greek ὕλη, <em>matter</em> or <em>material</em>) is built on the idea that AI agents should work <em>within</em> structure, not instead of it.</p>
-      <h3>Substrates over prompts</h3>
-      <p>A one-off prompt is ephemeral. A substrate is persistent, versioned, and reviewable. Hylé treats the agent's working context as a first-class artifact — one that can be audited, diffed, and reproduced.</p>
-      <h3>The four folders</h3>
-      <p>Every print is structured around four orthogonal concerns: <strong>ontology</strong> (what the agent knows), <strong>identities</strong> (who the agent is), <strong>craft</strong> (how the agent works), and <strong>ethics</strong> (what the agent must never do). This separation makes prints composable and auditable.</p>
-      <h3>Reproducibility</h3>
-      <p>Model outputs are non-deterministic, but the <em>context</em> fed to the model need not be. Hylé's weight system and snapshot tags allow any prompt to be replayed under identical conditions, making AI-assisted development auditable in regulated environments.</p>
+      <p>Hylé (from the Greek ὕλη, <em>hyle: "wood, matter"</em>) is built on the idea that AI agents should work <em>within</em> structure, not instead of it.</p>
+      <h3>Blueprints over one-off prompts</h3>
+      <p>A one-off prompt is ephemeral. A blueprint is persistent, versioned, and reviewable. Hylé treats the agent's working context as a first-class artifact — one that can be audited, diffed, and reproduced.</p>
+      <h3>The four domains</h3>
+      <p>Every blueprint is structured around four orthogonal concerns:</p>
+      <ul>
+        <li><strong>ontology</strong> — The "what"? Specifications, goals, features, examples and data</li>
+        <li><strong>craft</strong> — The "how"? Architecture, technical design, practices and recipes</li>
+        <li><strong>identities</strong> — The "who"? Agentic personas, model behaviour specifications</li>
+        <li><strong>ethics</strong> — The limits: behaviour constraints, compliance requirements, security concerns, privacy design</li>
+      </ul>
+      <p>The "why"? is between your human hands. This separation makes blueprints composable and auditable.</p>
+      <h3>Programmatic core, optional intelligence</h3>
+      <p>The core CLI requires no LLM — no network call to an AI on every command; fast, scriptable. Optional extensions (<code>hyle watch</code>, <code>hyle index</code>) may use lightweight local or SaaS models, configured in <code>.hyle</code>.</p>
+      <h3>Hylomorphism</h3>
+      <p>In Aristotle's hylomorphism doctrine, <em>ὕλη (hyle: "matter")</em> gains substantial form through act. Projects developed with LLM assistance mimic this potency: LLMs allow humans to digest large amounts of information and arrange its extracted essence into a project form meant to be used in the real world. Hylé helps humans act upon a compound of documents (raw matter) — may it be already structured or spread out and chaotic.</p>
     }
 
   </div>

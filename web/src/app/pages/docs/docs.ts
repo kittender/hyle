@@ -13,54 +13,33 @@ export const DOC_SECTIONS = [
 ];
 
 export const CLI_GROUPS = [
-  { label: 'Initialization', cmds: [
-    ['hyle init', 'Initialize a substrate interactively'],
-    ['hyle init <name>', 'Initialize from a named registry substrate'],
-    ['hyle init --yes', 'Initialize blank without prompts'],
-    ['hyle init --force', 'Re-initialize, overwriting existing substrate'],
+  { label: 'Core', cmds: [
+    ['hyle init', 'Interactive setup, generates hyle.yaml'],
+    ['hyle pull <name>', 'Pull blueprint: show diff, verify checksum, check+install deps'],
+    ['hyle pull <name>@<version>', 'Pull specific version (checksum-pinned)'],
+    ['hyle pull <name> --dry-run', 'Preview diff without applying'],
+    ['hyle snapshot', 'Patch bump, unstable — for WIP sharing, no SLA'],
+    ['hyle push', 'Minor bump, listed as stable'],
+    ['hyle push --new <name>', 'Create a blueprint in your registry'],
+    ['hyle release', 'Major bump, listed as stable'],
+    ['hyle fork <name>@<version> <new-name>', 'Fork any blueprint and make it your own'],
+    ['hyle search <query>', 'Search the blueprint registry'],
+    ['hyle config get <key>', 'Read a config value'],
+    ['hyle config set <key> <value>', 'Write a config value'],
   ]},
-  { label: 'Work Sessions', cmds: [
-    ['hyle prompt "<text>"', 'Start a work session'],
-    ['hyle prompt "<text>" --scope <id>', 'With a named scope (data access perimeter)'],
-    ['hyle prompt "<text>" --agent <label>', 'With a declared agent identity'],
-    ['hyle prompt "<text>" --dry-run', 'Preview what the Epitomator would inject'],
-    ['hyle done', 'Close the active instance manually'],
+  { label: 'Blueprint Scanning', cmds: [
+    ['hyle ontology [path]', 'Scan and add ontology files to hyle.yaml'],
+    ['hyle craft [path]', 'Scan and add craft files to hyle.yaml'],
+    ['hyle identities [path]', 'Scan and add identity files to hyle.yaml'],
+    ['hyle ethics [path]', 'Scan and add ethics files to hyle.yaml'],
   ]},
-  { label: 'Substrate Lifecycle', cmds: [
-    ['hyle substrate list', 'List local substrate library'],
-    ['hyle substrate pull <name>', 'Clone from registry'],
-    ['hyle substrate commit <name>', 'Promote .hyle/ to local library'],
-    ['hyle substrate publish <name>', 'Publish local substrate to registry'],
-    ['hyle substrate tag <version>', 'Freeze weights + create reproducibility snapshot'],
-    ['hyle substrate diff <v1> <v2>', 'What changed between two tags'],
-    ['hyle substrate test', 'Run substrate.test.yml regression suite'],
-  ]},
-  { label: 'Index Management', cmds: [
-    ['hyle index update', 'Sync index from filesystem'],
-    ['hyle index verify', 'Check index vs filesystem consistency'],
-    ['hyle index rollback [timestamp]', 'Restore a prior index snapshot'],
-    ['hyle index approve <path>', 'Approve a quarantined document'],
-    ['hyle index lineage <path>', 'Show provenance chain of a synthesis'],
-  ]},
-  { label: 'Scopes', cmds: [
-    ['hyle scope list', 'List all scopes with document counts'],
-    ['hyle scope show <id>', 'Documents accessible in this scope'],
-    ['hyle scope add <id> <path>', 'Assign a document to a scope'],
-    ['hyle scope check <id>', 'Validate: no forbidden data_category leakage'],
-    ['hyle scope check <id> --strict', 'Exit non-zero on violation (CI/CD)'],
-  ]},
-  { label: 'Governance & Topology', cmds: [
-    ['hyle governance show', 'List all active ethics constraints'],
-    ['hyle governance check "<prompt>"', 'Detect conflicts before execution'],
-    ['hyle topology show', 'ASCII delegation graph'],
-    ['hyle topology check', 'Validate consistency + update topology_hash'],
-    ['hyle topology trace <agent> <doc>', 'Can this agent access this document?'],
-  ]},
-  { label: 'Audit & Status', cmds: [
-    ['hyle status', 'Overview: tokens + substrate + budget'],
-    ['hyle audit verify', 'Verify audit.log hash-chain integrity'],
-    ['hyle security log', 'Display security.log'],
-    ['hyle analyze', 'Quantitative + qualitative maintenance report'],
+  { label: 'Optional Extensions (hyle install watcher)', cmds: [
+    ['hyle watch', 'Live terminal UI: token consumption, cost estimate'],
+    ['hyle watch --audit', '+ hash-chained audit log (GDPR Article 30 trail)'],
+    ['hyle watch --split <threshold>', '+ context-split prompt at token threshold'],
+    ['hyle audit verify', 'Verify audit log hash-chain integrity'],
+    ['hyle index', 'Generate hyle.json metadata index across all domains'],
+    ['hyle index --dry-run', 'Preview index without writing'],
   ]},
 ];
 

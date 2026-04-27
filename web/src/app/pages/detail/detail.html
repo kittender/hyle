@@ -1,7 +1,7 @@
 @if (!print) {
   <div class="container" style="padding-top:64px; text-align:center; color:var(--muted);">
-    <p>Print not found.</p>
-    <button class="link-btn" (click)="goToSearch()">Browse all prints</button>
+    <p>Blueprint not found.</p>
+    <button class="link-btn" (click)="goToSearch()">Browse all blueprints</button>
   </div>
 } @else {
   <!-- Header -->
@@ -58,7 +58,7 @@
         </div>
         <div style="flex-shrink:0;">
           <div style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:10px 14px;">
-            <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.05em;">Pull this print</div>
+            <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.05em;">Pull this blueprint</div>
             <div style="display:flex; align-items:center; gap:8px;">
               <code style="font-family:var(--mono); font-size:12px; color:rgba(255,255,255,0.9);">hyle pull {{ print.id }}</code>
               <app-copy-button [text]="'hyle pull ' + print.id" style="color:rgba(255,255,255,0.5);"></app-copy-button>
@@ -93,10 +93,8 @@
           <li><code>ethics/</code> — Policies, constraints, and compliance rules</li>
         </ul>
         <h2>Usage</h2>
-        <pre><code>hyle pull {{ print.id }}
-cd my-project
-hyle init {{ print.id }}
-hyle prompt "scaffold a new feature"</code></pre>
+        <pre><code>cd my-project/
+hyle pull {{ print.id }}</code></pre>
         <h2>License</h2>
         <p>Released under the {{ print.license }} license.</p>
       </div>

@@ -40,15 +40,15 @@ export class QuickstartPanelComponent {
   get cmds(): QsCmd[] {
     if (this.printId) {
       return [
-        { label: 'Pull this print', cmd: `hyle pull ${this.printId}` },
-        { label: 'Start a session', cmd: 'hyle prompt "scaffold a new feature"' },
+        { label: 'Pull this blueprint', cmd: `hyle pull ${this.printId}` },
+        { label: 'Fork and customize', cmd: `hyle fork ${this.printId} my-blueprint` },
       ];
     }
     return [
-      { label: 'Install (macOS detected)', cmd: 'brew install hyle' },
-      { label: 'Or via npm', cmd: 'npm install --global hyle' },
-      { label: 'Pull a print', cmd: 'hyle pull hyle-org/starter' },
-      { label: 'Start working', cmd: 'hyle prompt "generate a REST API"' },
+      { label: 'Install (macOS)', cmd: 'brew install hyle' },
+      { label: 'Install (Windows)', cmd: 'choco install hyle' },
+      { label: 'Pull a blueprint', cmd: 'hyle pull claude-java-springboot' },
+      { label: 'Publish your own', cmd: 'hyle push --new my-blueprint' },
     ];
   }
 
