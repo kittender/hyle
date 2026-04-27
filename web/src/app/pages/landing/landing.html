@@ -1,0 +1,232 @@
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">hylé registry</div>
+    <p class="hero-sub">
+      A community-driven registry of AI-ready project substrates — templates for scaffolding, boilerplating, and structuring projects with agent-driven workflows.
+    </p>
+    <form (submit)="handleSearch($event)" class="hero-search-wrap">
+      <span class="hero-search-icon">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4"/><path d="M11 11l3 3" stroke-linecap="round"/></svg>
+      </span>
+      <input [(ngModel)]="query" name="heroSearch" placeholder="Search by language, tags, or author…" class="hero-search" autofocus>
+      <button type="submit" class="hero-search-btn">Search</button>
+    </form>
+    <div class="hero-stats">
+      <span><strong>{{ totalPrints }}</strong> prints</span>
+      <span class="dot">·</span>
+      <span><strong>{{ totalStars.toLocaleString() }}</strong> stars</span>
+      <span class="dot">·</span>
+      <span>Updated daily</span>
+    </div>
+  </div>
+</div>
+
+<!-- Body -->
+<div class="container" style="display:grid; grid-template-columns:1fr 320px; gap:40px; padding-top:48px; padding-bottom:64px;">
+  <div>
+    <!-- Featured -->
+    <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:20px;">
+      <h2 class="section-heading">Featured prints</h2>
+      <button class="link-btn" (click)="navigateTo('/search')">Browse all →</button>
+    </div>
+    <div class="featured-grid">
+      @for (p of featured; track p.id) {
+        <app-print-card [print]="p"></app-print-card>
+      }
+    </div>
+
+    <!-- Most Pulled -->
+    <div style="margin-top:48px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+        <h2 class="section-heading">Most pulled</h2>
+        <div style="display:flex; gap:4px;">
+          @for (f of pullFilters; track f.id) {
+            <button (click)="setPullFilter(f.id)"
+              [style.font-weight]="pullFilter() === f.id ? 600 : 400"
+              [style.border-color]="pullFilter() === f.id ? 'var(--gold)' : 'var(--border)'"
+              [style.background]="pullFilter() === f.id ? 'rgba(196,152,42,0.1)' : 'transparent'"
+              [style.color]="pullFilter() === f.id ? 'var(--gold)' : 'var(--muted-text)'"
+              style="padding:4px 11px; font-size:12px; border-radius:20px; border:1px solid; cursor:pointer; transition:all 0.15s;">
+              {{ f.label }}
+            </button>
+          }
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:1px; background:var(--border); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden;">
+        @for (p of mostPulled; track p.id; let i = $index) {
+          <div class="most-pulled-row" (click)="navigateToPrint(p.id)">
+            <span style="font-family:var(--mono); font-size:13px; font-weight:700; color:var(--muted); min-width:20px; text-align:right; flex-shrink:0;">#{{ i + 1 }}</span>
+            <div style="flex:1; min-width:0;">
+              <div style="font-family:var(--mono); font-size:13px; font-weight:500; display:flex; align-items:center; gap:5px; margin-bottom:2px;">
+                <span style="color:var(--muted);">{{ p.author }}/</span><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ p.name }}</span>
+                @if (p.verified) {
+                  <span title="Verified print" style="display:inline-flex; align-items:center; flex-shrink:0;">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" fill="#166534"/><path d="M4.5 8.5l2.5 2.5 4.5-5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </span>
+                }
+                @if (p.community) {
+                  <span title="Community favourite" style="display:inline-flex; align-items:center; flex-shrink:0;">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" fill="#92400e"/><path d="M8 4l1.1 2.2 2.4.35-1.75 1.7.41 2.4L8 9.5l-2.16 1.15.41-2.4L4.5 6.55l2.4-.35L8 4z" fill="#fde68a"/></svg>
+                  </span>
+                }
+              </div>
+              <p style="font-size:12px; color:var(--muted); margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ p.description }}</p>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
+              <span style="display:flex; align-items:center; gap:4px; font-size:12px; color:var(--muted);">
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="opacity:0.6;"><path d="M5 3.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm0 2.122a2.25 2.25 0 10-1.5 0v.878A2.25 2.25 0 005.75 8.5h1.5v2.128a2.251 2.251 0 101.5 0V8.5h1.5a2.25 2.25 0 002.25-2.25v-.878a2.25 2.25 0 10-1.5 0v.878a.75.75 0 01-.75.75h-4.5A.75.75 0 015 6.25v-.878zm3.75 7.378a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm3-8.75a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>
+                {{ getMostPulledCount(p).toLocaleString() }} pulls
+              </span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Team Picks -->
+    <div style="margin-top:48px;">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:16px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <h2 class="section-heading">Hylé team picks</h2>
+          <span style="display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:600; padding:2px 8px; background:rgba(196,152,42,0.12); border:1px solid rgba(196,152,42,0.3); border-radius:20px; color:var(--gold); letter-spacing:0.06em; text-transform:uppercase;">
+            <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg>
+            Curated
+          </span>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        @for (p of teamPicks; track p.id) {
+          <div class="team-pick-row" (click)="navigateToPrint(p.id)" style="position:relative;">
+            @if (p.verified || p.community) {
+              <div style="position:absolute; top:14px; right:16px;">
+                @if (p.verified) {
+                  <span style="font-size:10px; font-weight:700; padding:2px 7px; background:rgba(20,83,45,0.12); border:1px solid rgba(34,197,94,0.3); border-radius:20px; color:#166534; letter-spacing:0.05em;">Verified</span>
+                }
+                @if (p.community) {
+                  <span style="font-size:10px; font-weight:700; padding:2px 7px; background:rgba(120,53,15,0.10); border:1px solid rgba(196,152,42,0.35); border-radius:20px; color:#92400e; letter-spacing:0.05em;">Community</span>
+                }
+              </div>
+            }
+            <div style="width:3px; border-radius:2px; background:linear-gradient(180deg,var(--gold) 0%,rgba(196,152,42,0.2) 100%); align-self:stretch; flex-shrink:0;"></div>
+            <div style="flex:1; min-width:0;">
+              <div style="font-family:var(--mono); font-size:13px; font-weight:500; margin-bottom:5px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                <span><span style="color:var(--muted);">{{ p.author }}/</span>{{ p.name }}</span>
+                @if (p.verified) {
+                  <span title="Verified print" style="display:inline-flex; align-items:center; flex-shrink:0;">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" fill="#166534"/><path d="M4.5 8.5l2.5 2.5 4.5-5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </span>
+                }
+                @if (p.community) {
+                  <span title="Community favourite" style="display:inline-flex; align-items:center; flex-shrink:0;">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" fill="#92400e"/><path d="M8 4l1.1 2.2 2.4.35-1.75 1.7.41 2.4L8 9.5l-2.16 1.15.41-2.4L4.5 6.55l2.4-.35L8 4z" fill="#fde68a"/></svg>
+                  </span>
+                }
+                <span style="display:flex; gap:3px;">
+                  @for (t of p.tags.slice(0,3); track t) {
+                    <span class="tag">{{ t }}</span>
+                  }
+                </span>
+              </div>
+              <p style="font-size:13px; color:var(--muted-text); margin:0 0 10px; line-height:1.55;">{{ p.description }}</p>
+              <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                <span style="display:inline-flex; align-items:center; gap:5px; font-size:12px; color:var(--muted);">
+                  <span style="width:9px; height:9px; border-radius:50%; background:var(--text); display:inline-block; opacity:0.7;"></span>
+                  {{ p.language }}
+                </span>
+                <span style="display:flex; align-items:center; gap:4px; font-size:12px; color:var(--muted);">
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg>
+                  {{ p.stars.toLocaleString() }}
+                </span>
+                <span style="font-size:12px; color:var(--muted);">{{ p.license }}</span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Anatomy -->
+    <div style="margin-top:48px;">
+      <h2 class="section-heading" style="margin-bottom:16px;">Anatomy of a print</h2>
+      <div class="anatomy-grid">
+        @for (item of ANATOMY; track item.folder) {
+          <div class="anatomy-card">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+              <span [style.background]="item.color" style="width:10px; height:10px; border-radius:2px; flex-shrink:0; display:inline-block;"></span>
+              <span style="font-family:var(--mono); font-size:13px; font-weight:500;">{{ item.folder }}/</span>
+            </div>
+            <p style="font-size:13px; color:var(--muted); line-height:1.55; margin:0;">{{ item.desc }}</p>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div>
+    <app-quickstart-panel></app-quickstart-panel>
+    <div style="margin-top:24px;">
+      <div class="qs-title" style="margin-bottom:12px;">Configure</div>
+      <div class="qs-cmd">
+        <span class="qs-label">Edit substrate config</span>
+        <div class="qs-row">
+          <code class="qs-code">edit hyle.yaml</code>
+          <app-copy-button text="edit hyle.yaml"></app-copy-button>
+        </div>
+      </div>
+      <div class="qs-cmd" style="margin-top:8px;">
+        <span class="qs-label">Check topology</span>
+        <div class="qs-row">
+          <code class="qs-code">hyle topology check</code>
+          <app-copy-button text="hyle topology check"></app-copy-button>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:24px;">
+      <div class="qs-title" style="margin-bottom:12px;">Resources</div>
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <button class="link-btn" style="text-align:left; padding:5px 0;" (click)="navigateToDoc('cli')">CLI Reference →</button>
+        <button class="link-btn" style="text-align:left; padding:5px 0;" (click)="navigateToDoc('publishing')">Publishing a print →</button>
+        <button class="link-btn" style="text-align:left; padding:5px 0;" (click)="navigateToDoc('philosophy')">Philosophy →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GitHub CLI Banner -->
+<div style="border-top:1px solid var(--border); background:var(--surface); margin-top:0;">
+  <div class="container" style="padding-top:40px; padding-bottom:48px;">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap;">
+      <div style="display:flex; align-items:center; gap:20px;">
+        <div style="width:48px; height:48px; border-radius:10px; background:#0d1117; display:flex; align-items:center; justify-content:center; flex-shrink:0; border:1px solid #30363d;">
+          <svg width="24" height="24" viewBox="0 0 16 16" fill="#c9d1d9"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        </div>
+        <div>
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+            <span style="font-family:var(--mono); font-size:15px; font-weight:600; color:var(--text);">hyle-org/hyle-cli</span>
+            <span style="font-size:10px; font-weight:700; padding:2px 7px; background:rgba(196,152,42,0.1); border:1px solid rgba(196,152,42,0.3); border-radius:20px; color:var(--gold); letter-spacing:0.06em; text-transform:uppercase;">Official</span>
+          </div>
+          <p style="font-size:13px; color:var(--muted); margin:0 0 10px; max-width:520px; line-height:1.6;">The official Hylé CLI — pull, push and manage prints, run agent sessions, and scaffold projects from your terminal. Open source, MIT licensed.</p>
+          <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
+            <span style="display:flex; align-items:center; gap:4px; font-size:12px; color:var(--muted);">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg>
+              3,241 stars
+            </span>
+            <span style="display:flex; align-items:center; gap:4px; font-size:12px; color:var(--muted);">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M5 3.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm0 2.122a2.25 2.25 0 10-1.5 0v.878A2.25 2.25 0 005.75 8.5h1.5v2.128a2.251 2.251 0 101.5 0V8.5h1.5a2.25 2.25 0 002.25-2.25v-.878a2.25 2.25 0 10-1.5 0v.878a.75.75 0 01-.75.75h-4.5A.75.75 0 015 6.25v-.878zm3.75 7.378a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm3-8.75a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>
+              418 forks
+            </span>
+            <span style="font-size:12px; color:var(--muted);">TypeScript</span>
+            <span style="font-size:12px; color:var(--muted);">MIT License</span>
+            <span style="font-size:12px; color:var(--muted);">Last updated 3 days ago</span>
+          </div>
+        </div>
+      </div>
+      <a href="https://github.com/hyle-org/hyle-cli" target="_blank" rel="noreferrer" class="github-btn">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="#c9d1d9"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        View on GitHub
+      </a>
+    </div>
+  </div>
+</div>

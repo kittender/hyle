@@ -1,0 +1,143 @@
+<div style="display:flex; min-height:calc(100vh - 52px);">
+  <!-- Sidebar -->
+  <div class="docs-sidebar">
+    <div class="docs-sidebar-label">Documentation</div>
+    @for (s of sections; track s.id) {
+      <button class="docs-nav-item" [class.active]="active() === s.id" (click)="setActive(s.id)">
+        {{ s.label }}
+      </button>
+    }
+  </div>
+
+  <!-- Content -->
+  <div class="docs-content" #contentEl>
+
+    @if (active() === 'quickstart') {
+      <h1>Quickstart</h1>
+      <p>Get up and running with Hylé in under 5 minutes.</p>
+      <h3>1. Install Hylé <code style="font-size:11px; letter-spacing:0.02em;">(macOS detected)</code></h3>
+      <pre class="docs-code"><code class="language-bash">brew install hyle
+# or
+npm install --global hyle</code></pre>
+      <h3>2. Pull a substrate</h3>
+      <pre class="docs-code"><code class="language-bash">cd my-project/
+hyle pull hyle-org/starter</code></pre>
+      <h3>3. Start working</h3>
+      <pre class="docs-code"><code class="language-bash">hyle prompt "generate a REST CRUD boilerplate"
+hyle done</code></pre>
+      <div class="callout">Use <code>hyle prompt --dry-run</code> to preview what context the Epitomator will inject before running.</div>
+    }
+
+    @if (active() === 'installation') {
+      <h1>Installation</h1>
+      <h3>Homebrew (macOS / Linux)</h3>
+      <pre class="docs-code"><code class="language-bash">brew install hyle</code></pre>
+      <h3>npm (global)</h3>
+      <pre class="docs-code"><code class="language-bash">npm install --global hyle</code></pre>
+      <h3>Verify</h3>
+      <pre class="docs-code"><code class="language-bash">hyle --version
+hyle status</code></pre>
+      <div class="callout">Hylé requires Node ≥ 20 or a compatible runtime. No other runtime dependencies.</div>
+    }
+
+    @if (active() === 'configuration') {
+      <h1>Configuration</h1>
+      <p>All configuration lives in <code>.hyle/hyle.yaml</code> at the root of your project.</p>
+      <pre class="docs-code"><code class="language-yaml"># .hyle/hyle.yaml
+substrate:
+  name: my-project
+  version: 1.0.0
+  registry: hyle-org/starter
+
+budget:
+  max_tokens_per_session: 50000
+  warn_at: 80
+
+scopes:
+  - id: public
+    description: All non-sensitive documents
+  - id: internal
+    description: Internal specs only
+
+governance:
+  ethics_path: ethics/policies.yaml
+  strict: true</code></pre>
+      <h3>Key fields</h3>
+      <table class="docs-table">
+        <thead><tr><th>Field</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>substrate.name</code></td><td>Project identifier used in audit logs</td></tr>
+          <tr><td><code>budget.max_tokens_per_session</code></td><td>Hard cap on token usage per hyle prompt call</td></tr>
+          <tr><td><code>governance.strict</code></td><td>Exit non-zero on any ethics violation</td></tr>
+          <tr><td><code>scopes</code></td><td>Named data access perimeters for agents</td></tr>
+        </tbody>
+      </table>
+    }
+
+    @if (active() === 'cli') {
+      <h1>CLI Reference</h1>
+      @for (g of cliGroups; track g.label) {
+        <div style="margin-bottom:32px;">
+          <h3>{{ g.label }}</h3>
+          <table class="docs-table">
+            <thead><tr><th>Command</th><th>Description</th></tr></thead>
+            <tbody>
+              @for (cmd of g.cmds; track cmd[0]) {
+                <tr><td><code>{{ cmd[0] }}</code></td><td>{{ cmd[1] }}</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+
+    @if (active() === 'best-practices') {
+      <h1>Best Practices</h1>
+      <h3>Structure your ontology first</h3>
+      <p>Before prompting agents, ensure <code>ontology/</code> contains high-weight anchor documents. The Epitomator weights documents during injection — sparse ontologies lead to unfocused output.</p>
+      <h3>Use scopes for data isolation</h3>
+      <pre class="docs-code"><code class="language-bash">hyle scope add internal ontology/specs/secret-api.md
+hyle prompt "generate client code" --scope public</code></pre>
+      <h3>Run governance checks in CI</h3>
+      <pre class="docs-code"><code class="language-bash">hyle scope check all --strict
+hyle topology check
+hyle substrate check-anchors --strict</code></pre>
+      <h3>Tag before publishing</h3>
+      <p>Always run <code>hyle substrate tag &lt;version&gt;</code> before publishing. Tags freeze model weights and create a reproducibility snapshot, allowing other users to replay prompts with identical conditions.</p>
+      <div class="callout">Use <code>hyle substrate reproduce &lt;tag&gt; "your prompt"</code> to verify reproducibility before releasing a new version.</div>
+    }
+
+    @if (active() === 'publishing') {
+      <h1>Publishing a Print</h1>
+      <p>Anyone can publish a print to the Hylé Prints registry. Prints are backed by public GitHub repositories.</p>
+      <h3>1. Author your substrate</h3>
+      <pre class="docs-code"><code class="language-bash">mkdir my-print && cd my-print
+hyle init --yes
+# populate ontology/, identities/, craft/, ethics/</code></pre>
+      <h3>2. Test it</h3>
+      <pre class="docs-code"><code class="language-bash">hyle substrate test
+hyle substrate check-anchors --strict
+hyle governance check "scaffold a feature"</code></pre>
+      <h3>3. Tag and publish</h3>
+      <pre class="docs-code"><code class="language-bash">hyle substrate tag 1.0.0
+hyle substrate publish myuser/my-print</code></pre>
+      <h3>4. Push new versions</h3>
+      <pre class="docs-code"><code class="language-bash"># after making changes:
+hyle substrate tag 1.1.0
+hyle substrate publish myuser/my-print</code></pre>
+      <div class="callout">The registry links directly to the GitHub repository. Ensure your repo is public before publishing.</div>
+    }
+
+    @if (active() === 'philosophy') {
+      <h1>Philosophy</h1>
+      <p>Hylé (from the Greek ὕλη, <em>matter</em> or <em>material</em>) is built on the idea that AI agents should work <em>within</em> structure, not instead of it.</p>
+      <h3>Substrates over prompts</h3>
+      <p>A one-off prompt is ephemeral. A substrate is persistent, versioned, and reviewable. Hylé treats the agent's working context as a first-class artifact — one that can be audited, diffed, and reproduced.</p>
+      <h3>The four folders</h3>
+      <p>Every print is structured around four orthogonal concerns: <strong>ontology</strong> (what the agent knows), <strong>identities</strong> (who the agent is), <strong>craft</strong> (how the agent works), and <strong>ethics</strong> (what the agent must never do). This separation makes prints composable and auditable.</p>
+      <h3>Reproducibility</h3>
+      <p>Model outputs are non-deterministic, but the <em>context</em> fed to the model need not be. Hylé's weight system and snapshot tags allow any prompt to be replayed under identical conditions, making AI-assisted development auditable in regulated environments.</p>
+    }
+
+  </div>
+</div>

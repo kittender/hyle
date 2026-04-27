@@ -1,0 +1,42 @@
+<div style="min-height:calc(100vh - 52px); display:flex; align-items:center; justify-content:center; background:var(--bg); padding:40px 16px;">
+  <div style="width:100%; max-width:420px;">
+    <div style="text-align:center; margin-bottom:32px;">
+      <div style="font-family:var(--script); font-size:36px; color:var(--gold); margin-bottom:8px;">Create an account</div>
+      <p style="font-size:14px; color:var(--muted);">Join the community, share your recipes and save your favourites.</p>
+    </div>
+    <form (submit)="submit($event)" style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:28px;">
+      @if (error) {
+        <div style="background:#fff5f5; border:1px solid #fca5a5; border-radius:5px; padding:9px 12px; font-size:13px; color:#c0392b; margin-bottom:18px;">{{ error }}</div>
+      }
+      <div style="margin-bottom:16px;">
+        <label class="auth-label">Full name</label>
+        <input class="auth-field" type="text" [(ngModel)]="name" name="name" placeholder="Andrej Kirskyn" autofocus>
+      </div>
+      <div style="margin-bottom:16px;">
+        <label class="auth-label">Username</label>
+        <input class="auth-field" type="text" [(ngModel)]="username" name="username" placeholder="andrej-kirskyn">
+      </div>
+      <div style="margin-bottom:16px;">
+        <label class="auth-label">Email address</label>
+        <input class="auth-field" type="email" [(ngModel)]="email" name="email" placeholder="you@example.com">
+      </div>
+      <div style="margin-bottom:16px;">
+        <label class="auth-label">Password</label>
+        <input class="auth-field" type="password" [(ngModel)]="password" name="password" placeholder="Min. 8 characters">
+      </div>
+      <div style="margin-bottom:22px;">
+        <label class="auth-label">Confirm password</label>
+        <input class="auth-field" type="password" [(ngModel)]="confirm" name="confirm" placeholder="••••••••">
+      </div>
+      <button type="submit" [disabled]="loading"
+        style="width:100%; height:40px; background:var(--gold); color:#0b1f12; font-weight:600; font-size:14px; border-radius:var(--radius-sm); border:none; cursor:pointer; transition:opacity 0.15s;"
+        [style.opacity]="loading ? 0.7 : 1">
+        {{ loading ? 'Creating account…' : 'Create account' }}
+      </button>
+    </form>
+    <p style="text-align:center; font-size:13px; color:var(--muted); margin-top:20px;">
+      Already have an account?
+      <button class="link-btn" (click)="goTo('/login')">Log in</button>
+    </p>
+  </div>
+</div>

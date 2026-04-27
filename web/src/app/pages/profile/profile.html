@@ -1,0 +1,276 @@
+@if (!authService.isLoggedIn()) {
+  <div class="container" style="padding-top:64px; text-align:center; color:var(--muted);">
+    <p>Please log in to view your profile.</p>
+    <button class="link-btn" (click)="goTo('/login')">Log in</button>
+  </div>
+} @else {
+  <div style="min-height:calc(100vh - 52px); background:var(--bg);">
+    <!-- Header -->
+    <div style="background:var(--nav-bg); border-bottom:1px solid rgba(255,255,255,0.06); padding:32px 0 28px;">
+      <div class="container">
+        <div style="display:flex; align-items:flex-start; gap:20px;">
+          <!-- Avatar -->
+          <div style="width:72px; height:72px; border-radius:50%; background:linear-gradient(135deg,#c4982a 0%,#5a7a3a 100%); display:flex; align-items:center; justify-content:center; font-size:30px; font-weight:700; color:#fff; flex-shrink:0; border:3px solid rgba(196,152,42,0.3);">
+            {{ authService.user()!.name.charAt(0).toUpperCase() }}
+          </div>
+          <!-- Info -->
+          <div style="flex:1; min-width:0;">
+            <div style="font-size:22px; font-weight:700; color:#fff; letter-spacing:-0.02em;">{{ authService.user()!.name }}</div>
+            <div style="font-size:13px; color:rgba(255,255,255,0.4); margin-top:2px; font-family:var(--mono);">&#64;{{ authService.user()!.username }}</div>
+            @if (!isPublic) {
+              <div style="font-size:12px; color:rgba(255,255,255,0.28); margin-top:3px;">{{ authService.user()!.email }}</div>
+            }
+
+            <!-- Bio -->
+            <div style="margin-top:12px; max-width:560px;">
+              @if (editingBio() && !isPublic) {
+                <div>
+                  <textarea [(ngModel)]="bioDraft" name="bio"
+                    style="width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:6px; padding:8px 10px; color:rgba(255,255,255,0.8); font-size:13px; line-height:1.6; resize:vertical; min-height:72px; font-family:var(--font); outline:none;"
+                    autofocus></textarea>
+                  <div style="display:flex; gap:8px; margin-top:8px;">
+                    <button (click)="saveBio()" style="padding:4px 12px; background:var(--gold); color:#0b1f12; border-radius:4px; font-size:12px; font-weight:600; border:none; cursor:pointer;">Save</button>
+                    <button (click)="cancelBio()" style="padding:4px 10px; background:transparent; color:rgba(255,255,255,0.4); border:1px solid rgba(255,255,255,0.15); border-radius:4px; font-size:12px; cursor:pointer;">Cancel</button>
+                  </div>
+                </div>
+              } @else {
+                <div style="display:flex; align-items:flex-start; gap:8px;">
+                  <p style="font-size:13px; color:rgba(255,255,255,0.55); line-height:1.65; margin:0;">{{ bio() }}</p>
+                  @if (!isPublic) {
+                    <button (click)="startEditBio()" style="flex-shrink:0; font-size:11px; color:rgba(255,255,255,0.3); background:none; border:none; cursor:pointer; margin-top:1px; padding:0 4px;">Edit</button>
+                  }
+                </div>
+              }
+            </div>
+
+            <!-- Social links -->
+            <div style="margin-top:12px;">
+              @if (editingSocials() && !isPublic) {
+                <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:14px 16px; max-width:460px;">
+                  <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:rgba(255,255,255,0.35); margin-bottom:12px;">Social links</div>
+                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px 16px;">
+                    @for (s of socialDefs; track s.key) {
+                      <div style="display:flex; align-items:center; gap:7px;">
+                        <span [style.color]="s.color" style="display:flex; flex-shrink:0; font-size:13px; width:16px;">{{ s.label.charAt(0) }}</span>
+                        <input [(ngModel)]="socialsDraft[s.key]" [name]="'social_' + s.key" [placeholder]="s.label"
+                          style="flex:1; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:4px; padding:4px 8px; color:rgba(255,255,255,0.8); font-size:12px; font-family:var(--mono); outline:none; width:100%;">
+                      </div>
+                    }
+                  </div>
+                  <div style="display:flex; gap:8px; margin-top:12px;">
+                    <button (click)="saveSocials()" style="padding:4px 12px; background:var(--gold); color:#0b1f12; border-radius:4px; font-size:12px; font-weight:600; border:none; cursor:pointer;">Save</button>
+                    <button (click)="cancelSocials()" style="padding:4px 10px; background:transparent; color:rgba(255,255,255,0.4); border:1px solid rgba(255,255,255,0.15); border-radius:4px; font-size:12px; cursor:pointer;">Cancel</button>
+                  </div>
+                </div>
+              } @else {
+                <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                  @for (s of getActiveSocials(); track s.key) {
+                    <a [href]="getSocialHref(s.key, socials()[s.key])" target="_blank" rel="noreferrer"
+                      [style.background]="s.bg" [style.border]="'1px solid ' + s.color + '55'" [style.color]="s.color"
+                      style="display:flex; align-items:center; gap:5px; padding:4px 10px; border-radius:20px; font-size:12px; text-decoration:none; font-weight:500;">
+                      {{ socials()[s.key] }}
+                    </a>
+                  }
+                  @if (!isPublic) {
+                    <button (click)="startEditSocials()" style="font-size:11px; color:rgba(255,255,255,0.3); background:none; border:1px dashed rgba(255,255,255,0.15); border-radius:20px; padding:3px 9px; cursor:pointer;">
+                      {{ getActiveSocials().length ? 'Edit links' : '+ Add social links' }}
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Right actions -->
+          <div style="display:flex; gap:8px; flex-shrink:0; margin-top:4px;">
+            @if (isPublic) {
+              <button class="btn-secondary" (click)="goTo('/profile')" style="font-size:12px; height:32px;">← Private view</button>
+            } @else {
+              <button class="btn-secondary" (click)="goTo('/profile/public')" style="font-size:12px; height:32px;">Public profile</button>
+            }
+          </div>
+        </div>
+
+        <!-- Stats bar -->
+        <div style="display:flex; gap:0; margin-top:24px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); border-radius:8px; overflow:hidden; align-self:flex-start; width:fit-content;">
+          <div style="padding:10px 24px; border-right:1px solid rgba(255,255,255,0.07); text-align:center;">
+            <div style="font-size:20px; font-weight:700; color:var(--gold-light); letter-spacing:-0.02em; line-height:1;">{{ myPrints.length }}</div>
+            <div style="font-size:11px; color:rgba(255,255,255,0.35); margin-top:3px; letter-spacing:0.04em; text-transform:uppercase;">Prints</div>
+          </div>
+          <div style="padding:10px 24px; border-right:1px solid rgba(255,255,255,0.07); text-align:center;">
+            <div style="font-size:20px; font-weight:700; color:var(--gold-light); letter-spacing:-0.02em; line-height:1;">{{ totalStars }}</div>
+            <div style="font-size:11px; color:rgba(255,255,255,0.35); margin-top:3px; letter-spacing:0.04em; text-transform:uppercase;">Stars</div>
+          </div>
+          <div style="padding:10px 24px; text-align:center;">
+            <div style="font-size:20px; font-weight:700; color:var(--gold-light); letter-spacing:-0.02em; line-height:1;">{{ starredPrints.length }}</div>
+            <div style="font-size:11px; color:rgba(255,255,255,0.35); margin-top:3px; letter-spacing:0.04em; text-transform:uppercase;">Starred</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs (private only) -->
+    @if (!isPublic) {
+      <div style="background:var(--surface); border-bottom:1px solid var(--border);">
+        <div class="container" style="display:flex; padding:0;">
+          <button class="detail-tab" [class.active]="tab() === 'published'" (click)="tab.set('published')">Published</button>
+          <button class="detail-tab" [class.active]="tab() === 'starred'" (click)="tab.set('starred')">Starred</button>
+          <button class="detail-tab" [class.active]="tab() === 'activity'" (click)="tab.set('activity')">Activity</button>
+        </div>
+      </div>
+    }
+
+    <!-- Content -->
+    <div class="container" style="padding-top:32px; padding-bottom:64px;">
+      <!-- Public heading + share -->
+      @if (isPublic) {
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
+          <h2 style="font-size:17px; font-weight:700; color:var(--text); letter-spacing:-0.01em; margin:0;">Published prints</h2>
+          <button (click)="share()"
+            style="display:flex; align-items:center; gap:6px; height:32px; padding:0 14px; border-radius:6px; font-size:13px; cursor:pointer; transition:all 0.15s;"
+            [style.background]="copied() ? 'rgba(22,163,74,0.08)' : 'var(--subtle)'"
+            [style.border]="copied() ? '1px solid rgba(22,163,74,0.3)' : '1px solid var(--border)'"
+            [style.color]="copied() ? '#16a34a' : 'var(--muted-text)'">
+            @if (copied()) { Copied! } @else { Share profile }
+          </button>
+        </div>
+      }
+
+      <!-- Published tab -->
+      @if (tab() === 'published' || isPublic) {
+        @if (myPrints.length === 0) {
+          <p style="font-size:14px; color:var(--muted); text-align:center; margin-top:48px;">No published prints yet.</p>
+        } @else if (isPublic) {
+          <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:16px;">
+            @for (p of myPrints; track p.id; let i = $index) {
+              <div (click)="navigateToPrint(p.id)"
+                [style.background]="getCardAccent(i).bg"
+                [style.border]="'1px solid ' + getCardAccent(i).border"
+                style="border-radius:10px; padding:20px 22px; cursor:pointer; transition:transform 0.15s, box-shadow 0.15s; position:relative; overflow:hidden;">
+                <div style="position:absolute; top:16px; right:16px; display:flex; flex-direction:column; align-items:flex-end; gap:5px;">
+                  <div [style.background]="'rgba(255,255,255,0.08)'" [style.border]="'1px solid ' + getCardAccent(i).border" style="display:flex; align-items:center; gap:5px; border-radius:20px; padding:3px 10px;">
+                    <svg width="12" height="12" viewBox="0 0 16 16" [attr.fill]="getCardAccent(i).tagText"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg>
+                    <span [style.color]="getCardAccent(i).tagText" style="font-size:12px; font-weight:600;">{{ getStarsDisplay(p) }}</span>
+                  </div>
+                  @if (p.verified) {
+                    <span style="font-size:10px; font-weight:700; padding:2px 7px; background:rgba(20,83,45,0.5); border:1px solid rgba(34,197,94,0.4); border-radius:20px; color:#86efac; letter-spacing:0.05em;">Verified</span>
+                  }
+                  @if (p.community) {
+                    <span style="font-size:10px; font-weight:700; padding:2px 7px; background:rgba(120,53,15,0.5); border:1px solid rgba(196,152,42,0.45); border-radius:20px; color:#fde68a; letter-spacing:0.05em;">Community</span>
+                  }
+                </div>
+                <div style="font-family:var(--mono); font-size:13px; font-weight:500; color:rgba(255,255,255,0.5); margin-bottom:4px;">{{ p.author }}/</div>
+                <div style="font-family:var(--mono); font-size:17px; font-weight:600; color:#fff; margin-bottom:10px; letter-spacing:-0.01em;">{{ p.name }}</div>
+                <p style="font-size:13px; color:rgba(255,255,255,0.55); line-height:1.55; margin:0 0 14px; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">{{ p.description }}</p>
+                <div style="display:flex; gap:5px; flex-wrap:wrap;">
+                  @for (t of p.tags.slice(0,4); track t) {
+                    <span [style.background]="getCardAccent(i).tag" [style.border]="'1px solid ' + getCardAccent(i).border" [style.color]="getCardAccent(i).tagText"
+                      style="font-size:11px; padding:2px 8px; border-radius:20px; font-family:var(--mono);">{{ t }}</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <div style="max-width:800px;">
+            @for (p of myPrints; track p.id) {
+              <div class="result-row" style="position:relative;" (click)="navigateToPrint(p.id)">
+                @if (p.verified || p.community) {
+                  <div style="position:absolute; top:12px; right:14px;">
+                    @if (p.verified) { <span style="font-size:10px; font-weight:700; padding:2px 7px; background:rgba(20,83,45,0.12); border:1px solid rgba(34,197,94,0.3); border-radius:20px; color:#166534; letter-spacing:0.05em;">Verified</span> }
+                    @if (p.community) { <span style="font-size:10px; font-weight:700; padding:2px 7px; background:rgba(120,53,15,0.10); border:1px solid rgba(196,152,42,0.35); border-radius:20px; color:#92400e; letter-spacing:0.05em;">Community</span> }
+                  </div>
+                }
+                <div style="flex:1; min-width:0;" [style.padding-right]="(p.verified || p.community) ? '80px' : '0'">
+                  <div style="font-family:var(--mono); font-size:13px; font-weight:500; margin-bottom:4px; display:flex; align-items:center; gap:5px;">
+                    <span><span style="color:var(--muted);">{{ p.author }}/</span>{{ p.name }}</span>
+                  </div>
+                  <p style="font-size:13px; color:var(--muted); margin:0 0 10px; line-height:1.5;">{{ p.description }}</p>
+                  <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                    <span style="display:inline-flex; align-items:center; gap:5px; font-size:12px; color:var(--muted);">
+                      <span style="width:9px; height:9px; border-radius:50%; background:var(--text); display:inline-block; opacity:0.7;"></span>
+                      {{ p.language }}
+                    </span>
+                    <span style="display:flex; align-items:center; gap:4px; font-size:12px; color:var(--muted);">
+                      <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg>
+                      {{ p.stars.toLocaleString() }}
+                    </span>
+                    @if (p.updated) { <span style="font-size:12px; color:var(--muted);">Updated {{ p.updated }}</span> }
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      }
+
+      <!-- Starred tab -->
+      @if (tab() === 'starred' && !isPublic) {
+        <div style="max-width:800px;">
+          @for (p of starredPrints; track p.id) {
+            <div class="result-row" style="position:relative;" (click)="navigateToPrint(p.id)">
+              @if (p.verified || p.community) {
+                <div style="position:absolute; top:12px; right:14px;">
+                  @if (p.verified) { <span style="font-size:10px; font-weight:700; padding:2px 7px; background:rgba(20,83,45,0.12); border:1px solid rgba(34,197,94,0.3); border-radius:20px; color:#166534; letter-spacing:0.05em;">Verified</span> }
+                  @if (p.community) { <span style="font-size:10px; font-weight:700; padding:2px 7px; background:rgba(120,53,15,0.10); border:1px solid rgba(196,152,42,0.35); border-radius:20px; color:#92400e; letter-spacing:0.05em;">Community</span> }
+                </div>
+              }
+              <div style="flex:1; min-width:0;" [style.padding-right]="(p.verified || p.community) ? '80px' : '0'">
+                <div style="font-family:var(--mono); font-size:13px; font-weight:500; margin-bottom:4px; display:flex; align-items:center; gap:5px;">
+                  <span><span style="color:var(--muted);">{{ p.author }}/</span>{{ p.name }}</span>
+                </div>
+                <p style="font-size:13px; color:var(--muted); margin:0 0 10px; line-height:1.5;">{{ p.description }}</p>
+                <div style="display:flex; gap:10px; align-items:center;">
+                  <span style="display:inline-flex; align-items:center; gap:5px; font-size:12px; color:var(--muted);">
+                    <span style="width:9px; height:9px; border-radius:50%; background:var(--text); display:inline-block; opacity:0.7;"></span>
+                    {{ p.language }}
+                  </span>
+                  <span style="display:flex; align-items:center; gap:4px; font-size:12px; color:var(--muted);">
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg>
+                    {{ p.stars.toLocaleString() }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Activity tab -->
+      @if (tab() === 'activity' && !isPublic) {
+        <div style="max-width:800px;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:20px; padding:9px 14px; background:rgba(196,152,42,0.06); border:1px solid rgba(196,152,42,0.2); border-radius:var(--radius); font-size:12px; color:var(--muted-text);">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="var(--gold)"><path d="M8 0a8 8 0 100 16A8 8 0 008 0zm1 9H7V4h2v5zm0 3H7v-2h2v2z"/></svg>
+            This activity log is private and only visible to you.
+          </div>
+          @for (a of activity; track $index; let i = $index) {
+            <div style="display:flex; gap:14px; align-items:flex-start; padding:13px 12px; margin-bottom:0px;"
+              [style.background]="isSpecialActivity(a.type) ? (a.type === 'verified' ? 'rgba(20,83,45,0.06)' : 'rgba(120,53,15,0.06)') : 'transparent'"
+              [style.border]="isSpecialActivity(a.type) ? '1px solid ' + (a.type === 'verified' ? 'rgba(34,197,94,0.2)' : 'rgba(196,152,42,0.2)') : 'none'"
+              [style.border-bottom]="!isSpecialActivity(a.type) ? '1px solid var(--border)' : undefined"
+              [style.border-radius]="isSpecialActivity(a.type) ? '6px' : '0'"
+              [style.margin-bottom]="isSpecialActivity(a.type) ? '4px' : '0'">
+              <div style="margin-top:1px;">
+                <span [style]="getActivityBadge(a.type).style + '; font-size:10px; font-weight:700; padding:2px 7px; border-radius:20px; letter-spacing:0.04em; white-space:nowrap;'">
+                  {{ getActivityBadge(a.type).label }}
+                </span>
+              </div>
+              <div style="flex:1;">
+                @if (isSpecialActivity(a.type)) {
+                  <div style="font-size:13px; line-height:1.6;" [style.color]="'var(--text)'">{{ a.note }}</div>
+                } @else {
+                  <div style="font-size:13px; color:var(--muted); line-height:1.6;">
+                    <button class="link-btn" (click)="navigateToPrint(a.print)" style="font-family:var(--mono); font-size:13px;">{{ a.print }}</button>
+                    @if (a.version) { <span style="color:var(--muted); font-size:12px; font-family:var(--mono);">&nbsp;&#64;{{ a.version }}</span> }
+                    &nbsp;— {{ a.note }}
+                  </div>
+                }
+              </div>
+              <div style="font-size:11px; color:var(--muted); white-space:nowrap;">{{ a.date }}</div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+}

@@ -1,0 +1,23 @@
+.files-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr 260px;
+  gap: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  min-height: calc(100vh - 280px);
+}
+
+.file-tree-col {
+  border-right: 1px solid var(--border);
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+.file-viewer-col {
+  min-height: 500px;
+  border-right: 1px solid var(--border);
+}
+
+.file-sidebar-col {
+  padding: 20px;
+}

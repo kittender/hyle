@@ -47,7 +47,7 @@ hyle search java spring tdd
 ```
 
 Full-text search across name, description, and tags.
-You can also look into [https://www.hyle.eu/] for a full UI experience with advanced filters.
+You can also look into https://www.hyle.eu/ for a full UI experience with advanced filters.
 
 ### Pull a substrate into your project
 
@@ -94,18 +94,40 @@ This generates a `hyle.yaml` at the project root after asking basic questions. T
 
 #### 2. Scan your project files
 
+Hylé covers four domains:
+* `ontology` The "what" ? Specifications, goals, features, examples and data
+* `craft` The "how" ? Architecture, technical design, practices and recipes
+* `identities` The "who" ? Agentic personas, models behaviour specifications
+* `ethics` The limits to all previous questions: Behaviour constraints, compliance requirements, security concerns, privacy design etc.
+
+As always, the "why" ? is between your human hands.
+Hylé will automatically find for you all the well-known and easily detectible files and folders:
+
 ```bash
-hyle ontology    # Finds CLAUDE.md, specs, features, model interfaces, diagrams
-hyle craft       # Finds SKILLS.md, ARCHITECTURE.md, MCP configs, package.json, pom.xml
-hyle identities  # Finds AGENTS.md, .claude/agents/*.md
+hyle ontology    # Finds CLAUDE.md, .cursorrules, .github/copilot-instructions.md, .continue/config.json, specs, features, diagrams
+hyle craft       # Finds SKILLS.md, ARCHITECTURE.md, MCP configs, .cursor/rules/*.md, package.json, pom.xml
+hyle identities  # Finds AGENTS.md, .claude/agents/*.md, .cursor/agents/*.md
 hyle ethics      # Finds *.cedar policies, TruLens configs, Ragas configs, eval setups
 ```
 
-You can also point each command at a specific path:
+You can also point each command at a specific path, to cherry-pick more:
 
 ```bash
 hyle ontology path/to/relevant-files
 hyle craft path/to/relevant-files
+```
+
+Either way, you'll have the final word through the manifest.
+
+Don't forget to add a `.hyleignore` file to explicitly exclude files you never want to share, 
+like API keys, secrets, and private configs:
+
+```
+.env
+*.pem
+*.key
+secrets/
+config/local.*
 ```
 
 #### 3. Review the manifest
@@ -117,7 +139,7 @@ name: claude-java-springboot
 version: 1.0.11
 description: Powers up any Spring Boot project with state-of-the-art practices
 tags: [java, spring, boot, claude, cedar, tdd]
-forks:          # Hylé registry link of source substrate if forked from one
+forks:                                  # Hylé registry link of source substrate with version if forked from one
 author: jean-pierre-kowalski
 url: https://github.com/JeanPierreKowalski
 
@@ -134,7 +156,7 @@ models:
       - provider: openai               # Second: free-tier Codex when out of tokens
         model: "codex-mini"
         tags: [saas, free-tier]
-      - provider: ollama               # Always keep a local fallback
+      - provider: ollama               # You could keep a free local fallback
         model: "qwen2.5:14b"
         tags: [local, free]
   secondary:                           # Lightweight tasks: summaries, indexing, scaffolding
@@ -152,7 +174,7 @@ models:
 dependencies:
   - name: cedar
     version: ">=3.0"
-    url: https://github.com/cedar-policy/cedar        # Hylé resolves install per OS from here
+    url: https://github.com/cedar-policy/cedar        # Hylé resolves install per OS from source link
   - name: spec-kit
     version: ">=1.0"
     url: https://www.npmjs.com/package/spec-kit
@@ -162,13 +184,17 @@ dependencies:
   - name: peonping
     version: ">=1.0"
     url: https://peonping.com
-    install:                                           # Optional: per-OS override
+    install:                                           # Optional: provide per-OS commands
       macos: brew install PeonPing/tap/peon-ping
       linux: curl -fsSL peonping.com/install | bash
 
 substrate:
   ontology:
-    - CLAUDE.md
+    - CLAUDE.md                              # Claude Code instruction file
+    # - .cursorrules                         # Cursor
+    # - .github/copilot-instructions.md      # GitHub Copilot
+    # - .continue/config.json               # Continue.dev
+    # - .windsurf/rules/*.md                # Windsurf
     - path/to/spec/*.pdf
     - path/to/features/*.md
     - path/to/models/*.ts
@@ -179,11 +205,14 @@ substrate:
     - path/to/guardrails/*.yaml  # Any agent compliance/safety rules
   identities:
     - AGENTS.md
-    - .claude/agents/*.md
+    - .claude/agents/*.md                    # Claude Code sub-agents
+    # - .cursor/agents/*.md                  # Cursor agents
   craft:
     - SKILLS.md
     - ARCHITECTURE.md
-    - .claude/mcp/*.md
+    - .claude/mcp/*.md                       # Claude Code MCP configs
+    # - .cursor/mcp.json                     # Cursor MCP config
+    # - .continue/tools/*.json               # Continue.dev tools
     - package.json
 ```
 
@@ -210,16 +239,6 @@ The `url` field is the canonical pointer to a dependency — the official GitHub
 When Hylé resolves a new install command (steps 2–4), it saves it to local cache and optionally contributes it to the shared registry, so future pullers benefit too.
 
 > **If you provide `install` overrides**, prefer official package managers over raw `curl | bash` pipes when possible — they are safer, verifiable, and easier to update.
-
-Add a `.hyleignore` file to explicitly exclude files you never want to share, like API keys, secrets, and private configs:
-
-```
-.env
-*.pem
-*.key
-secrets/
-config/local.*
-```
 
 #### 4. Publish to the registry
 
@@ -279,7 +298,7 @@ Hylé uses a two-layer config system: global defaults at `~/.hyle`, local overri
 remote_url: https://registry.hyle.eu    # Default registry
 currency: EUR                           # Cost estimates in hyle watch (EUR or USD)
 default_llm: fallback                   # Model key from hyle.yaml to use for extensions
-auto_inject: true                       # Inject file refs into CLAUDE.md on pull
+auto_inject: true                       # Inject file refs into agent instruction file on pull (CLAUDE.md, .cursorrules, etc.)
 contribute_deps: true                   # Share resolved dep install commands with registry
 
 split_threshold: "80%"                  # hyle watch --split threshold (% or abs token count)
@@ -297,16 +316,13 @@ scan:
 
 ## Optional tools
 
-Additional capabilities that may use lightweight LLM calls. Recommend installing a free local model (`ollama pull qwen`) and setting it as the `fallback` LLM to avoid costs.
-
-```bash
-hyle install watcher
-hyle install structurer
-```
+Additional capabilities that may use lightweight LLM calls, and model's API if available.
 
 ### `hyle watch` — live monitoring and context management
 
 ```bash
+hyle install watcher
+
 hyle watch                    # Live terminal UI: token consumption, cost estimate. Ctrl+C to exit.
 hyle watch --audit            # + hash-chained audit log (see below)
 hyle watch --split 80%        # + context-split prompt at 80% of model context limit
@@ -343,10 +359,10 @@ Threshold can be set as `80%` (percentage of the active model's context limit) o
 Every substrate on the registry carries:
 
 - **Pull count** — how many times it has been installed
-- **Stars** — from the linked GitHub repo if declared, otherwise registry-specific
+- **Stars** — from the linked GitHub repo if declared, otherwise registry-specific (user favorite on hyle.eu)
 - **Likes + reviews** — per-user like (one per substrate) and written reviews with a 1–5 rating
 - **Version diff** — "Changes" tab on the website shows a unified diff between any two versions
-- **Community flags** — factual, non-qualitative warning tags applied by registered users and reviewed by the Hylé team: `[skips-confirmations]`, `[uses-curl-pipe]`, `[requires-paid-model]`, `[unverified-deps]`, `[ollama-required]`
+- **Community flags** — factual, non-qualitative warning tags applied by registered users and reviewed by the Hylé team: `[skips-confirmations]`, `[uses-curl-pipe]`, `[requires-paid-model]`, `[unverified-deps]`, `[ollama-required]` (a button allow registered user to raise a flag on any substrate, it submits the request to Hylé team).
 
 **Security scan on every publish:** Hylé automatically scans each pushed version for red flags (curl-pipe install patterns, hardcoded credential shapes, skip-confirmation flags, suspicious network calls in agent instructions). Flagged versions are marked `[flagged:<tags>]` — not pullable, content hidden, only flag tags visible. **The full publish history is always public**, including flagged versions with their reason tags.
 
@@ -411,8 +427,23 @@ For each file, the index captures:
         "weight": 0.9
       }
     ],
-    "identities": [],
-    "ethics": []
+    "identities": [
+      {
+        "path": ".claude/agents/reviewer.md",
+        "summary": "Agent identity for the code reviewer role. Defines persona, responsibilities, tone, and scope of review tasks delegated to this sub-agent.",
+        "tags": ["agent", "code-review", "persona"],
+        "scopes": ["ci", "pull-requests"]
+      }
+    ],
+    "ethics": [
+      {
+        "path": ".cedar/policies.cedar",
+        "summary": "Cedar policy file defining access control rules for agent actions. Restricts destructive operations and enforces least-privilege across tool use.",
+        "tags": ["access-control", "cedar", "least-privilege"],
+        "scopes": ["agent-permissions", "compliance"],
+        "weight": 2.0
+      }
+    ]
   }
 }
 ```

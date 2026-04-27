@@ -1,0 +1,114 @@
+<div class="container" style="padding-top:32px; padding-bottom:64px;">
+  <!-- Search bar -->
+  <form (submit)="handleSearch($event)" style="margin-bottom:32px;">
+    <div style="position:relative; max-width:560px;">
+      <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--muted);">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4"/><path d="M11 11l3 3" stroke-linecap="round"/></svg>
+      </span>
+      <input [(ngModel)]="inputVal" name="searchInput" placeholder="Search prints…" class="search-input">
+    </div>
+  </form>
+
+  <div style="display:grid; grid-template-columns:200px 1fr; gap:40px;">
+    <!-- Filters -->
+    <div>
+      <div class="filter-heading">Language</div>
+      @for (l of languages; track l) {
+        <label class="filter-item">
+          <input type="checkbox" [checked]="filterLanguage.includes(l)" (change)="toggleLang(l)">
+          <span>{{ l }}</span>
+          <span class="filter-count">{{ getLangCount(l) }}</span>
+        </label>
+      }
+      <div class="filter-heading" style="margin-top:24px;">License</div>
+      @for (l of licenses; track l) {
+        <label class="filter-item">
+          <input type="checkbox" [checked]="filterLicense.includes(l)" (change)="toggleLicense(l)">
+          <span>{{ l }}</span>
+          <span class="filter-count">{{ getLicenseCount(l) }}</span>
+        </label>
+      }
+      @if (hasFilters) {
+        <button class="link-btn" style="margin-top:16px; font-size:12px;" (click)="clearFilters()">Clear filters</button>
+      }
+    </div>
+
+    <!-- Results -->
+    <div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <span style="font-size:13px; color:var(--muted);">
+          {{ results.length }} result{{ results.length !== 1 ? 's' : '' }}
+          @if (query) {
+            for <strong style="color:var(--text);">"{{ query }}"</strong>
+          }
+        </span>
+        <select [(ngModel)]="sort" name="sort" class="sort-select">
+          <option value="stars">Most starred</option>
+          <option value="recent">Recently updated</option>
+          <option value="name">Name A–Z</option>
+        </select>
+      </div>
+
+      @if (results.length === 0) {
+        <div style="padding:48px 0; text-align:center; color:var(--muted); font-size:14px;">
+          No prints found.
+          <button class="link-btn" (click)="clearSearch()">Clear search</button>
+        </div>
+      } @else {
+        @for (p of results; track p.id) {
+          <div class="result-row" style="position:relative;" (click)="navigateToPrint(p.id)">
+            @if (p.verified || p.community) {
+              <div style="position:absolute; top:14px; right:16px;">
+                @if (p.verified) {
+                  <span style="font-size:10px; font-weight:700; padding:2px 7px; background:rgba(20,83,45,0.12); border:1px solid rgba(34,197,94,0.3); border-radius:20px; color:#166534; letter-spacing:0.05em;">Verified</span>
+                }
+                @if (p.community) {
+                  <span style="font-size:10px; font-weight:700; padding:2px 7px; background:rgba(120,53,15,0.10); border:1px solid rgba(196,152,42,0.35); border-radius:20px; color:#92400e; letter-spacing:0.05em;">Community</span>
+                }
+              </div>
+            }
+            <div style="flex:1; min-width:0;" [style.padding-right]="(p.verified || p.community) ? '80px' : '0'">
+              <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:4px; flex-wrap:wrap;">
+                <span style="font-family:var(--mono); font-size:14px; font-weight:500; flex-shrink:0; display:flex; align-items:center; gap:5px;">
+                  <span><span style="color:var(--muted);">{{ p.author }}/</span>{{ p.name }}</span>
+                  @if (p.verified) {
+                    <span title="Verified print" style="display:inline-flex; align-items:center; flex-shrink:0;">
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" fill="#166534"/><path d="M4.5 8.5l2.5 2.5 4.5-5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                  }
+                  @if (p.community) {
+                    <span title="Community favourite" style="display:inline-flex; align-items:center; flex-shrink:0;">
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" fill="#92400e"/><path d="M8 4l1.1 2.2 2.4.35-1.75 1.7.41 2.4L8 9.5l-2.16 1.15.41-2.4L4.5 6.55l2.4-.35L8 4z" fill="#fde68a"/></svg>
+                    </span>
+                  }
+                </span>
+                <span style="display:flex; gap:3px; flex-wrap:wrap;">
+                  @for (t of p.tags.slice(0,3); track t) {
+                    <span class="tag">{{ t }}</span>
+                  }
+                </span>
+              </div>
+              <p style="font-size:13px; color:var(--muted); margin:0 0 8px; line-height:1.5;">{{ p.description }}</p>
+              <div style="display:flex; gap:16px; align-items:center;">
+                <span style="display:inline-flex; align-items:center; gap:5px; font-size:12px; color:var(--muted);">
+                  <span style="width:9px; height:9px; border-radius:50%; background:var(--text); display:inline-block; opacity:0.7;"></span>
+                  {{ p.language }}
+                </span>
+                <span style="display:flex; align-items:center; gap:4px; font-size:12px; color:var(--muted);">
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg>
+                  {{ p.stars.toLocaleString() }}
+                </span>
+                <span style="display:flex; align-items:center; gap:4px; font-size:12px; color:var(--muted);">
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M5 3.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm0 2.122a2.25 2.25 0 10-1.5 0v.878A2.25 2.25 0 005.75 8.5h1.5v2.128a2.251 2.251 0 101.5 0V8.5h1.5a2.25 2.25 0 002.25-2.25v-.878a2.25 2.25 0 10-1.5 0v.878a.75.75 0 01-.75.75h-4.5A.75.75 0 015 6.25v-.878zm3.75 7.378a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm3-8.75a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>
+                  {{ p.forks }}
+                </span>
+                <span style="font-size:12px; color:var(--muted);">{{ p.license }}</span>
+                <span style="font-size:12px; color:var(--muted);">Updated {{ p.updated }}</span>
+              </div>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  </div>
+</div>
