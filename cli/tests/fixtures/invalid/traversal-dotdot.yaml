@@ -1,0 +1,5 @@
+name: test-traversal
+author: testauthor
+version: 0.1.0
+ontology:
+  - ".."

@@ -1,0 +1,169 @@
+import { text, confirm, intro, outro, isCancel, cancel } from "@clack/prompts";
+import { dump } from "js-yaml";
+import { existsSync, writeFileSync } from "node:fs";
+import { join, basename } from "node:path";
+import { execSync } from "node:child_process";
+import type { HyleManifest } from "../manifest";
+import { SLUG_RE } from "../manifest";
+import { loadConfig } from "../config";
+
+const DEFAULT_HYLE_CONFIG = `# Hylé local config — overrides ~/.hyle
+default_model: claude-haiku-4-5
+`;
+
+const DEFAULT_HYLEIGNORE = `.env
+*.env.*
+*.key
+*.pem
+*.p12
+secrets/
+`;
+
+export async function runInit(opts: { yes: boolean; offline?: boolean }): Promise<void> {
+  const cwd = process.cwd();
+  const manifestPath = join(cwd, "hyle.yaml");
+
+  if (!opts.yes) intro("hyle init");
+
+  if (existsSync(manifestPath)) {
+    if (!opts.yes) {
+      const overwrite = await confirm({ message: "hyle.yaml already exists. Overwrite?" });
+      if (isCancel(overwrite) || !overwrite) {
+        cancel("Aborted.");
+        process.exit(0);
+      }
+    }
+  }
+
+  const defaultName = slugify(basename(cwd)) || "my-substrate";
+  const defaultAuthor = getGitAuthor() || "author";
+
+  let name: string;
+  let author: string;
+  let description: string | undefined;
+  let tags: string[] | undefined;
+  let version: string;
+
+  if (opts.yes) {
+    name = defaultName;
+    author = defaultAuthor;
+    version = "0.1.0";
+  } else {
+    name = await prompt("Substrate name", defaultName, validateSlug);
+    author = await prompt("Author (GitHub username)", defaultAuthor, validateSlug);
+
+    const rawDesc = await prompt("Description (optional)", "", () => undefined);
+    description = rawDesc || undefined;
+
+    version = await prompt("Initial version", "0.1.0", (v) =>
+      /^\d+\.\d+\.\d+$/.test(v) ? undefined : "Must be x.y.z"
+    );
+
+    const rawTags = await prompt("Tags (comma-separated, optional)", "", () => undefined);
+    tags = rawTags ? rawTags.split(",").map((t) => t.trim()).filter(Boolean) : undefined;
+  }
+
+  if (!opts.offline) {
+    const config = loadConfig(cwd);
+    await checkRegistry(name, author, config.remote_url);
+  }
+
+  const manifest: HyleManifest = {
+    name,
+    author,
+    version,
+    ...(description ? { description } : {}),
+    ...(tags?.length ? { tags } : {}),
+    models: {
+      primary: {
+        provider: "anthropic",
+        model: "claude-sonnet-4-6",
+        tags: ["saas", "paid"],
+        fallback: [{ provider: "ollama", model: "qwen2.5:14b", tags: ["local", "free"] }],
+      },
+      secondary: {
+        provider: "anthropic",
+        model: "claude-haiku-4-5",
+        tags: ["saas", "paid"],
+        fallback: [{ provider: "ollama", model: "qwen2.5:7b", tags: ["local", "free"] }],
+      },
+    },
+  };
+
+  writeFileSync(manifestPath, dump(manifest, { lineWidth: 80 }));
+
+  const hylePath = join(cwd, ".hyle");
+  if (!existsSync(hylePath)) writeFileSync(hylePath, DEFAULT_HYLE_CONFIG);
+
+  const ignorePath = join(cwd, ".hyleignore");
+  if (!existsSync(ignorePath)) writeFileSync(ignorePath, DEFAULT_HYLEIGNORE);
+
+  if (opts.yes) {
+    console.log(`Created hyle.yaml (${name} by ${author} v${version})`);
+  } else {
+    outro(`Created hyle.yaml — edit models block, then run \`hyle push\` to publish.`);
+  }
+}
+
+// ---- Helpers ----
+
+async function prompt(
+  message: string,
+  defaultValue: string,
+  validate: (v: string) => string | undefined
+): Promise<string> {
+  const result = await text({ message, defaultValue, placeholder: defaultValue, validate });
+  if (isCancel(result)) {
+    cancel("Aborted.");
+    process.exit(0);
+  }
+  return result as string;
+}
+
+function validateSlug(v: string): string | undefined {
+  return SLUG_RE.test(v)
+    ? undefined
+    : "Must be lowercase alphanumeric with hyphens, max 64 chars (e.g. my-substrate)";
+}
+
+function slugify(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 64);
+}
+
+function getGitAuthor(): string {
+  try {
+    const name = execSync("git config user.name", {
+      encoding: "utf8",
+      stdio: ["pipe", "pipe", "pipe"],
+    }).trim();
+    return slugify(name);
+  } catch {
+    return "";
+  }
+}
+
+type Fetcher = (url: string, init?: RequestInit) => Promise<Response>;
+
+export async function checkRegistry(
+  name: string,
+  author: string,
+  remoteUrl: string,
+  fetcher: Fetcher = globalThis.fetch
+): Promise<void> {
+  try {
+    const res = await fetcher(`${remoteUrl}/substrates/${author}/${name}`, {
+      signal: AbortSignal.timeout(3000),
+    });
+    if (res.ok) {
+      console.warn(
+        `Warning: "${author}/${name}" already exists in registry. You will need to choose a different name or the push will be rejected.`
+      );
+    }
+  } catch {
+    console.warn("Registry unreachable — skipping uniqueness check (will be enforced server-side on push).");
+  }
+}

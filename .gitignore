@@ -1,7 +1,12 @@
 CLAUDE.md
 PLAN.md
 REVIEW.md
+REPORT.md
+GUIDE.md
+SUMMARY.md
 todo-*.md
 hyl-web/*
 .claude
 .vscode
+node_modules
+dist

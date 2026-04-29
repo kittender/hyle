@@ -1,0 +1,24 @@
+name: Release
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: cli
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run build:all
+      - name: Compute checksums
+        run: sha256sum dist/* > dist/checksums.sha256
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: cli/dist/*

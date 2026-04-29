@@ -9,6 +9,7 @@ import { AuthService } from '../../services/auth.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './register.html',
+  styleUrl: './register.css',
 })
 export class RegisterComponent {
   name = '';

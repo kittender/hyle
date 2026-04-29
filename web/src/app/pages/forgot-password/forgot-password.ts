@@ -8,6 +8,7 @@ import { FormsModule } from '@angular/forms';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './forgot-password.html',
+  styleUrl: './forgot-password.css',
 })
 export class ForgotPasswordComponent {
   email = '';

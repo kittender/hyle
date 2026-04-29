@@ -1,0 +1,30 @@
+{
+  "name": "hyle",
+  "version": "0.0.1",
+  "description": "AI context substrate manager",
+  "type": "module",
+  "bin": { "hyle": "./src/index.ts" },
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "build": "bun build src/index.ts --compile --outfile dist/hyle",
+    "build:all": "bun run scripts/build-all.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "lint": "bunx @biomejs/biome check src"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.7.0",
+    "commander": "^12.0.0",
+    "js-yaml": "^4.1.0",
+    "micromatch": "^4.0.8",
+    "semver": "^7.6.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.0",
+    "@types/js-yaml": "^4.0.9",
+    "@types/micromatch": "^4.0.9",
+    "@types/semver": "^7.5.8",
+    "bun-types": "latest",
+    "typescript": "^5.0.0"
+  }
+}

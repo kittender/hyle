@@ -1,4 +1,4 @@
-<div style="display:flex; min-height:calc(100vh - 52px);">
+<div class="docs-layout">
   <!-- Sidebar -->
   <div class="docs-sidebar">
     <div class="docs-sidebar-label">Documentation</div>
@@ -87,7 +87,7 @@ scan:
     @if (active() === 'cli') {
       <h1>CLI Reference</h1>
       @for (g of cliGroups; track g.label) {
-        <div style="margin-bottom:32px;">
+        <div class="docs-section">
           <h3>{{ g.label }}</h3>
           <table class="docs-table">
             <thead><tr><th>Command</th><th>Description</th></tr></thead>

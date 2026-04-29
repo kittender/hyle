@@ -317,6 +317,7 @@
   gap: 14px;
   align-items: flex-start;
   padding: 13px 12px;
+  border-bottom: 1px solid var(--border);
 }
 
 .activity-badge-wrap {
@@ -364,3 +365,11 @@
   color: var(--muted);
   white-space: nowrap;
 }
+
+/* ── Share button ── */
+.btn-share { padding: 5px 12px; font-size: 13px; border-radius: var(--radius); cursor: pointer; font-weight: 500; transition: all 0.15s; background: var(--subtle); border: 1px solid var(--border); color: var(--muted-text); }
+.btn-share.copied { background: rgba(22,163,74,0.08); border-color: rgba(22,163,74,0.3); color: #16a34a; }
+
+/* ── Activity item variants ── */
+.activity-item--verified { background: rgba(20,83,45,0.06); border: 1px solid rgba(34,197,94,0.2); border-radius: 6px; margin-bottom: 4px; }
+.activity-item--community { background: rgba(120,53,15,0.06); border: 1px solid rgba(196,152,42,0.2); border-radius: 6px; margin-bottom: 4px; }

@@ -1,5 +1,5 @@
 @if (!print) {
-  <div class="container" style="padding-top:64px; text-align:center; color:var(--muted);">
+  <div class="container detail-not-found">
     <p>Blueprint not found.</p>
     <button class="link-btn" (click)="goToSearch()">Browse all blueprints</button>
   </div>
@@ -7,62 +7,60 @@
   <!-- Header -->
   <div class="detail-header">
     <div class="container">
-      <div style="margin-bottom:8px; font-size:13px; color:rgba(255,255,255,0.5);">
+      <div class="breadcrumb">
         <button class="link-btn-light" (click)="goHome()">Home</button>
-        <span style="margin:0 6px;">/</span>
+        <span class="breadcrumb__sep">/</span>
         <button class="link-btn-light" (click)="goToAuthor()">{{ print.author }}</button>
-        <span style="margin:0 6px;">/</span>
-        <span style="color:#fff;">{{ print.name }}</span>
+        <span class="breadcrumb__sep">/</span>
+        <span class="breadcrumb__current">{{ print.name }}</span>
       </div>
-      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:24px;">
+      <div class="detail-header__body">
         <div>
-          <h1 style="font-family:var(--mono); font-size:22px; font-weight:600; color:#fff; margin:0 0 8px; display:flex; align-items:center; gap:10px;">
-            <span><span style="opacity:0.6;">{{ print.author }}/</span>{{ print.name }}</span>
+          <h1 class="detail-title">
+            <span><span class="detail-title__author">{{ print.author }}/</span>{{ print.name }}</span>
             @if (print.verified) {
-              <span title="Verified print" style="display:inline-flex; align-items:center; flex-shrink:0;">
+              <span title="Verified print" class="icon-badge">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" fill="#166534"/><path d="M4.5 8.5l2.5 2.5 4.5-5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </span>
             }
             @if (print.community) {
-              <span title="Community favourite" style="display:inline-flex; align-items:center; flex-shrink:0;">
+              <span title="Community favourite" class="icon-badge">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" fill="#92400e"/><path d="M8 4l1.1 2.2 2.4.35-1.75 1.7.41 2.4L8 9.5l-2.16 1.15.41-2.4L4.5 6.55l2.4-.35L8 4z" fill="#fde68a"/></svg>
               </span>
             }
           </h1>
           @if (print.verified || print.community) {
-            <div style="display:flex; gap:6px; margin-bottom:10px;">
+            <div class="badge-row">
               @if (print.verified) {
-                <span style="font-size:10px; font-weight:700; padding:2px 7px; background:rgba(20,83,45,0.12); border:1px solid rgba(34,197,94,0.3); border-radius:20px; color:#166534; letter-spacing:0.05em;">Verified</span>
+                <span class="badge badge--verified">Verified</span>
               }
               @if (print.community) {
-                <span style="font-size:10px; font-weight:700; padding:2px 7px; background:rgba(120,53,15,0.10); border:1px solid rgba(196,152,42,0.35); border-radius:20px; color:#92400e; letter-spacing:0.05em;">Community</span>
+                <span class="badge badge--community">Community</span>
               }
             </div>
           }
-          <p style="color:rgba(255,255,255,0.7); font-size:14px; margin:0 0 14px; max-width:600px;">{{ print.description }}</p>
-          <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
-            <span style="display:flex; align-items:center; gap:5px; font-size:13px; color:rgba(255,255,255,0.8);">
+          <p class="detail-desc">{{ print.description }}</p>
+          <div class="detail-meta">
+            <span class="meta-item--light">
               <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg>
               {{ print.stars.toLocaleString() }} stars
             </span>
-            <span style="display:flex; align-items:center; gap:5px; font-size:13px; color:rgba(255,255,255,0.8);">
+            <span class="meta-item--light">
               <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M5 3.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm0 2.122a2.25 2.25 0 10-1.5 0v.878A2.25 2.25 0 005.75 8.5h1.5v2.128a2.251 2.251 0 101.5 0V8.5h1.5a2.25 2.25 0 002.25-2.25v-.878a2.25 2.25 0 10-1.5 0v.878a.75.75 0 01-.75.75h-4.5A.75.75 0 015 6.25v-.878zm3.75 7.378a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm3-8.75a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>
               {{ print.forks }} forks
             </span>
-            <span style="font-size:13px; color:rgba(255,255,255,0.7);">{{ print.license }}</span>
-            <span style="font-size:13px; color:rgba(255,255,255,0.7);">{{ print.language }}</span>
+            <span class="meta-item--light">{{ print.license }}</span>
+            <span class="meta-item--light">{{ print.language }}</span>
             @for (t of print.tags; track t) {
               <span class="tag-light">{{ t }}</span>
             }
           </div>
         </div>
-        <div style="flex-shrink:0;">
-          <div style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:10px 14px;">
-            <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.05em;">Pull this blueprint</div>
-            <div style="display:flex; align-items:center; gap:8px;">
-              <code style="font-family:var(--mono); font-size:12px; color:rgba(255,255,255,0.9);">hyle pull {{ print.id }}</code>
-              <app-copy-button [text]="'hyle pull ' + print.id" style="color:rgba(255,255,255,0.5);"></app-copy-button>
-            </div>
+        <div class="pull-box">
+          <div class="pull-box__label">Pull this blueprint</div>
+          <div class="pull-box__inner">
+            <code class="pull-box__code">hyle pull {{ print.id }}</code>
+            <app-copy-button [text]="'hyle pull ' + print.id" style="color:rgba(255,255,255,0.5);"></app-copy-button>
           </div>
         </div>
       </div>
@@ -81,7 +79,7 @@
 
   <!-- README -->
   @if (tab() === 'readme') {
-    <div class="container" style="padding-top:32px; padding-bottom:64px; max-width:780px;">
+    <div class="container readme-tab">
       <div class="readme-body">
         <h1>{{ print.name }}</h1>
         <p>{{ print.longDesc }}</p>
@@ -112,15 +110,15 @@ hyle pull {{ print.id }}</code></pre>
       </div>
       <div class="file-sidebar-col">
         <app-quickstart-panel [printId]="print.id" [compact]="true"></app-quickstart-panel>
-        <div style="margin-top:24px;">
-          <div class="qs-title" style="margin-bottom:10px;">Latest version</div>
+        <div class="sidebar-section">
+          <div class="qs-title qs-title--standalone">Latest version</div>
           @if (print.versions.length > 0) {
-            <div style="font-family:var(--mono); font-size:13px; font-weight:500; margin-bottom:4px;">{{ print.versions[0].tag }}</div>
-            <div style="font-size:12px; color:var(--muted); margin-bottom:8px;">{{ print.versions[0].date }}</div>
-            <p style="font-size:12px; color:var(--muted); line-height:1.5;">{{ print.versions[0].notes }}</p>
-            <div style="margin-top:8px; display:flex; gap:8px;">
+            <div class="version-panel__tag">{{ print.versions[0].tag }}</div>
+            <div class="version-panel__date">{{ print.versions[0].date }}</div>
+            <p class="version-panel__notes">{{ print.versions[0].notes }}</p>
+            <div class="version-panel__actions">
               <button class="link-btn" style="font-size:12px;" (click)="setTab('versions')">All releases →</button>
-              <span style="color:var(--muted); font-size:12px;">·</span>
+              <span class="arrow-sep">·</span>
               <button class="link-btn" style="font-size:12px;" (click)="setTab('diff')">Compare →</button>
             </div>
           }
@@ -131,33 +129,27 @@ hyle pull {{ print.id }}</code></pre>
 
   <!-- Versions -->
   @if (tab() === 'versions') {
-    <div class="container" style="padding-top:32px; padding-bottom:64px;">
-      <div style="display:flex; align-items:center; gap:12px; margin-bottom:24px; flex-wrap:wrap;">
+    <div class="container content-section">
+      <div class="versions-header">
         <h3 style="font-size:15px; font-weight:600;">Releases</h3>
         <!-- View toggle -->
-        <div style="display:flex; gap:1px; background:var(--border); border-radius:5px; padding:1px; margin-left:4px;">
-          <button (click)="releasesView.set('list')"
-            style="display:flex; align-items:center; justify-content:center; width:28px; height:26px; border-radius:4px; border:none; cursor:pointer; transition:all 0.12s;"
-            [style.background]="releasesView() === 'list' ? 'var(--surface)' : 'transparent'"
-            [style.color]="releasesView() === 'list' ? 'var(--text)' : 'var(--muted)'">
+        <div class="view-toggle">
+          <button (click)="releasesView.set('list')" class="view-toggle__btn" [class.active]="releasesView() === 'list'">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="0" y="1" width="14" height="2" rx="1"/><rect x="0" y="6" width="14" height="2" rx="1"/><rect x="0" y="11" width="14" height="2" rx="1"/></svg>
           </button>
-          <button (click)="releasesView.set('grid')"
-            style="display:flex; align-items:center; justify-content:center; width:28px; height:26px; border-radius:4px; border:none; cursor:pointer; transition:all 0.12s;"
-            [style.background]="releasesView() === 'grid' ? 'var(--surface)' : 'transparent'"
-            [style.color]="releasesView() === 'grid' ? 'var(--text)' : 'var(--muted)'">
+          <button (click)="releasesView.set('grid')" class="view-toggle__btn" [class.active]="releasesView() === 'grid'">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="0" y="0" width="6" height="6" rx="1"/><rect x="8" y="0" width="6" height="6" rx="1"/><rect x="0" y="8" width="6" height="6" rx="1"/><rect x="8" y="8" width="6" height="6" rx="1"/></svg>
           </button>
         </div>
         <!-- Compare selectors -->
-        <div style="margin-left:auto; display:flex; align-items:center; gap:8px; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:6px 12px;">
-          <span style="font-size:12px; color:var(--muted); font-weight:500;">Compare</span>
+        <div class="compare-bar">
+          <span class="compare-bar__label">Compare</span>
           <select [(ngModel)]="diffV1" name="diffV1" class="sort-select" style="font-size:12px;">
             @for (v of print.versions; track v.tag) {
               <option [value]="v.tag">{{ v.tag }}</option>
             }
           </select>
-          <span style="color:var(--muted); font-size:13px;">→</span>
+          <span class="arrow-sep">→</span>
           <select [(ngModel)]="diffV2" name="diffV2" class="sort-select" style="font-size:12px;">
             @for (v of print.versions; track v.tag) {
               <option [value]="v.tag">{{ v.tag }}</option>
@@ -168,39 +160,38 @@ hyle pull {{ print.id }}</code></pre>
       </div>
 
       @if (releasesView() === 'list') {
-        <div style="display:flex; flex-direction:column; gap:8px;">
+        <div class="versions-list">
           @for (v of print.versions; track v.tag; let i = $index) {
-            <div class="version-row" [class.latest]="i === 0" style="display:flex; gap:16px; align-items:flex-start;">
-              <div style="flex-shrink:0; width:80px;">
-                <div style="font-family:var(--mono); font-size:13px; font-weight:600;">{{ v.tag }}</div>
+            <div class="version-row" [class.latest]="i === 0">
+              <div class="version-row__tag">
+                <div class="version-row__tag-label">{{ v.tag }}</div>
                 @if (i === 0) {
-                  <span class="badge-latest" style="margin-top:4px; display:inline-block;">latest</span>
+                  <span class="badge-latest">latest</span>
                 }
               </div>
-              <div style="flex:1;">
+              <div class="version-row__body">
                 <p style="font-size:13px; color:var(--muted); margin:0 0 8px; line-height:1.5;">{{ v.notes }}</p>
                 <div style="display:flex; gap:8px; align-items:center;">
-                  <code style="font-family:var(--mono); font-size:11px; background:var(--subtle); padding:2px 8px; border-radius:4px; color:var(--muted);">hyle pull {{ print.id }}&#64;{{ v.tag }}</code>
+                  <code class="code-sm">hyle pull {{ print.id }}&#64;{{ v.tag }}</code>
                   <app-copy-button [text]="'hyle pull ' + print.id + '@' + v.tag"></app-copy-button>
                 </div>
               </div>
-              <div style="flex-shrink:0; text-align:right;">
-                <div style="font-size:12px; color:var(--muted); margin-bottom:6px;">{{ v.date }}</div>
+              <div class="version-row__aside">
+                <div class="version-row__aside-date">{{ v.date }}</div>
                 <button class="link-btn" style="font-size:12px;" (click)="setTabAndDiffV2(v.tag)">diff →</button>
               </div>
             </div>
           }
         </div>
       } @else {
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <div class="versions-grid">
           @for (v of print.versions; track v.tag; let i = $index) {
-            <div style="padding:10px 16px; background:var(--surface); border-radius:8px; min-width:160px;"
-              [style.border]="i === 0 ? '1px solid rgba(196,152,42,0.4)' : '1px solid var(--border)'">
-              <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
-                <span style="font-family:var(--mono); font-size:13px; font-weight:600;">{{ v.tag }}</span>
+            <div class="version-card" [class.latest]="i === 0">
+              <div class="version-card__header">
+                <span class="version-card__tag">{{ v.tag }}</span>
                 @if (i === 0) { <span class="badge-latest">latest</span> }
               </div>
-              <div style="font-size:11px; color:var(--muted); margin-bottom:6px;">{{ v.date }}</div>
+              <div class="version-card__date">{{ v.date }}</div>
               <button class="link-btn" style="font-size:11px;" (click)="setTabAndDiffV2(v.tag)">diff →</button>
             </div>
           }
@@ -219,13 +210,13 @@ hyle pull {{ print.id }}</code></pre>
             <option [value]="v.tag">{{ v.tag }}</option>
           }
         </select>
-        <span style="color:var(--muted); font-size:13px;">→</span>
+        <span class="arrow-sep">→</span>
         <select [(ngModel)]="diffV2" name="diffV2b" class="sort-select">
           @for (v of print.versions; track v.tag) {
             <option [value]="v.tag">{{ v.tag }}</option>
           }
         </select>
-        <span style="margin-left:auto; font-size:12px; color:var(--muted);">Showing: identities/roles.yaml</span>
+        <span class="compare-label">Showing: identities/roles.yaml</span>
       </div>
       <app-diff-view
         [left]="diffLeft"
@@ -233,7 +224,7 @@ hyle pull {{ print.id }}</code></pre>
         [leftLabel]="'identities/roles.yaml @ ' + diffV1"
         [rightLabel]="'identities/roles.yaml @ ' + diffV2">
       </app-diff-view>
-      <p style="margin-top:12px; font-size:12px; color:var(--muted);">
+      <p class="compare-tip">
         Tip: select a file in the <button class="link-btn" style="font-size:12px;" (click)="setTab('files')">Files</button> tab then use the version selectors in the sidebar to compare.
       </p>
     </div>

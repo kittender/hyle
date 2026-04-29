@@ -1,3 +1,61 @@
+/* ── Not found ── */
+.detail-not-found { padding-top: 64px; text-align: center; color: var(--muted); }
+
+/* ── Breadcrumb ── */
+.breadcrumb { margin-bottom: 8px; font-size: 13px; color: rgba(255,255,255,0.5); }
+.breadcrumb__sep { margin: 0 6px; }
+.breadcrumb__current { color: #fff; }
+
+/* ── Header layout ── */
+.detail-header__body { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+
+/* ── Title / meta ── */
+.detail-title { font-family: var(--mono); font-size: 22px; font-weight: 600; color: #fff; margin: 0 0 8px; display: flex; align-items: center; gap: 10px; }
+.detail-title__author { opacity: 0.6; }
+.detail-desc { color: rgba(255,255,255,0.7); font-size: 14px; margin: 0 0 14px; max-width: 600px; }
+.detail-meta { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.meta-item--light { display: flex; align-items: center; gap: 5px; font-size: 13px; color: rgba(255,255,255,0.8); }
+
+/* ── Pull box ── */
+.pull-box { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 10px 14px; flex-shrink: 0; }
+.pull-box__label { font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+.pull-box__inner { display: flex; align-items: center; gap: 8px; }
+.pull-box__code { font-family: var(--mono); font-size: 12px; color: rgba(255,255,255,0.9); }
+
+/* ── Tabs content ── */
+.readme-tab { padding-top: 32px; padding-bottom: 64px; max-width: 780px; }
+
+/* ── Versions header ── */
+.versions-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; padding-top: 32px; padding-bottom: 64px; }
+.compare-bar { margin-left: auto; display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; }
+.compare-bar__label { font-size: 12px; color: var(--muted); font-weight: 500; }
+
+/* ── Version row columns ── */
+.version-row__tag { flex-shrink: 0; width: 80px; }
+.version-row__tag-label { font-family: var(--mono); font-size: 13px; font-weight: 600; }
+.version-row__body { flex: 1; }
+.version-row__aside { flex-shrink: 0; text-align: right; }
+.version-row__aside-date { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.versions-list { display: flex; flex-direction: column; gap: 8px; }
+
+/* ── Version grid ── */
+.versions-grid { display: flex; gap: 10px; flex-wrap: wrap; }
+.version-card { padding: 10px 16px; background: var(--surface); border-radius: 8px; min-width: 160px; border: 1px solid var(--border); }
+.version-card.latest { border-color: rgba(196,152,42,0.4); }
+.version-card__header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.version-card__tag { font-family: var(--mono); font-size: 13px; font-weight: 600; }
+.version-card__date { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+
+/* ── Version panel (files sidebar) ── */
+.version-panel__tag { font-family: var(--mono); font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+.version-panel__date { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+.version-panel__notes { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.version-panel__actions { margin-top: 8px; display: flex; gap: 8px; }
+
+/* ── Compare tab ── */
+.compare-tip { margin-top: 12px; font-size: 12px; color: var(--muted); }
+.compare-label { margin-left: auto; font-size: 12px; color: var(--muted); }
+
 .files-layout {
   display: grid;
   grid-template-columns: 220px 1fr 260px;

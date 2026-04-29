@@ -1,29 +1,29 @@
-<div style="min-height:calc(100vh - 52px); display:flex; align-items:center; justify-content:center; background:var(--bg); padding:40px 16px;">
-  <div style="width:100%; max-width:400px;">
-    <div style="text-align:center; margin-bottom:32px;">
-      <div style="font-family:var(--script); font-size:36px; color:var(--gold); margin-bottom:8px;">Welcome back</div>
-      <p style="font-size:14px; color:var(--muted);">Log in to your Hylé account</p>
+<div class="auth-page">
+  <div class="auth-card-wrap">
+    <div class="auth-heading">
+      <div class="auth-title">Welcome back</div>
+      <p class="auth-subtitle">Log in to your Hylé account</p>
     </div>
-    <form (submit)="submit($event)" style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:28px;">
+    <form (submit)="submit($event)" class="auth-form-card">
       @if (error) {
-        <div style="background:#fff5f5; border:1px solid #fca5a5; border-radius:5px; padding:9px 12px; font-size:13px; color:#c0392b; margin-bottom:18px;">{{ error }}</div>
+        <div class="form-error">{{ error }}</div>
       }
-      <div style="margin-bottom:18px;">
+      <div class="form-field--lg">
         <label class="form-label">Email address</label>
         <input class="form-input" type="email" [(ngModel)]="email" name="email" placeholder="you@example.com" autofocus>
       </div>
-      <div style="margin-bottom:10px;">
+      <div class="form-field">
         <label class="form-label">Password</label>
         <input class="form-input" type="password" [(ngModel)]="password" name="password" placeholder="••••••••">
       </div>
-      <div style="text-align:right; margin-bottom:22px;">
-        <button type="button" class="link-btn" (click)="goTo('/forgot-password')" style="font-size:12px;">Forgot password?</button>
+      <div class="forgot-wrap">
+        <button type="button" class="link-btn" (click)="goTo('/forgot-password')">Forgot password?</button>
       </div>
       <button type="submit" class="form-submit" [disabled]="loading">
         {{ loading ? 'Logging in…' : 'Log in' }}
       </button>
     </form>
-    <p style="text-align:center; font-size:13px; color:var(--muted); margin-top:20px;">
+    <p class="auth-footer">
       Don't have an account?
       <button class="link-btn" (click)="goTo('/register')">Create one</button>
     </p>

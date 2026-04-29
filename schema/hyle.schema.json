@@ -1,0 +1,158 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://hyle.eu/schema/hyle.schema.json",
+  "title": "HyleManifest",
+  "description": "Hylé substrate manifest schema",
+  "type": "object",
+  "required": ["name", "author", "version", "models"],
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$",
+      "maxLength": 64,
+      "description": "URL-safe slug, unique per author on registry"
+    },
+    "author": {
+      "type": "string",
+      "pattern": "^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$",
+      "maxLength": 64,
+      "description": "GitHub username of the publisher"
+    },
+    "description": {
+      "type": "string",
+      "description": "Short human-readable description of the substrate"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Strict semver x.y.z (no pre-release suffix)"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Searchable tags for registry discovery"
+    },
+    "url": {
+      "type": "string",
+      "format": "uri",
+      "description": "Optional linked GitHub repository"
+    },
+    "forks": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Source substrates this was forked from"
+    },
+    "models": {
+      "type": "object",
+      "required": ["primary", "secondary"],
+      "additionalProperties": false,
+      "properties": {
+        "primary": {
+          "$ref": "#/definitions/ModelConfig",
+          "description": "High-intelligence model for complex work"
+        },
+        "secondary": {
+          "$ref": "#/definitions/ModelConfig",
+          "description": "Lightweight model for indexing, summaries, scaffolding"
+        }
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/DepEntry" },
+      "description": "External tools required by this substrate"
+    },
+    "ontology": {
+      "$ref": "#/definitions/PathArray",
+      "description": "Knowledge docs: CLAUDE.md, specs, diagrams, feature files"
+    },
+    "craft": {
+      "$ref": "#/definitions/PathArray",
+      "description": "Technical structure: SKILLS.md, ARCHITECTURE.md, MCP configs, package.json"
+    },
+    "identities": {
+      "$ref": "#/definitions/PathArray",
+      "description": "Agent roles: AGENTS.md, .claude/agents/*.md"
+    },
+    "ethics": {
+      "$ref": "#/definitions/PathArray",
+      "description": "Policies and compliance: .cedar files, evals"
+    }
+  },
+  "definitions": {
+    "ModelConfig": {
+      "type": "object",
+      "required": ["provider", "model"],
+      "additionalProperties": false,
+      "properties": {
+        "provider": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Provider name: anthropic, openai, ollama, or any string"
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Model family alias (e.g. claude-sonnet-4-6)"
+        },
+        "model_pin": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Exact checkpoint for reproducibility (opt-in)"
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "e.g. [saas, paid] or [local, free] or [free-tier]"
+        },
+        "fallback": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/ModelConfig" },
+          "description": "Ordered fallback chain; resolved top-to-bottom"
+        }
+      }
+    },
+    "DepEntry": {
+      "type": "object",
+      "required": ["name", "version", "url"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Tool name (e.g. node, bun, docker)"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Semver range constraint (e.g. >=18.0.0, ^2.3)"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Canonical source URL for install instructions"
+        },
+        "install": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Per-OS install command overrides",
+          "properties": {
+            "macos": { "type": "string" },
+            "linux": { "type": "string" },
+            "windows": { "type": "string" }
+          }
+        }
+      }
+    },
+    "PathArray": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "not": { "pattern": "^(/|~/|\\.\\./)" },
+        "description": "Relative path or glob, no absolute paths or directory traversal"
+      }
+    }
+  }
+}
