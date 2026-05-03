@@ -4,6 +4,7 @@ import { runInit } from "./commands/init";
 import { runScan } from "./commands/scan";
 import { runPublish } from "./commands/publish";
 import { runPull } from "./commands/pull";
+import { runWatch } from "./commands/watch";
 import pkg from "../package.json" with { type: "json" };
 
 const program = new Command()
@@ -147,7 +148,10 @@ program
   .description("Live token consumption monitor (extension)")
   .option("--audit", "Write hash-chained hyle-audit.log")
   .option("--split <threshold>", "Split context at threshold (e.g. 80% or 10000)")
-  .action(() => stub("watch"));
+  .action(async (cmd) => {
+    const globals = program.opts<{ offline?: boolean }>();
+    await runWatch({ audit: !!cmd.audit, split: cmd.split, offline: !!globals.offline });
+  });
 
 program
   .command("index")
