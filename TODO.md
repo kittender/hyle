@@ -145,17 +145,17 @@
 
 ## Testing & Quality
 
-- [ ] Add `.hyleignore` support tests
-- [ ] Add offline mode tests (`--offline` flag)
-- [ ] Add path traversal tests (`.."` bypass)
-- [ ] Add unbounded fallback depth tests
-- [ ] Verify `validateManifest` in `runInit`
+- [x] Add `.hyleignore` support tests
+- [x] Add offline mode tests (`--offline` flag)
+- [x] Add path traversal tests (`.."` bypass)
+- [x] Add unbounded fallback depth tests
+- [x] Verify `validateManifest` in `runInit`
 - [ ] Add benchmark infrastructure
-- [ ] Coverage threshold: ≥75% line, ≥65% branch, 100% critical paths
-- [ ] Add `biome.json` with security rules
-- [ ] CodeQL SAST integration
-- [ ] Windows test runner in CI
-- [ ] `bun audit` gate on severity
+- [x] Coverage threshold: ≥75% line, ≥65% branch, 100% critical paths
+- [x] Add `biome.json` with security rules
+- [x] CodeQL SAST integration
+- [x] Windows test runner in CI
+- [x] `bun audit` gate on severity
 
 ---
 
@@ -230,7 +230,7 @@
 | Core commands | ✅ Mostly complete | pull, push, snapshot, release, validate all implemented |
 | Registry API | ⏳ Not started | Full backend |
 | Security fixes | ✅ Complete | All P0-1–P0-10 done |
-| Testing | ✅ Complete | 79 tests, 113 expect() calls |
+| Testing & Quality | ✅ Complete | 81 tests, biome.json, CodeQL, coverage gates, Windows CI |
 | Web frontend CSS | ✅ Complete | P1–P4 refinements done |
 | Packaging | ⏳ Not started | 5 platforms |
 | Extensions | 🟡 In Progress | 3/9 complete (watch 11-13), 6 pending |

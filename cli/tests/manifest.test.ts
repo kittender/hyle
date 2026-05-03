@@ -471,4 +471,83 @@ describe("validateManifest — warnings", () => {
     expect(errors).toHaveLength(0);
     expect(warnings.filter((w) => w.field.includes("fallback"))).toHaveLength(0);
   });
+
+  test("fallback chain within depth limit is valid", () => {
+    const yaml = minimalYaml({
+      description: "A substrate",
+      models: {
+        primary: {
+          provider: "anthropic",
+          model: "claude-sonnet-4-6",
+          fallback: [
+            {
+              provider: "openai",
+              model: "gpt-4o",
+              fallback: [
+                {
+                  provider: "openai",
+                  model: "gpt-4o-mini",
+                  fallback: [{ provider: "ollama", model: "qwen2.5:14b", tags: ["local"] }],
+                },
+              ],
+            },
+          ],
+        },
+        secondary: { provider: "anthropic", model: "claude-haiku-4-5" },
+      },
+    });
+    const m = parseManifest(yaml);
+    const { errors } = validateManifest(m);
+    expect(errors.filter((e) => e.field.includes("fallback"))).toHaveLength(0);
+  });
+
+  test("fallback chain exceeding depth limit produces error", () => {
+    const yaml = minimalYaml({
+      description: "A substrate",
+      models: {
+        primary: {
+          provider: "anthropic",
+          model: "claude-sonnet-4-6",
+          fallback: [
+            {
+              provider: "openai",
+              model: "gpt-4o",
+              fallback: [
+                {
+                  provider: "openai",
+                  model: "gpt-4o-mini",
+                  fallback: [
+                    {
+                      provider: "openai",
+                      model: "text-davinci-003",
+                      fallback: [
+                        {
+                          provider: "openai",
+                          model: "text-davinci-002",
+                          fallback: [
+                            {
+                              provider: "ollama",
+                              model: "qwen2.5:14b",
+                              tags: ["local"],
+                              fallback: [
+                                { provider: "ollama", model: "llama2", tags: ["local"] },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        secondary: { provider: "anthropic", model: "claude-haiku-4-5" },
+      },
+    });
+    const m = parseManifest(yaml);
+    const { errors } = validateManifest(m);
+    expect(errors.some((e) => e.field.includes("fallback") && e.message.includes("too deep"))).toBe(true);
+  });
 });

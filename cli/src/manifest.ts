@@ -83,6 +83,7 @@ export class ManifestParseError extends Error {
 // ---- Parsing ----
 
 export const SLUG_RE = /^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$/;
+export const MAX_FALLBACK_DEPTH = 5;
 
 export function parseManifest(yaml: string): HyleManifest {
 	let raw: unknown;
@@ -428,6 +429,7 @@ function validateModelConfig(
 	errors: ValidationError[],
 	warnings: ValidationWarning[],
 	warnLocalFallback = false,
+	depth = 0,
 ): void {
 	if (!m.provider) {
 		errors.push({
@@ -450,6 +452,13 @@ function validateModelConfig(
 
 	const fallback = m.fallback ?? [];
 
+	if (depth >= MAX_FALLBACK_DEPTH && fallback.length > 0) {
+		errors.push({
+			field: `${path}.fallback`,
+			message: `Fallback chain too deep (max depth ${MAX_FALLBACK_DEPTH})`,
+		});
+	}
+
 	if (warnLocalFallback) {
 		const hasLocalFallback = fallback.some((f) => f.tags?.includes("local"));
 		if (!hasLocalFallback) {
@@ -469,6 +478,7 @@ function validateModelConfig(
 			errors,
 			warnings,
 			false,
+			depth + 1,
 		);
 	}
 }
