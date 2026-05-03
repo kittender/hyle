@@ -278,9 +278,9 @@ export function validateManifest(m: HyleManifest): ValidationResult {
     errors.push({ field: "author", message: "Must be a URL-safe slug: lowercase alphanumeric and hyphens, max 64 chars" });
   }
 
-  // version — strict x.y.z only (no pre-release, no v prefix)
-  if (!/^\d+\.\d+\.\d+$/.test(m.version) || !semver.valid(m.version)) {
-    errors.push({ field: "version", message: "Must be a valid semver string: x.y.z" });
+  // version — x.y.z or x.y.z-snapshot (for snapshot builds)
+  if (!/^\d+\.\d+\.\d+(-snapshot)?$/.test(m.version) || !semver.valid(m.version)) {
+    errors.push({ field: "version", message: "Must be a valid semver string: x.y.z (or x.y.z-snapshot)" });
   }
 
   // description warning
@@ -408,8 +408,8 @@ export async function loadManifest(path: string): Promise<HyleManifest> {
   const manifest = parseManifest(yaml);
   const validation = validateManifest(manifest);
 
-  if (!validation.valid) {
-    const errors = validation.errors.map((e) => `  ${e.path}: ${e.message}`).join("\n");
+  if (validation.errors.length > 0) {
+    const errors = validation.errors.map((e) => `  ${e.field}: ${e.message}`).join("\n");
     throw new Error(`Invalid manifest at ${path}:\n${errors}`);
   }
 

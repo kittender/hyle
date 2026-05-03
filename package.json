@@ -2,7 +2,7 @@
   "name": "hyle",
   "version": "0.1.0",
   "description": "AI Context Substrate Manager — versioned snapshots of agent workflows",
-  "workspaces": ["cli", "web"],
+  "workspaces": ["cli", "web", "registry"],
   "scripts": {
     "test": "bun run --cwd cli test",
     "lint": "bun run --cwd cli lint",

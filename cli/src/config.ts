@@ -22,6 +22,12 @@ export function loadConfig(cwd = process.cwd()): HyleConfig {
       merged = { ...merged, ...(raw as object) };
     }
   }
+
+  // Allow env var override for development/testing
+  if (process.env.HYLE_REGISTRY_URL) {
+    merged.remote_url = process.env.HYLE_REGISTRY_URL;
+  }
+
   validateRemoteUrl(merged.remote_url);
   return merged;
 }
@@ -33,10 +39,14 @@ function validateRemoteUrl(url: string): void {
   } catch {
     throw new Error(`Invalid remote_url in .hyle config: "${url}" is not a valid URL`);
   }
-  if (parsed.protocol !== "https:") {
+
+  const allowInsecure = process.env.HYLE_ALLOW_INSECURE === "1";
+
+  if (parsed.protocol !== "https:" && !allowInsecure) {
     throw new Error(`Invalid remote_url in .hyle config: must use https (got "${parsed.protocol}")`);
   }
-  if (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") {
-    throw new Error(`Invalid remote_url in .hyle config: localhost not allowed`);
+
+  if ((parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") && !allowInsecure) {
+    throw new Error(`Invalid remote_url in .hyle config: localhost not allowed (set HYLE_ALLOW_INSECURE=1 for development)`);
   }
 }

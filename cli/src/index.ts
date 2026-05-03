@@ -1,6 +1,9 @@
 #!/usr/bin/env bun
 import { Command } from "commander";
 import { runInit } from "./commands/init";
+import { runScan } from "./commands/scan";
+import { runPublish } from "./commands/publish";
+import { runPull } from "./commands/pull";
 import pkg from "../package.json" with { type: "json" };
 
 const program = new Command()
@@ -24,39 +27,67 @@ program
   .description("Pull substrate from registry")
   .option("--dry-run", "Preview diff without applying")
   .option("--force", "Overwrite existing files")
-  .action(() => stub("pull"));
+  .option("-y, --yes", "Skip confirmations")
+  .action(async (name: string, opts: { dryRun?: boolean; force?: boolean; yes?: boolean }) => {
+    const globals = program.opts<{ offline?: boolean }>();
+    await runPull(name, { dryRun: !!opts.dryRun, force: !!opts.force, offline: !!globals.offline, yes: !!opts.yes });
+  });
 
 program
   .command("snapshot")
   .description("Patch bump (x.x.+1), unstable publish")
   .option("--dry-run", "Preview without uploading")
-  .action(() => stub("snapshot"));
+  .option("-y, --yes", "Skip confirmations")
+  .action(async (opts: { dryRun?: boolean; yes?: boolean }) => {
+    const globals = program.opts<{ offline?: boolean }>();
+    await runPublish("snapshot", { dryRun: !!opts.dryRun, offline: !!globals.offline, yes: !!opts.yes });
+  });
 
 program
   .command("push [version]")
   .description("Minor bump (x.+1.0), stable publish")
   .option("--dry-run", "Preview without uploading")
-  .action(() => stub("push"));
+  .option("-y, --yes", "Skip confirmations")
+  .action(async (version: string, opts: { dryRun?: boolean; yes?: boolean }) => {
+    const globals = program.opts<{ offline?: boolean }>();
+    await runPublish("push", { dryRun: !!opts.dryRun, offline: !!globals.offline, version, yes: !!opts.yes });
+  });
 
 program
   .command("release [version]")
   .description("Major bump (+1.0.0), stable publish")
   .option("--dry-run", "Preview without uploading")
-  .action(() => stub("release"));
+  .option("-y, --yes", "Skip confirmations")
+  .action(async (version: string, opts: { dryRun?: boolean; yes?: boolean }) => {
+    const globals = program.opts<{ offline?: boolean }>();
+    await runPublish("release", { dryRun: !!opts.dryRun, offline: !!globals.offline, version, yes: !!opts.yes });
+  });
 
 program
   .command("ontology [path]")
   .description("Scan and add ontology files to hyle.yaml")
   .option("--dry-run", "Preview without writing")
   .option("--add <file>", "Add single file without scanning")
-  .action(() => stub("ontology"));
+  .action(async (path: string, cmd) => {
+    await runScan("ontology", {
+      path,
+      dryRun: !!cmd.dryRun,
+      add: cmd.add,
+    });
+  });
 
 program
   .command("craft [path]")
   .description("Scan and add craft files to hyle.yaml")
   .option("--dry-run", "Preview without writing")
   .option("--add <file>", "Add single file without scanning")
-  .action(() => stub("craft"));
+  .action(async (path: string, cmd) => {
+    await runScan("craft", {
+      path,
+      dryRun: !!cmd.dryRun,
+      add: cmd.add,
+    });
+  });
 
 program
   .command("identities [path]")
@@ -64,14 +95,30 @@ program
   .option("--dry-run", "Preview without writing")
   .option("--add <file>", "Add single file without scanning")
   .option("--structure", "LLM-powered: refactor into hierarchical topology")
-  .action(() => stub("identities"));
+  .action(async (path: string, cmd) => {
+    if (cmd.structure) {
+      console.error("--structure not implemented yet (requires LLM)");
+      process.exit(1);
+    }
+    await runScan("identities", {
+      path,
+      dryRun: !!cmd.dryRun,
+      add: cmd.add,
+    });
+  });
 
 program
   .command("ethics [path]")
   .description("Scan and add ethics files to hyle.yaml")
   .option("--dry-run", "Preview without writing")
   .option("--add <file>", "Add single file without scanning")
-  .action(() => stub("ethics"));
+  .action(async (path: string, cmd) => {
+    await runScan("ethics", {
+      path,
+      dryRun: !!cmd.dryRun,
+      add: cmd.add,
+    });
+  });
 
 const config = program.command("config").description("Read/write .hyle config");
 config

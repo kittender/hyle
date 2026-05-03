@@ -155,7 +155,7 @@ function getGitAuthor(): string {
   }
 }
 
-function injectHyleReference(cwd: string, name: string, author: string, version: string): void {
+export function injectHyleReference(cwd: string, name: string, author: string, version: string): void {
   const claudeMdPath = join(cwd, "CLAUDE.md");
   if (!existsSync(claudeMdPath)) return;
 
