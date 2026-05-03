@@ -79,9 +79,9 @@
 
 ## Extensions (LLM-powered, opt-in)
 
-- [ ] TODO 11 — `hyle watch` terminal UI
-- [ ] TODO 12 — `hyle watch --audit` GDPR audit log
-- [ ] TODO 13 — `hyle watch --split` context splitting
+- [x] TODO 11 — `hyle watch` terminal UI
+- [x] TODO 12 — `hyle watch --audit` GDPR audit log
+- [x] TODO 13 — `hyle watch --split` context splitting
 - [ ] TODO 14 — `hyle identities --structure` LLM topology
 - [ ] TODO 15 — `hyle ontology --structure` LLM index
 - [ ] TODO 16 — `hyle index` unified metadata
@@ -233,6 +233,6 @@
 | Testing | 🟡 In Progress | Coverage + benchmarks |
 | Web frontend CSS | 🟡 In Progress | P1–P4 refinements |
 | Packaging | ⏳ Not started | 5 platforms |
-| Extensions | ⏳ Not started | 9 commands |
+| Extensions | 🟡 In Progress | 3/9 complete (watch 11-13), 6 pending |
 | Docs | ⏳ Mostly pending | SECURITY.md, CONTRIBUTING.md |
 
