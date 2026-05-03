@@ -1,0 +1,21 @@
+{
+  "name": "hyle",
+  "version": "0.1.0",
+  "description": "AI Context Substrate Manager — versioned snapshots of agent workflows",
+  "workspaces": ["cli", "web"],
+  "scripts": {
+    "test": "bun run --cwd cli test",
+    "lint": "bun run --cwd cli lint",
+    "build": "bun run --cwd cli build && bun run --cwd web build",
+    "build:cli": "bun run --cwd cli build",
+    "build:web": "bun run --cwd web build",
+    "build:all": "bun run --cwd cli scripts/build-all.ts",
+    "dev": "bun run --cwd web start",
+    "dev:cli": "bun run --cwd cli dev"
+  },
+  "engines": {
+    "bun": ">=1.0.0",
+    "node": ">=18.0.0"
+  },
+  "license": "Apache-2.0"
+}

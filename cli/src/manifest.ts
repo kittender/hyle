@@ -401,3 +401,17 @@ function isUnsafePath(p: string, root = "."): boolean {
   const rel = relative(resolvedRoot, abs);
   return rel.startsWith("..") || abs === resolvedRoot;
 }
+
+export async function loadManifest(path: string): Promise<HyleManifest> {
+  const { readFileSync } = await import("node:fs");
+  const yaml = readFileSync(path, "utf8");
+  const manifest = parseManifest(yaml);
+  const validation = validateManifest(manifest);
+
+  if (!validation.valid) {
+    const errors = validation.errors.map((e) => `  ${e.path}: ${e.message}`).join("\n");
+    throw new Error(`Invalid manifest at ${path}:\n${errors}`);
+  }
+
+  return manifest;
+}

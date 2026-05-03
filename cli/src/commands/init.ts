@@ -4,7 +4,7 @@ import { existsSync, writeFileSync } from "node:fs";
 import { join, basename } from "node:path";
 import { execSync } from "node:child_process";
 import type { HyleManifest } from "../manifest";
-import { SLUG_RE } from "../manifest";
+import { SLUG_RE, validateManifest } from "../manifest";
 import { loadConfig } from "../config";
 
 const DEFAULT_HYLE_CONFIG = `# Hylé local config — overrides ~/.hyle
@@ -89,6 +89,13 @@ export async function runInit(opts: { yes: boolean; offline?: boolean }): Promis
       },
     },
   };
+
+  const validation = validateManifest(manifest);
+  if (!validation.valid) {
+    console.error("Generated manifest failed validation:");
+    validation.errors.forEach((e) => console.error(`  ${e.path}: ${e.message}`));
+    process.exit(1);
+  }
 
   writeFileSync(manifestPath, dump(manifest, { lineWidth: 80 }));
 

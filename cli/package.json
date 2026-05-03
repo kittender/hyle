@@ -1,6 +1,6 @@
 {
   "name": "hyle",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "AI context substrate manager",
   "type": "module",
   "bin": { "hyle": "./src/index.ts" },
