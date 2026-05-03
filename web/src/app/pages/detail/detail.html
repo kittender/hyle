@@ -60,7 +60,7 @@
           <div class="pull-box__label">Pull this blueprint</div>
           <div class="pull-box__inner">
             <code class="pull-box__code">hyle pull {{ print.id }}</code>
-            <app-copy-button [text]="'hyle pull ' + print.id" style="color:rgba(255,255,255,0.5);"></app-copy-button>
+            <app-copy-button [text]="'hyle pull ' + print.id" class="text-muted-light"></app-copy-button>
           </div>
         </div>
       </div>
@@ -117,9 +117,9 @@ hyle pull {{ print.id }}</code></pre>
             <div class="version-panel__date">{{ print.versions[0].date }}</div>
             <p class="version-panel__notes">{{ print.versions[0].notes }}</p>
             <div class="version-panel__actions">
-              <button class="link-btn" style="font-size:12px;" (click)="setTab('versions')">All releases →</button>
+              <button class="link-btn link-btn--sm" (click)="setTab('versions')">All releases →</button>
               <span class="arrow-sep">·</span>
-              <button class="link-btn" style="font-size:12px;" (click)="setTab('diff')">Compare →</button>
+              <button class="link-btn link-btn--sm" (click)="setTab('diff')">Compare →</button>
             </div>
           }
         </div>
@@ -131,7 +131,7 @@ hyle pull {{ print.id }}</code></pre>
   @if (tab() === 'versions') {
     <div class="container content-section">
       <div class="versions-header">
-        <h3 style="font-size:15px; font-weight:600;">Releases</h3>
+        <h3 class="section-title--detail">Releases</h3>
         <!-- View toggle -->
         <div class="view-toggle">
           <button (click)="releasesView.set('list')" class="view-toggle__btn" [class.active]="releasesView() === 'list'">
@@ -144,7 +144,7 @@ hyle pull {{ print.id }}</code></pre>
         <!-- Compare selectors -->
         <div class="compare-bar">
           <span class="compare-bar__label">Compare</span>
-          <select [(ngModel)]="diffV1" name="diffV1" class="sort-select" style="font-size:12px;">
+          <select [(ngModel)]="diffV1" name="diffV1" class="sort-select text-sm">
             @for (v of print.versions; track v.tag) {
               <option [value]="v.tag">{{ v.tag }}</option>
             }
@@ -155,7 +155,7 @@ hyle pull {{ print.id }}</code></pre>
               <option [value]="v.tag">{{ v.tag }}</option>
             }
           </select>
-          <button class="btn-primary" style="height:26px; font-size:12px; padding:0 10px;" (click)="setTab('diff')">View diff</button>
+          <button class="btn-primary btn-sm" (click)="setTab('diff')">View diff</button>
         </div>
       </div>
 
@@ -170,15 +170,15 @@ hyle pull {{ print.id }}</code></pre>
                 }
               </div>
               <div class="version-row__body">
-                <p style="font-size:13px; color:var(--muted); margin:0 0 8px; line-height:1.5;">{{ v.notes }}</p>
-                <div style="display:flex; gap:8px; align-items:center;">
+                <p class="version-notes">{{ v.notes }}</p>
+                <div class="flex-gap-2">
                   <code class="code-sm">hyle pull {{ print.id }}&#64;{{ v.tag }}</code>
                   <app-copy-button [text]="'hyle pull ' + print.id + '@' + v.tag"></app-copy-button>
                 </div>
               </div>
               <div class="version-row__aside">
                 <div class="version-row__aside-date">{{ v.date }}</div>
-                <button class="link-btn" style="font-size:12px;" (click)="setTabAndDiffV2(v.tag)">diff →</button>
+                <button class="link-btn link-btn--sm" (click)="setTabAndDiffV2(v.tag)">diff →</button>
               </div>
             </div>
           }
@@ -192,7 +192,7 @@ hyle pull {{ print.id }}</code></pre>
                 @if (i === 0) { <span class="badge-latest">latest</span> }
               </div>
               <div class="version-card__date">{{ v.date }}</div>
-              <button class="link-btn" style="font-size:11px;" (click)="setTabAndDiffV2(v.tag)">diff →</button>
+              <button class="link-btn link-btn--xs" (click)="setTabAndDiffV2(v.tag)">diff →</button>
             </div>
           }
         </div>
@@ -225,7 +225,7 @@ hyle pull {{ print.id }}</code></pre>
         [rightLabel]="'identities/roles.yaml @ ' + diffV2">
       </app-diff-view>
       <p class="compare-tip">
-        Tip: select a file in the <button class="link-btn" style="font-size:12px;" (click)="setTab('files')">Files</button> tab then use the version selectors in the sidebar to compare.
+        Tip: select a file in the <button class="link-btn link-btn--sm" (click)="setTab('files')">Files</button> tab then use the version selectors in the sidebar to compare.
       </p>
     </div>
   }

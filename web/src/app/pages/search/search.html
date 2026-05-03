@@ -36,10 +36,10 @@
     <!-- Results -->
     <div>
       <div class="section-header">
-        <span style="font-size:13px; color:var(--muted);">
+        <span class="text-base text-muted">
           {{ results.length }} result{{ results.length !== 1 ? 's' : '' }}
           @if (query) {
-            for <strong style="color:var(--text);">"{{ query }}"</strong>
+            for <strong class="text-dark">"{{ query }}"</strong>
           }
         </span>
         <select [(ngModel)]="sort" name="sort" class="sort-select">
