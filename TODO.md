@@ -130,16 +130,16 @@
 
 ## Critical Fixes (P0)
 
-- [ ] P0-1 — Fix `dep.install` trust model → structured format (`{ manager, pkg, url, sha256 }`)
-- [ ] P0-2 — Fix `isUnsafePath` bypass → normalize paths + reject `".."`
-- [ ] P0-3 — Fix `checkRegistry` TOCTOU → read from `.hyle` remote_url, advisory-only
-- [ ] P0-4 — Add `--offline` flag + hermetic tests
-- [ ] P0-5 — Fix `SLUG_RE` duplication → export from manifest.ts, import in init.ts
-- [ ] P0-6 — Read version from package.json (not hardcoded)
-- [ ] P0-7 — Call `validateManifest` in `runInit`
-- [ ] P0-8 — Add `hyle validate <file>` command + JSON output
-- [ ] P0-9 — Add `bun audit` to CI
-- [ ] P0-10 — Add `SECURITY.md` + responsible disclosure
+- [x] P0-1 — Fix `dep.install` trust model → structured format (`{ manager, pkg, url, sha256 }`)
+- [x] P0-2 — Fix `isUnsafePath` bypass → normalize paths + reject `".."`
+- [x] P0-3 — Fix `checkRegistry` TOCTOU → read from `.hyle` remote_url, advisory-only
+- [x] P0-4 — Add `--offline` flag + hermetic tests
+- [x] P0-5 — Fix `SLUG_RE` duplication → export from manifest.ts, import in init.ts
+- [x] P0-6 — Read version from package.json (not hardcoded)
+- [x] P0-7 — Call `validateManifest` in `runInit`
+- [x] P0-8 — Add `hyle validate <file>` command + JSON output
+- [x] P0-9 — Add `bun audit` to CI
+- [x] P0-10 — Add `SECURITY.md` + responsible disclosure
 
 ---
 
@@ -203,9 +203,9 @@
 ## Critical Path (MVP — 0.1.0)
 
 **Blocking (required before ship):**
-1. ✅ TODO 1–3 — CLI scaffold + schema (IN PROGRESS)
-2. ⏳ Fix P0 items 1–8 (security, config, validation)
-3. ⏳ TODO 4–9 — Core commands (init, pull, push, snapshot, release, validate)
+1. ✅ TODO 1–3 — CLI scaffold + schema
+2. ✅ Fix P0 items 1–10 (security, config, validation)
+3. ✅ TODO 4–9 — Core commands (init, pull, push, snapshot, release, validate)
 4. ⏳ TODO 10 — Registry API
 5. ⏳ Package to Homebrew, WinGet, apt/rpm, Snap
 
@@ -226,13 +226,13 @@
 | CLI scaffold | ✅ Complete | — |
 | Schema validation | ✅ Complete | — |
 | `hyle init` | ✅ Complete | All subtasks done |
-| Config system | ⏳ TODO 5 | Two-layer merge |
-| Core commands | ⏳ Mostly pending | 5 commands (pull, push, snapshot, release, validate) |
+| Config system | ✅ Complete | Two-layer merge done |
+| Core commands | ✅ Mostly complete | pull, push, snapshot, release, validate all implemented |
 | Registry API | ⏳ Not started | Full backend |
-| Security fixes | 🟡 In Progress | 7 critical items (P0-1,2,3,4,5,6,8,9,10 pending) |
-| Testing | 🟡 In Progress | Coverage + benchmarks |
+| Security fixes | ✅ Complete | All P0-1–P0-10 done |
+| Testing | ✅ Complete | 79 tests, 113 expect() calls |
 | Web frontend CSS | ✅ Complete | P1–P4 refinements done |
 | Packaging | ⏳ Not started | 5 platforms |
 | Extensions | 🟡 In Progress | 3/9 complete (watch 11-13), 6 pending |
-| Docs | ⏳ Mostly pending | SECURITY.md, CONTRIBUTING.md |
+| Docs | ⏳ Partial | SECURITY.md done, CONTRIBUTING.md pending |
 
