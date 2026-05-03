@@ -1,6 +1,6 @@
 import { text, confirm, intro, outro, isCancel, cancel } from "@clack/prompts";
 import { dump } from "js-yaml";
-import { existsSync, writeFileSync } from "node:fs";
+import { existsSync, writeFileSync, readFileSync } from "node:fs";
 import { join, basename } from "node:path";
 import { execSync } from "node:child_process";
 import type { HyleManifest } from "../manifest";
@@ -91,9 +91,9 @@ export async function runInit(opts: { yes: boolean; offline?: boolean }): Promis
   };
 
   const validation = validateManifest(manifest);
-  if (!validation.valid) {
+  if (validation.errors.length > 0) {
     console.error("Generated manifest failed validation:");
-    validation.errors.forEach((e) => console.error(`  ${e.path}: ${e.message}`));
+    validation.errors.forEach((e) => console.error(`  ${e.field}: ${e.message}`));
     process.exit(1);
   }
 
@@ -104,6 +104,8 @@ export async function runInit(opts: { yes: boolean; offline?: boolean }): Promis
 
   const ignorePath = join(cwd, ".hyleignore");
   if (!existsSync(ignorePath)) writeFileSync(ignorePath, DEFAULT_HYLEIGNORE);
+
+  injectHyleReference(cwd, name, author, version);
 
   if (opts.yes) {
     console.log(`Created hyle.yaml (${name} by ${author} v${version})`);
@@ -151,6 +153,19 @@ function getGitAuthor(): string {
   } catch {
     return "";
   }
+}
+
+function injectHyleReference(cwd: string, name: string, author: string, version: string): void {
+  const claudeMdPath = join(cwd, "CLAUDE.md");
+  if (!existsSync(claudeMdPath)) return;
+
+  const content = readFileSync(claudeMdPath, "utf8");
+  const marker = "<!-- hyle-substrate: ";
+  if (content.includes(marker)) return; // Already injected
+
+  const reference = `<!-- hyle-substrate: ${author}/${name}@${version} — see hyle.yaml for models, .hyle for config -->`;
+  const updated = reference + "\n" + content;
+  writeFileSync(claudeMdPath, updated);
 }
 
 type Fetcher = (url: string, init?: RequestInit) => Promise<Response>;

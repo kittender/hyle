@@ -31,11 +31,11 @@
 
 ### Commands (TODO 4-10)
 - [x] TODO 4 — `hyle init` command
-  - [x] `cli/src/commands/init.ts` (169 lines)
+  - [x] `cli/src/commands/init.ts` (180 lines)
   - [x] Interactive setup + manifest generation
   - [x] Tests (`cli/tests/init.test.ts`, 138 lines)
-  - [ ] `.hyle` + `.hyleignore` auto-generation
-  - [ ] Reference injection workflow
+  - [x] `.hyle` + `.hyleignore` auto-generation
+  - [x] Reference injection workflow
 
 - [ ] TODO 5 — `.hyle` config system
   - [x] `cli/src/config.ts` stub (42 lines)
@@ -225,7 +225,7 @@
 | Monorepo scaffold | ✅ Complete | — |
 | CLI scaffold | ✅ Complete | — |
 | Schema validation | ✅ Complete | — |
-| `hyle init` | 🟡 In Progress | `.hyle`/`.hyleignore` generation |
+| `hyle init` | ✅ Complete | All subtasks done |
 | Config system | ⏳ TODO 5 | Two-layer merge |
 | Core commands | ⏳ Mostly pending | 5 commands (pull, push, snapshot, release, validate) |
 | Registry API | ⏳ Not started | Full backend |
