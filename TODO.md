@@ -94,18 +94,18 @@
 ## Web Frontend
 
 ### CSS Refactoring
-- [ ] CSS P1 (16 items) — Replace inline styles with existing classes
-  - [ ] detail page cleanup
-  - [ ] enterprise page cleanup
-  - [ ] landing page cleanup
-  - [ ] navigation component
-  - [ ] search page cleanup
+- [x] CSS P1 (16 items) — Replace inline styles with existing classes
+  - [x] detail page cleanup
+  - [x] enterprise page cleanup
+  - [x] landing page cleanup
+  - [x] navigation component
+  - [x] search page cleanup
 
-- [ ] CSS P2 (14 rules) — Add reusable patterns to `styles.css`
-  - [ ] auth pages (login, register, forgot-password)
-  - [ ] badges
-  - [ ] meta items
-  - [ ] buttons consistency
+- [x] CSS P2 (14 rules) — Add reusable patterns to `styles.css`
+  - [x] auth pages (login, register, forgot-password)
+  - [x] badges
+  - [x] meta items
+  - [x] buttons consistency
 
 - [x] CSS P3 (~80 classes) — Per-component CSS organization
   - [x] `web/src/app/components/nav/nav.css`
@@ -119,12 +119,12 @@
   - [x] `web/src/app/pages/profile/profile.css`
   - [x] `web/src/app/pages/docs/docs.css`
 
-- [ ] CSS P4 (5 fixes) — `styles.css` consistency
-  - [ ] Logo size standardization
-  - [ ] QS title padding
-  - [ ] Section header alignment
-  - [ ] Code-inline utility
-  - [ ] Badge-latest display
+- [x] CSS P4 (5 fixes) — `styles.css` consistency
+  - [x] Logo size standardization
+  - [x] QS title padding
+  - [x] Section header alignment
+  - [x] Code-inline utility
+  - [x] Badge-latest display
 
 ---
 
@@ -231,7 +231,7 @@
 | Registry API | ⏳ Not started | Full backend |
 | Security fixes | 🟡 In Progress | 7 critical items (P0-1,2,3,4,5,6,8,9,10 pending) |
 | Testing | 🟡 In Progress | Coverage + benchmarks |
-| Web frontend CSS | 🟡 In Progress | P1–P4 refinements |
+| Web frontend CSS | ✅ Complete | P1–P4 refinements done |
 | Packaging | ⏳ Not started | 5 platforms |
 | Extensions | 🟡 In Progress | 3/9 complete (watch 11-13), 6 pending |
 | Docs | ⏳ Mostly pending | SECURITY.md, CONTRIBUTING.md |
