@@ -10,22 +10,24 @@
   - [x] `cli/package.json` + `bun.lock`
   - [x] `cli/tsconfig.json` configured
   - [x] GitHub workflows (`.github/workflows/ci.yml`, `release.yml`)
-  - [ ] Finish build pipeline (`cli/scripts/build-all.ts` started)
-  - [ ] Binary release automation
+  - [x] Build pipeline (`cli/scripts/build-all.ts`)
+  - [x] Binary release automation (release.yml)
+  - [x] CI build:all sanity check
 
 - [x] TODO 2 — hyle.yaml schema definition + TypeScript validation
   - [x] `schema/hyle.schema.json` created
   - [x] `cli/src/manifest.ts` validation module (403 lines)
   - [x] Test fixtures (`cli/tests/fixtures/invalid/traversal-dotdot.yaml`)
-  - [ ] JSON Schema enforcement in runtime
-  - [ ] Error message polish
+  - [x] JSON Schema enforcement in runtime (`loadManifest()`)
+  - [x] Error message polish (validation errors printed on load)
+  - [x] Validation call in `runInit` (P0-7)
 
 - [x] TODO 3 — Monorepo structure (git, workspaces, web scaffold)
   - [x] `cli/` workspace set up with package.json
   - [x] `web/` structure exists with Next.js
   - [x] `.github/workflows/` for CI
-  - [ ] Workspace linking (root package.json monorepo config)
-  - [ ] Dependency synchronization
+  - [x] Workspace linking (root `package.json` monorepo config)
+  - [x] Version sync (0.1.0 across packages)
 
 ### Commands (TODO 4-10)
 - [x] TODO 4 — `hyle init` command
@@ -220,14 +222,14 @@
 | Category | Status | Gap |
 |----------|--------|-----|
 | Specification | ✅ Complete | — |
-| Monorepo scaffold | 🟡 In Progress | Workspace linking |
-| CLI scaffold | 🟡 In Progress | Build automation, binary releases |
-| Schema validation | 🟡 In Progress | Runtime enforcement |
+| Monorepo scaffold | ✅ Complete | — |
+| CLI scaffold | ✅ Complete | — |
+| Schema validation | ✅ Complete | — |
 | `hyle init` | 🟡 In Progress | `.hyle`/`.hyleignore` generation |
 | Config system | ⏳ TODO 5 | Two-layer merge |
 | Core commands | ⏳ Mostly pending | 5 commands (pull, push, snapshot, release, validate) |
 | Registry API | ⏳ Not started | Full backend |
-| Security fixes | ⏳ P0 pending | 10 critical items |
+| Security fixes | 🟡 In Progress | 7 critical items (P0-1,2,3,4,5,6,8,9,10 pending) |
 | Testing | 🟡 In Progress | Coverage + benchmarks |
 | Web frontend CSS | 🟡 In Progress | P1–P4 refinements |
 | Packaging | ⏳ Not started | 5 platforms |
