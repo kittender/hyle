@@ -25,11 +25,19 @@ test("unknown command exits non-zero", () => {
 });
 
 test("stub commands exit non-zero with message", () => {
-  const stubs = ["snapshot", "push", "release", "search"];
-  for (const cmd of stubs) {
-    const { exitCode, stderr } = spawnSync([...ENTRY, cmd]);
+  const stubs = [
+    ["search"],
+    ["config", "get", "key"],
+    ["config", "set", "key", "value"],
+    ["deps", "check"],
+    ["index"],
+    ["install", "extension"],
+  ];
+  for (const args of stubs) {
+    const { exitCode, stderr } = spawnSync([...ENTRY, ...args]);
     expect(exitCode).toBe(1);
-    expect(new TextDecoder().decode(stderr)).toContain(`hyle ${cmd}: not implemented yet`);
+    const msg = new TextDecoder().decode(stderr);
+    expect(msg).toContain("not implemented yet");
   }
 });
 

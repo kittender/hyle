@@ -1,0 +1,21 @@
+name: test-substrate
+author: test-author
+version: 0.1.0
+description: Test substrate
+models:
+  primary:
+    provider: anthropic
+    model: claude-sonnet-4-6
+    tags: [saas, paid]
+    fallback:
+      - provider: ollama
+        model: qwen2.5:14b
+        tags: [local, free]
+  secondary:
+    provider: anthropic
+    model: claude-haiku-4-5
+    tags: [saas, paid]
+    fallback:
+      - provider: ollama
+        model: qwen2.5:7b
+        tags: [local, free]

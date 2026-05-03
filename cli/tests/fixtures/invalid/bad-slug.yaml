@@ -1,0 +1,10 @@
+name: "Invalid Name With Spaces"
+author: valid-author
+version: 0.1.0
+models:
+  primary:
+    provider: anthropic
+    model: claude-sonnet-4-6
+  secondary:
+    provider: anthropic
+    model: claude-haiku-4-5

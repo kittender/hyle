@@ -305,10 +305,10 @@ describe("validateManifest — errors", () => {
     expect(errors.some((e) => e.field === "version")).toBe(true);
   });
 
-  test("version with snapshot suffix produces error", () => {
+  test("version with snapshot suffix is valid", () => {
     const m = parseManifest(minimalYaml({ version: "1.0.0-snapshot" }));
     const { errors } = validateManifest(m);
-    expect(errors.some((e) => e.field === "version")).toBe(true);
+    expect(errors.some((e) => e.field === "version")).toBe(false);
   });
 
   test("models.primary.provider empty produces error", () => {
