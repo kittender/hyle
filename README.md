@@ -48,6 +48,12 @@ Core CLI is **programmatic only — no LLM required**, no network call to an AI 
 
 ---
 
+## Deployment
+
+For AWS deployment instructions (S3 + CloudFront CDN, registry backend setup, multi-platform CLI distribution), see [docs/deployment/DEPLOYMENT.md](docs/deployment/DEPLOYMENT.md).
+
+---
+
 ## Getting started
 
 ### Install Hylé
