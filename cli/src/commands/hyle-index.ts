@@ -53,7 +53,7 @@ export async function runHyleIndex(opts: IndexOptions): Promise<void> {
 				// Limit to first 150 lines
 				const lines = content.split("\n");
 				if (lines.length > 150) {
-					content = lines.slice(0, 150).join("\n") + "\n... (truncated)";
+					content = `${lines.slice(0, 150).join("\n")}\n... (truncated)`;
 				}
 				filesByDomain[domain][file] = content;
 			}
@@ -134,13 +134,10 @@ Return ONLY valid JSON (no markdown, no extra text) with this structure:
 	const outputPath = join(cwd, "hyle.json");
 	writeFileSync(outputPath, JSON.stringify(index, null, 2));
 
-	console.log(`✓ Index written to hyle.json`);
+	console.log("✓ Index written to hyle.json");
 
 	// Count files per domain
-	const idx = index as Record<
-		string,
-		Record<string, Record<string, unknown>>
-	>;
+	const idx = index as Record<string, Record<string, Record<string, unknown>>>;
 	for (const domain of domainsToIndex) {
 		const count = Object.keys(idx.domains?.[domain] || {}).length;
 		if (count > 0) {

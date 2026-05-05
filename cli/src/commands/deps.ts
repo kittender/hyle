@@ -45,9 +45,7 @@ export async function runDepsCheck(name?: string): Promise<void> {
 			if (installCmd) {
 				console.log(`✗ ${dep.name} — install: ${installCmd}`);
 			} else {
-				console.log(
-					`✗ ${dep.name} — no install method available for ${os}`,
-				);
+				console.log(`✗ ${dep.name} — no install method available for ${os}`);
 			}
 		}
 	}

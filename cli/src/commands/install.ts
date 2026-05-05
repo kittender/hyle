@@ -16,7 +16,9 @@ const KNOWN_EXTENSIONS: Record<string, string[]> = {
 export async function runInstall(name: string): Promise<void> {
 	if (!KNOWN_EXTENSIONS[name]) {
 		console.error(`✗ Unknown extension: ${name}`);
-		console.error(`  Known extensions: ${Object.keys(KNOWN_EXTENSIONS).join(", ")}`);
+		console.error(
+			`  Known extensions: ${Object.keys(KNOWN_EXTENSIONS).join(", ")}`,
+		);
 		process.exit(1);
 	}
 

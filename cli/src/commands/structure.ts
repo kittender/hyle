@@ -94,7 +94,7 @@ Return ONLY valid JSON (no markdown, no extra text) with this structure:
 	const outputPath = join(cwd, "agents-topology.json");
 	writeFileSync(outputPath, JSON.stringify(topology, null, 2));
 
-	console.log(`✓ Topology written to agents-topology.json`);
+	console.log("✓ Topology written to agents-topology.json");
 	const t = topology as Record<string, unknown>;
 	console.log(`  Primary agents: ${String(t.topology).split(",").length}`);
 }
@@ -127,7 +127,7 @@ export async function runOntologyStructure(
 			let content = readFileSync(filePath, "utf8");
 			const lines = content.split("\n");
 			if (lines.length > 200) {
-				content = lines.slice(0, 200).join("\n") + "\n... (truncated)";
+				content = `${lines.slice(0, 200).join("\n")}\n... (truncated)`;
 			}
 			ontologies[file] = content;
 		}
@@ -190,7 +190,7 @@ Return ONLY valid JSON (no markdown, no extra text) with this structure:
 	const outputPath = join(cwd, "ontology.json");
 	writeFileSync(outputPath, JSON.stringify(index, null, 2));
 
-	console.log(`✓ Ontology index written to ontology.json`);
+	console.log("✓ Ontology index written to ontology.json");
 	const idx = index as Record<string, Record<string, unknown>>;
 	const fileCount = Object.keys(idx.files || {}).length;
 	console.log(`  Indexed ${fileCount} file(s)`);

@@ -18,7 +18,10 @@ export async function runSearch(
 	const limit = opts.limit || 20;
 
 	try {
-		const results = await client.search(query, opts.tag ? [opts.tag] : undefined);
+		const results = await client.search(
+			query,
+			opts.tag ? [opts.tag] : undefined,
+		);
 
 		let filtered = results;
 		if (opts.author) {
@@ -39,11 +42,7 @@ export async function runSearch(
 
 		// Table header
 		console.log(
-			"NAME".padEnd(25) +
-				"AUTHOR".padEnd(15) +
-				"VER".padEnd(10) +
-				"TAGS".padEnd(25) +
-				"DESCRIPTION",
+			`${"NAME".padEnd(25)}${"AUTHOR".padEnd(15)}${"VER".padEnd(10)}${"TAGS".padEnd(25)}DESCRIPTION`,
 		);
 		console.log("─".repeat(95));
 

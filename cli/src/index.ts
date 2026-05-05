@@ -1,20 +1,20 @@
 #!/usr/bin/env bun
 import { Command } from "commander";
 import pkg from "../package.json" with { type: "json" };
+import { runDepsCheck } from "./commands/deps";
+import { runHyleIndex } from "./commands/hyle-index";
 import { runInit } from "./commands/init";
+import { runInstall } from "./commands/install";
 import { runPublish } from "./commands/publish";
 import { runPull } from "./commands/pull";
 import { runScan } from "./commands/scan";
-import { runValidate } from "./commands/validate";
-import { runWatch } from "./commands/watch";
 import { runSearch } from "./commands/search";
-import { runDepsCheck } from "./commands/deps";
-import { runInstall } from "./commands/install";
 import {
 	runIdentitiesStructure,
 	runOntologyStructure,
 } from "./commands/structure";
-import { runHyleIndex } from "./commands/hyle-index";
+import { runValidate } from "./commands/validate";
+import { runWatch } from "./commands/watch";
 
 const program = new Command()
 	.name("hyle")
