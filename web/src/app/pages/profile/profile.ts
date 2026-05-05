@@ -133,7 +133,8 @@ export class ProfileComponent implements OnInit {
   }
 
   navigateToPrint(id: string) {
-    this.router.navigate(['/print', id]);
+    const [author, name] = id.split('/');
+    this.router.navigate(['/print', author, name]);
   }
 
   goTo(path: string) {

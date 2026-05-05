@@ -4,6 +4,7 @@ import type { HyleManifest } from "../../../cli/src/manifest";
 import type { IDatabase } from "../db";
 import type { IStorage } from "../storage";
 import type { IAuth } from "../auth";
+import { scanManifest } from "../scan";
 
 export async function handlePublish(
   req: Request,
@@ -29,6 +30,7 @@ export async function handlePublish(
 
   let manifest: HyleManifest;
   let bundleData: Uint8Array;
+  let author: string;
 
   try {
     const formData = await req.formData();
@@ -67,6 +69,25 @@ export async function handlePublish(
     });
   }
 
+  // Rate limiting: check max publishes per hour
+  const RATE_LIMIT_WINDOW_S = 3600;
+  const MAX_PUBLISHES_PER_WINDOW = parseInt(process.env.HYLE_RATE_LIMIT ?? "10");
+  const recentCount = db.countRecentPublishes(manifest.author, RATE_LIMIT_WINDOW_S);
+  if (recentCount >= MAX_PUBLISHES_PER_WINDOW) {
+    return new Response(
+      JSON.stringify({
+        error: `Rate limit exceeded: max ${MAX_PUBLISHES_PER_WINDOW} publishes per hour`,
+      }),
+      {
+        status: 429,
+        headers: {
+          "Content-Type": "application/json",
+          "Retry-After": "3600",
+        },
+      }
+    );
+  }
+
   const exists = db.exists(manifest.author, manifest.name, manifest.version);
   if (exists) {
     return new Response(
@@ -84,6 +105,19 @@ export async function handlePublish(
 
   await storage.storeBundle(bundleKey, bundleData);
 
+  // Spam detection: flag if bundle is tiny and has no files
+  let isSpam = false;
+  if (bundleData.length < 512) {
+    const hasFiles =
+      (manifest.ontology?.length ?? 0) > 0 ||
+      (manifest.craft?.length ?? 0) > 0 ||
+      (manifest.identities?.length ?? 0) > 0 ||
+      (manifest.ethics?.length ?? 0) > 0;
+    if (!hasFiles) {
+      isSpam = true;
+    }
+  }
+
   const isStable = !manifest.version.includes("-snapshot");
   const record = db.insertSubstrate(
     manifest.author,
@@ -94,8 +128,22 @@ export async function handlePublish(
     checksum,
     manifest.description,
     manifest.tags || [],
-    isStable
+    isStable && !isSpam
   );
+
+  // Run security scan asynchronously
+  queueMicrotask(() => {
+    const scanResult = scanManifest(manifest, bundleData.length);
+    db.insertScan(record.id, scanResult);
+    if (scanResult.scan_status === "flagged") {
+      const topFinding = scanResult.findings.find((f) => f.severity === "critical");
+      const reason = topFinding?.detail ?? "Security scan flagged";
+      db.flagSubstrate(record.id, reason);
+    }
+  });
+
+  // Record publish for rate limiting
+  db.recordPublish(manifest.author);
 
   return new Response(
     JSON.stringify({
@@ -107,6 +155,7 @@ export async function handlePublish(
         version: record.version,
         checksum: record.checksum,
         created_at: record.created_at,
+        scan_status: "pending",
       },
     }),
     {

@@ -27,7 +27,7 @@ declare const Prism: any;
               </span>
             }
           </span>
-          <app-copy-button [text]="content"></app-copy-button>
+          <app-copy-button [text]="displayContent"></app-copy-button>
         </div>
         <div class="code-wrap">
           <div class="line-numbers" aria-hidden="true">
@@ -35,7 +35,7 @@ declare const Prism: any;
               <div>{{ $index + 1 }}</div>
             }
           </div>
-          <pre class="code-content"><code #codeEl [class]="'language-' + lang">{{ content }}</code></pre>
+          <pre class="code-content"><code #codeEl [class]="'language-' + displayLang">{{ displayContent }}</code></pre>
         </div>
       </div>
     }
@@ -43,10 +43,12 @@ declare const Prism: any;
 })
 export class FileViewerComponent implements OnChanges, AfterViewChecked {
   @Input() filePath: string | null = null;
+  @Input() content: string | null = null;
+  @Input() lang: string = 'plain';
   @ViewChild('codeEl') codeEl?: ElementRef;
 
-  content = '';
-  lang = 'plain';
+  displayContent = '';
+  displayLang = 'plain';
   lines: string[] = [];
   pathParts: { text: string }[] = [];
   private needsHighlight = false;
@@ -54,10 +56,18 @@ export class FileViewerComponent implements OnChanges, AfterViewChecked {
   constructor(private dataService: DataService) {}
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes['filePath'] && this.filePath) {
-      this.content = this.dataService.getFileContent(this.filePath);
-      this.lang = this.dataService.getLang(this.filePath);
-      this.lines = this.content.split('\n');
+    if (changes['content'] && this.content !== null) {
+      // Content provided directly
+      this.displayContent = this.content;
+      this.displayLang = this.lang;
+      this.lines = this.displayContent.split('\n');
+      this.pathParts = [{ text: 'manifest.yaml' }];
+      this.needsHighlight = true;
+    } else if (changes['filePath'] && this.filePath) {
+      // Load from DataService
+      this.displayContent = this.dataService.getFileContent(this.filePath);
+      this.displayLang = this.dataService.getLang(this.filePath);
+      this.lines = this.displayContent.split('\n');
       this.pathParts = this.filePath.split('/').map(t => ({ text: t }));
       this.needsHighlight = true;
     }

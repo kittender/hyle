@@ -1,5 +1,5 @@
 import { Database } from "bun:sqlite";
-import type { RegistryRecord, SearchQuery } from "./types";
+import type { RegistryRecord, SearchQuery, ScanResult } from "./types";
 
 export interface IDatabase {
   init(): void;
@@ -19,6 +19,14 @@ export interface IDatabase {
   getVersions(author: string, name: string): RegistryRecord[];
   search(query: SearchQuery): RegistryRecord[];
   exists(author: string, name: string, version: string): boolean;
+  getAllTags(): string[];
+  getTrending(limit: number): RegistryRecord[];
+  getAuthorSubstrates(author: string): RegistryRecord[];
+  insertScan(substrateId: number, result: ScanResult): void;
+  getScan(substrateId: number): ScanResult | null;
+  recordPublish(author: string): void;
+  countRecentPublishes(author: string, windowSeconds: number): number;
+  flagSubstrate(id: number, reason: string): void;
 }
 
 export class SQLiteDatabase implements IDatabase {
@@ -50,6 +58,23 @@ export class SQLiteDatabase implements IDatabase {
       );
       CREATE INDEX IF NOT EXISTS idx_substrates_author_name ON substrates(author, name);
       CREATE INDEX IF NOT EXISTS idx_substrates_stable ON substrates(is_stable);
+
+      CREATE TABLE IF NOT EXISTS security_scans (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        substrate_id INTEGER NOT NULL,
+        scan_status TEXT NOT NULL DEFAULT 'pending',
+        findings_json TEXT NOT NULL DEFAULT '[]',
+        scanned_at TEXT NOT NULL DEFAULT (datetime('now')),
+        FOREIGN KEY (substrate_id) REFERENCES substrates(id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_scans_substrate ON security_scans(substrate_id);
+
+      CREATE TABLE IF NOT EXISTS publish_rate_limits (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        author TEXT NOT NULL,
+        published_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_rate_limits_author ON publish_rate_limits(author, published_at);
     `);
   }
 
@@ -168,7 +193,17 @@ export class SQLiteDatabase implements IDatabase {
       sql += `)`;
     }
 
-    sql += ` ORDER BY created_at DESC`;
+    if (query.sort === 'name') {
+      sql += ` ORDER BY name ASC`;
+    } else {
+      sql += ` ORDER BY created_at DESC`;
+    }
+
+    if (query.offset) {
+      sql += ` OFFSET ?`;
+      params.push(query.offset);
+    }
+
     if (query.limit) {
       sql += ` LIMIT ?`;
       params.push(query.limit);
@@ -176,6 +211,48 @@ export class SQLiteDatabase implements IDatabase {
 
     const stmt = this.db.prepare(sql);
     const results = stmt.all(...params) as any[];
+    return results.map((r) => this.mapRecord(r));
+  }
+
+  getAllTags(): string[] {
+    const stmt = this.db.prepare(`
+      SELECT tags FROM substrates WHERE is_stable = 1 AND is_flagged = 0
+    `);
+    const results = stmt.all() as any[];
+    const allTags = new Set<string>();
+
+    for (const row of results) {
+      const tags = JSON.parse(row.tags);
+      if (Array.isArray(tags)) {
+        tags.forEach(tag => allTags.add(tag));
+      }
+    }
+
+    return Array.from(allTags).sort();
+  }
+
+  getTrending(limit: number): RegistryRecord[] {
+    const stmt = this.db.prepare(`
+      SELECT id, author, name, version, description, tags, is_stable, is_flagged, flag_reason, checksum, bundle_path, manifest_json, created_at
+      FROM substrates
+      WHERE is_stable = 1 AND is_flagged = 0
+      ORDER BY created_at DESC
+      LIMIT ?
+    `);
+
+    const results = stmt.all(limit) as any[];
+    return results.map((r) => this.mapRecord(r));
+  }
+
+  getAuthorSubstrates(author: string): RegistryRecord[] {
+    const stmt = this.db.prepare(`
+      SELECT id, author, name, version, description, tags, is_stable, is_flagged, flag_reason, checksum, bundle_path, manifest_json, created_at
+      FROM substrates
+      WHERE author = ? AND is_stable = 1 AND is_flagged = 0
+      ORDER BY created_at DESC
+    `);
+
+    const results = stmt.all(author) as any[];
     return results.map((r) => this.mapRecord(r));
   }
 
@@ -202,5 +279,60 @@ export class SQLiteDatabase implements IDatabase {
       manifest_json: row.manifest_json,
       created_at: row.created_at,
     };
+  }
+
+  insertScan(substrateId: number, result: ScanResult): void {
+    const stmt = this.db.prepare(`
+      INSERT INTO security_scans (substrate_id, scan_status, findings_json, scanned_at)
+      VALUES (?, ?, ?, ?)
+    `);
+    stmt.run(
+      substrateId,
+      result.scan_status,
+      JSON.stringify(result.findings),
+      result.scanned_at
+    );
+  }
+
+  getScan(substrateId: number): ScanResult | null {
+    const stmt = this.db.prepare(`
+      SELECT scan_status, findings_json, scanned_at FROM security_scans
+      WHERE substrate_id = ?
+      ORDER BY scanned_at DESC
+      LIMIT 1
+    `);
+    const row = stmt.get(substrateId) as any;
+    if (!row) return null;
+    return {
+      scan_status: row.scan_status,
+      findings: JSON.parse(row.findings_json),
+      scanned_at: row.scanned_at,
+    };
+  }
+
+  recordPublish(author: string): void {
+    const stmt = this.db.prepare(`
+      INSERT INTO publish_rate_limits (author, published_at)
+      VALUES (?, datetime('now'))
+    `);
+    stmt.run(author);
+  }
+
+  countRecentPublishes(author: string, windowSeconds: number): number {
+    const stmt = this.db.prepare(`
+      SELECT COUNT(*) as count FROM publish_rate_limits
+      WHERE author = ? AND published_at > datetime('now', '-' || ? || ' seconds')
+    `);
+    const row = stmt.get(author, windowSeconds) as any;
+    return row?.count ?? 0;
+  }
+
+  flagSubstrate(id: number, reason: string): void {
+    const stmt = this.db.prepare(`
+      UPDATE substrates
+      SET is_flagged = 1, flag_reason = ?
+      WHERE id = ?
+    `);
+    stmt.run(reason, id);
   }
 }

@@ -1,165 +1,15 @@
 # Hylé TODO List
-**Last updated:** 2026-05-02 (based on SUMMARY.md from 2026-04-29 + git commit c519d12)
+**Last updated:** 2026-05-05 (cleaned: removed completed items TODO 1-19, P0 fixes, CSS refactoring, tests)
 
 ---
 
-## Core CLI Implementation
+## Completed (MVP 0.1.0)
 
-### Scaffolding (TODO 1-3)
-- [x] TODO 1 — CLI stack scaffold (Bun, toolchain, CI matrix, release pipeline)
-  - [x] `cli/package.json` + `bun.lock`
-  - [x] `cli/tsconfig.json` configured
-  - [x] GitHub workflows (`.github/workflows/ci.yml`, `release.yml`)
-  - [x] Build pipeline (`cli/scripts/build-all.ts`)
-  - [x] Binary release automation (release.yml)
-  - [x] CI build:all sanity check
-
-- [x] TODO 2 — hyle.yaml schema definition + TypeScript validation
-  - [x] `schema/hyle.schema.json` created
-  - [x] `cli/src/manifest.ts` validation module (403 lines)
-  - [x] Test fixtures (`cli/tests/fixtures/invalid/traversal-dotdot.yaml`)
-  - [x] JSON Schema enforcement in runtime (`loadManifest()`)
-  - [x] Error message polish (validation errors printed on load)
-  - [x] Validation call in `runInit` (P0-7)
-
-- [x] TODO 3 — Monorepo structure (git, workspaces, web scaffold)
-  - [x] `cli/` workspace set up with package.json
-  - [x] `web/` structure exists with Next.js
-  - [x] `.github/workflows/` for CI
-  - [x] Workspace linking (root `package.json` monorepo config)
-  - [x] Version sync (0.1.0 across packages)
-
-### Commands (TODO 4-10)
-- [x] TODO 4 — `hyle init` command
-  - [x] `cli/src/commands/init.ts` (180 lines)
-  - [x] Interactive setup + manifest generation
-  - [x] Tests (`cli/tests/init.test.ts`, 138 lines)
-  - [x] `.hyle` + `.hyleignore` auto-generation
-  - [x] Reference injection workflow
-
-- [x] TODO 5 — `.hyle` config system
-  - [x] `cli/src/config.ts` stub (42 lines)
-  - [x] Two-layer merge (global `~/.hyle` + local `.hyle`)
-  - [x] Config validation
-  - [x] Tests (`cli/tests/init.test.ts`, config subsection)
-
-- [x] TODO 6 — `.hyleignore` parser
-  - [x] `cli/src/ignore.ts` (gitignore-style pattern matching with micromatch)
-  - [x] Exclusion during push/scan
-  - [x] Tests (`cli/tests/ignore.test.ts`)
-
-- [x] TODO 7 — File-scanning commands
-  - [x] `hyle ontology [path]`
-  - [x] `hyle craft [path]`
-  - [x] `hyle identities [path]`
-  - [x] `hyle ethics [path]`
-  - [x] Dedup + respect ignore patterns
-  - [x] Tests (`cli/tests/scan.test.ts`)
-
-- [x] TODO 8 — Publish workflow
-  - [x] `hyle snapshot` (patch bump, unstable)
-  - [x] `hyle push` (minor bump, stable)
-  - [x] `hyle release` (major bump, stable)
-  - [x] Auto-versioning + bundling
-  - [x] Checksum generation + upload
-
-- [x] TODO 9 — `hyle pull` command
-  - [x] Fetch substrate from registry
-  - [x] Validate checksum
-  - [x] Resolve dependencies (basic stub)
-  - [x] Install + inject references
-
-- [x] TODO 10 — Registry backend API
-  - [x] SQLite + local filesystem integration
-  - [x] Search endpoint
-  - [x] Version resolution
-  - [x] Dependency hints endpoint
-
----
-
-## Extensions (LLM-powered, opt-in)
-
-- [x] TODO 11 — `hyle watch` terminal UI
-- [x] TODO 12 — `hyle watch --audit` GDPR audit log
-- [x] TODO 13 — `hyle watch --split` context splitting
-- [x] TODO 14 — `hyle identities --structure` LLM topology
-- [x] TODO 15 — `hyle ontology --structure` LLM index
-- [x] TODO 16 — `hyle index` unified metadata
-- [x] TODO 17 — `hyle install <extension>`
-- [x] TODO 18 — `hyle search <query>`
-- [x] TODO 19 — `hyle deps check [name]`
-
----
-
-## Web Frontend
-
-### CSS Refactoring
-- [x] CSS P1 (16 items) — Replace inline styles with existing classes
-  - [x] detail page cleanup
-  - [x] enterprise page cleanup
-  - [x] landing page cleanup
-  - [x] navigation component
-  - [x] search page cleanup
-
-- [x] CSS P2 (14 rules) — Add reusable patterns to `styles.css`
-  - [x] auth pages (login, register, forgot-password)
-  - [x] badges
-  - [x] meta items
-  - [x] buttons consistency
-
-- [x] CSS P3 (~80 classes) — Per-component CSS organization
-  - [x] `web/src/app/components/nav/nav.css`
-  - [x] `web/src/app/pages/detail/detail.css`
-  - [x] `web/src/app/pages/enterprise/enterprise.css`
-  - [x] `web/src/app/pages/landing/landing.css`
-  - [x] `web/src/app/pages/login/login.css`
-  - [x] `web/src/app/pages/register/register.css`
-  - [x] `web/src/app/pages/search/search.css`
-  - [x] `web/src/app/pages/forgot-password/forgot-password.css`
-  - [x] `web/src/app/pages/profile/profile.css`
-  - [x] `web/src/app/pages/docs/docs.css`
-
-- [x] CSS P4 (5 fixes) — `styles.css` consistency
-  - [x] Logo size standardization
-  - [x] QS title padding
-  - [x] Section header alignment
-  - [x] Code-inline utility
-  - [x] Badge-latest display
-
----
-
-## Critical Fixes (P0)
-
-- [x] P0-1 — Fix `dep.install` trust model → structured format (`{ manager, pkg, url, sha256 }`)
-- [x] P0-2 — Fix `isUnsafePath` bypass → normalize paths + reject `".."`
-- [x] P0-3 — Fix `checkRegistry` TOCTOU → read from `.hyle` remote_url, advisory-only
-- [x] P0-4 — Add `--offline` flag + hermetic tests
-- [x] P0-5 — Fix `SLUG_RE` duplication → export from manifest.ts, import in init.ts
-- [x] P0-6 — Read version from package.json (not hardcoded)
-- [x] P0-7 — Call `validateManifest` in `runInit`
-- [x] P0-8 — Add `hyle validate <file>` command + JSON output
-- [x] P0-9 — Add `bun audit` to CI
-- [x] P0-10 — Add `SECURITY.md` + responsible disclosure
-
----
-
-## Testing & Quality
-
-- [x] Add `.hyleignore` support tests
-- [x] Add offline mode tests (`--offline` flag)
-- [x] Add path traversal tests (`.."` bypass)
-- [x] Add unbounded fallback depth tests
-- [x] Verify `validateManifest` in `runInit`
-- [x] Add benchmark infrastructure
-  - [x] `cli/benchmarks/manifest.bench.ts` (parseManifest, validateManifest)
-  - [x] `cli/benchmarks/ignore.bench.ts` (pattern matching)
-  - [x] `cli/scripts/bench.ts` runner
-  - [x] `bun run bench` script
-- [x] Coverage threshold: ≥75% line, ≥65% branch, 100% critical paths
-- [x] Add `biome.json` with security rules
-- [x] CodeQL SAST integration
-- [x] Windows test runner in CI
-- [x] `bun audit` gate on severity
+✅ **Core CLI (TODO 1-10)** — All commands (init, config, pull, push, snapshot, release, validate)
+✅ **Extensions (TODO 11-19)** — watch, audit, split, structure, index, install, search, deps-check
+✅ **Web CSS (P1-P4)** — All page refactoring complete
+✅ **Security (P0-1 to P0-10)** — trust model, path traversal, TOCTOU, offline, validation
+✅ **Testing & Quality** — benchmarks, coverage gates (≥75%), biome.json, CodeQL, Windows CI
 
 ---
 
@@ -316,51 +166,59 @@ Post-MVP expansion (0.2–0.3): Multi-platform binary distribution, registry UI/
 
 ---
 
-### TODO 23 — Registry Safety (Auto-Scan, Flags, Diffs, Checksums)
+### ✅ TODO 23 — Registry Safety (Auto-Scan, Flags, Diffs, Checksums)
 
-**Goal:** Add security & transparency features: supply chain scanning, trust badges, checksums, version diffs.
+**Status:** Complete (core features implemented).
 
-**Subtasks:**
-- [ ] Auto-scan substrates on publish
-  - Integration with SBOM scanner (Syft) or supply-chain tool (Trivy)
-  - Scan manifest for suspicious patterns (eval, exec, `file://` in URLs)
-  - Scan bundled files for known vulnerabilities (CVE database)
-  - Store scan results in registry DB (cached, re-scan on push)
-- [ ] Trust badges + flags
-  - "Verified author" badge (manual approval, linked GitHub/email verification)
-  - "Security scanned" badge (auto-scan passed, no critical vulns)
-  - "Popular" badge (>100 installs or >5 stars)
-  - Red flags: new author, no verified email, suspicious deps, unsigned
-  - Display on UI + API metadata
-- [ ] Checksum verification improvements
-  - Include `substrate.tar.gz.sig` (GPG signature) on publish
-  - Verify publisher GPG key on pull (warn if unsigned)
-  - Display checksums on detail page (user copy for verification)
-  - API: `GET /substrates/{name}@{version}/checksums` (SHA256, GPG signature)
-- [ ] Manifest + file diffs
-  - Track `hyle.yaml` deltas per version (stored as JSON patches)
-  - File-level diffs (ontology/craft changes highlighted)
-  - Warn on breaking changes (e.g., model version bump, new required dependency)
-  - Changelog auto-generation from diffs + commit messages
-- [ ] Security report
-  - API: `GET /substrates/{name}@{version}/security-report`
-  - Return: scan results, CVE count, flags, unsigned warning, author verification status
-  - Display on UI in prominent card
-- [ ] Registry abuse policies
-  - Rate limits on publish (1 per hour per author, burst cap)
-  - Spam detection (very small/empty substrates auto-flagged)
-  - Author takedown workflow (contact + review)
+**Implemented:**
+- ✅ Auto-scan substrates on publish
+  - ✅ Pattern scanner (eval, exec, file://, http://, IP-based URLs)
+  - ✅ Spam detection (tiny bundles with no files auto-flagged)
+  - ✅ Async scan on publish via `queueMicrotask()`
+  - ✅ Store results in `security_scans` table
+  - ❌ CVE database — out of scope (requires external service)
+- ✅ Trust badges + flags
+  - ✅ Computed badges (security_scanned, security_warning, security_flagged)
+  - ✅ Badge variants + labels for UI
+  - ✅ Returned in SecurityReport + optional on SubstrateResponse
+  - ❌ Verified author badge — depends on GitHub/email verification system
+  - ❌ Popular badge — depends on star/install count (TODO 24)
+- ✅ Checksum verification improvements
+  - ✅ API: `GET /substrates/{author}/{name}@{version}/checksums`
+  - ✅ Returns SHA256 hash
+  - ❌ GPG signatures — out of scope (requires key infrastructure)
+- ⏳ Manifest + file diffs
+  - Diffs already exist in TODO 22; breaking-change warnings deferred
+- ✅ Security report
+  - ✅ API: `GET /substrates/{author}/{name}@{version}/security-report`
+  - ✅ Returns: scan results, badges, checksum, substrate metadata
+- ✅ Registry abuse policies
+  - ✅ Rate limiting: 10 publishes/hour per author (configurable)
+  - ✅ Spam detection: auto-flag empty tiny bundles
+  - ❌ Author takedown workflow — requires policy + moderation (future)
 
-**Dependencies:** TODO 22 (UI to display flags/scans)
+**New files:**
+- `registry/src/scan.ts` — pattern detection logic + tests
+- `registry/src/handlers/checksums.ts` — checksums API
+- `registry/src/handlers/security.ts` — security report API + badge computation
 
-**Effort:** 3–4 days
+**Modified files:**
+- `registry/src/types.ts` — added ScanFinding, ScanResult, Badge, SecurityReport, ChecksumsResponse
+- `registry/src/db.ts` — security_scans + publish_rate_limits tables; 5 new methods
+- `registry/src/handlers/publish.ts` — rate limit check, spam detection, async scan trigger
+- `registry/src/router.ts` — registered 2 new routes
 
-**Success criteria:**
-- Scans run on 100% of published substrates
-- Checksums stored + verified on pull
-- Security report populated for all versions
-- No false positives on safe substrates
-- Scan latency <2 min per publish
+**Test coverage:**
+- `registry/tests/scan.test.ts` — 5 tests (pattern detection) ✅
+- `registry/tests/db-security.test.ts` — 3 tests (DB + scan integration) ✅
+
+**Out of scope (requires other work):**
+- CVE database scanning → requires Trivy/Syft integration
+- Verified author badge → requires GitHub OAuth + email verification (TODO 24 social features)
+- Popular badge → requires star/install aggregates (TODO 24)
+- GPG signature validation → requires key infrastructure + signing process
+- Breaking-change warnings in diffs → part of TODO 22 UI
+- Author takedown workflow → moderation system (future feature)
 
 ---
 
@@ -471,17 +329,6 @@ Post-MVP expansion (0.2–0.3): Multi-platform binary distribution, registry UI/
 
 ---
 
-## Documentation
-
-- [x] `SECURITY.md` — vulnerability disclosure policy
-- [x] `CONTRIBUTING.md` — contribution guidelines
-- [x] Local testing guide (from SUMMARY.md) → `LOCAL_TESTING.md`
-- [x] API docs for registry backend → `REGISTRY_API.md`
-- [x] Substrate manifest examples → `MANIFEST_EXAMPLES.md`
-- [x] Configuration reference → `CONFIG_REFERENCE.md`
-
----
-
 ## Open Questions (Decisions Pending)
 
 1. How aggressive should SSRF protection be?
@@ -517,55 +364,4 @@ Post-MVP expansion (0.2–0.3): Multi-platform binary distribution, registry UI/
 - Private registry
 - Advanced registry features (TODO 23–24)
 
----
-
-## Status Summary
-
-| Category | Status | Gap |
-|----------|--------|-----|
-| Specification | ✅ Complete | — |
-| Monorepo scaffold | ✅ Complete | — |
-| CLI scaffold | ✅ Complete | — |
-| Schema validation | ✅ Complete | — |
-| `hyle init` | ✅ Complete | All subtasks done |
-| Config system | ✅ Complete | Two-layer merge done |
-| Core commands | ✅ Mostly complete | pull, push, snapshot, release, validate all implemented |
-| Registry API | ⏳ Not started | Full backend |
-| Security fixes | ✅ Complete | All P0-1–P0-10 done |
-| Testing & Quality | ✅ Complete | 81 tests, biome.json, CodeQL, coverage gates, Windows CI |
-| Web frontend CSS | ✅ Complete | P1–P4 refinements done |
-| Packaging | ⏳ Not started | 5 platforms |
-| Extensions | ✅ Complete | 9/9 complete (watch 11-13, structure 14-15, index 16, install 17, search 18, deps-check 19) |
-| Docs | ✅ Complete | SECURITY.md, CONTRIBUTING.md, LOCAL_TESTING.md, REGISTRY_API.md, MANIFEST_EXAMPLES.md, CONFIG_REFERENCE.md |
-
-## Analysis
-
-### Obsolete (delete):
-
-PLAN.md — Narrative version of TODO.md. Redundant; TODO.md is live source.
-SUMMARY.md — Restates PLAN.md + TODO.md. No new info.
-todo-1.md, todo-2.md, todo-3.md, todo-4.md — Detailed implementation specs (1083 lines). Belong in code comments, ADRs, or GitHub issues, not persistent docs.
-REVIEW.md — Design feedback without clear resolution. Either: (a) feed issues into backlog w/ links, or (b) fold unresolved items into ARCHITECTURE.md.
-
-### Keep (actively used):
-
-README.md — Product overview. Needed for context.
-CONFIG_REFERENCE.md — Technical reference for hyle.yaml schema. Essential when editing config logic.
-CONTRIBUTING.md — Dev setup. Needed for onboarding.
-LOCAL_TESTING.md — Testing workflow with mock registry. Practical.
-MANIFEST_EXAMPLES.md — Quick reference for users/devs.
-REGISTRY_API.md — Backend API reference. Needed for API work.
-SECURITY.md — Responsible disclosure + best practices. Required.
-TODO.md — Live status. Keep but trim: add brief rationale inline as comments.
-CLAUDE.md — Project instructions.
-Optional consolidation:
-
-GUIDE.md (AWS deployment) — Niche audience. Either keep as-is or move to /docs/deployment/ and link from README.
-Delete first, then optionally split refs from REVIEW.md into GitHub issues w/ labels.
-
-### TODO
-
-- [ ] Move "GUIDE.md" like stated: "move to /docs/deployment/ and link from README."
-- [ ] Regarding REVIEW.md proceed with option (b)
-- [ ] Delete obsolete files and move to code comments anything useful.
 

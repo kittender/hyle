@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -13,101 +13,112 @@ import { Print } from '../../models/print.model';
   styleUrl: './search.css',
 })
 export class SearchComponent implements OnInit {
-  query = '';
-  inputVal = '';
-  sort = 'stars';
-  filterLanguage: string[] = [];
-  filterLicense: string[] = [];
+  query = signal('');
+  inputVal = signal('');
+  sort = signal<'recent' | 'name'>('recent');
+  selectedTags = signal<string[]>([]);
+  results = signal<Print[]>([]);
+  allTags = signal<string[]>([]);
+  loading = signal(false);
+  error = signal<string | null>(null);
+  offset = signal(0);
+  hasMore = signal(false);
+  limit = 20;
 
   constructor(
     private router: Router,
     private route: ActivatedRoute,
     public dataService: DataService,
-  ) {}
-
-  ngOnInit() {
-    this.route.queryParams.subscribe(params => {
-      const q = params['q'] || '';
-      this.query = q;
-      this.inputVal = q;
+  ) {
+    // Auto-run search when query/sort/tags change
+    effect(() => {
+      const q = this.query();
+      const s = this.sort();
+      const tags = this.selectedTags();
+      this.offset.set(0);
+      this.runSearch();
     });
   }
 
-  get languages(): string[] {
-    return [...new Set(this.dataService.PRINTS.map(p => p.language))].sort();
+  ngOnInit() {
+    // Load tags for filter
+    this.dataService.getTags$().subscribe({
+      next: (tags) => this.allTags.set(tags),
+      error: () => {} // Silently fail tag loading
+    });
+
+    // Load initial query from URL
+    this.route.queryParams.subscribe(params => {
+      const q = params['q'] || '';
+      const tag = params['tag'] || '';
+      this.query.set(q);
+      this.inputVal.set(q);
+      if (tag) this.selectedTags.set([tag]);
+    });
   }
 
-  get licenses(): string[] {
-    return [...new Set(this.dataService.PRINTS.map(p => p.license))].sort();
+  private runSearch() {
+    const tagsParam = this.selectedTags().length > 0 ? this.selectedTags().join(',') : undefined;
+    this.loading.set(true);
+    this.error.set(null);
+
+    this.dataService.search$({
+      q: this.query() || undefined,
+      tags: tagsParam,
+      sort: this.sort(),
+      offset: this.offset(),
+      limit: this.limit,
+    }).subscribe({
+      next: (results) => {
+        if (this.offset() === 0) {
+          this.results.set(results);
+        } else {
+          this.results.set([...this.results(), ...results]);
+        }
+        this.hasMore.set(results.length >= this.limit);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        this.error.set(err.message || 'Failed to load substrates');
+        this.loading.set(false);
+      }
+    });
   }
 
-  getLangCount(l: string): number {
-    return this.dataService.PRINTS.filter(p => p.language === l).length;
-  }
-
-  getLicenseCount(l: string): number {
-    return this.dataService.PRINTS.filter(p => p.license === l).length;
-  }
-
-  toggleLang(l: string) {
-    if (this.filterLanguage.includes(l)) {
-      this.filterLanguage = this.filterLanguage.filter(v => v !== l);
+  toggleTag(tag: string) {
+    const current = this.selectedTags();
+    if (current.includes(tag)) {
+      this.selectedTags.set(current.filter(t => t !== tag));
     } else {
-      this.filterLanguage = [...this.filterLanguage, l];
+      this.selectedTags.set([...current, tag]);
     }
   }
 
-  toggleLicense(l: string) {
-    if (this.filterLicense.includes(l)) {
-      this.filterLicense = this.filterLicense.filter(v => v !== l);
-    } else {
-      this.filterLicense = [...this.filterLicense, l];
-    }
-  }
-
-  get hasFilters(): boolean {
-    return this.filterLanguage.length > 0 || this.filterLicense.length > 0;
-  }
-
-  clearFilters() {
-    this.filterLanguage = [];
-    this.filterLicense = [];
-  }
-
-  get results(): Print[] {
-    return this.dataService.PRINTS
-      .filter(p => {
-        if (this.filterLanguage.length && !this.filterLanguage.includes(p.language)) return false;
-        if (this.filterLicense.length && !this.filterLicense.includes(p.license)) return false;
-        if (!this.query) return true;
-        const q = this.query.toLowerCase();
-        return p.name.toLowerCase().includes(q) || p.author.toLowerCase().includes(q) ||
-          p.description.toLowerCase().includes(q) || p.tags.some(t => t.includes(q)) ||
-          p.language.toLowerCase().includes(q);
-      })
-      .sort((a, b) => {
-        if (this.sort === 'stars') return b.stars - a.stars;
-        if (this.sort === 'recent') return new Date(b.updated).getTime() - new Date(a.updated).getTime();
-        if (this.sort === 'name') return a.name.localeCompare(b.name);
-        return 0;
-      });
+  get filteredTags(): string[] {
+    return this.allTags().slice(0, 10);
   }
 
   handleSearch(e: Event) {
     e.preventDefault();
-    this.query = this.inputVal;
-    this.router.navigate(['/search'], { queryParams: { q: this.inputVal } });
+    this.query.set(this.inputVal());
+    this.router.navigate(['/search'], { queryParams: { q: this.inputVal() } });
   }
 
-  navigateToPrint(id: string) {
-    this.router.navigate(['/print', id]);
+  navigateToPrint(author: string, name: string) {
+    this.router.navigate(['/print', author, name]);
+  }
+
+  loadMore() {
+    this.offset.set(this.offset() + this.limit);
+    this.runSearch();
   }
 
   clearSearch() {
-    this.query = '';
-    this.inputVal = '';
-    this.filterLanguage = [];
-    this.filterLicense = [];
+    this.query.set('');
+    this.inputVal.set('');
+    this.selectedTags.set([]);
+    this.offset.set(0);
+    this.results.set([]);
     this.router.navigate(['/search']);
   }
 }

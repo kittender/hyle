@@ -1,8 +1,12 @@
 import { Injectable } from '@angular/core';
-import { Print, ActivityItem } from '../models/print.model';
+import { Observable, map } from 'rxjs';
+import { Print, ActivityItem, substrateToprint } from '../models/print.model';
+import { ApiService } from './api.service';
+import type { SearchParams } from './api.service';
 
 @Injectable({ providedIn: 'root' })
 export class DataService {
+  constructor(private apiService: ApiService) {}
   readonly PRINTS: Print[] = [
     {
       id: 'hyle-org/starter',
@@ -260,5 +264,43 @@ export class DataService {
     if (ext === 'java') return `// ${filename}\n// Pull print to view full source\npackage com.example;`;
     if (ext === 'py') return `# ${filename}\n# Pull print to view full source`;
     return `# ${filename}\n# Content available after pull`;
+  }
+
+  // Observable-based methods using real API
+
+  search$(params: SearchParams): Observable<Print[]> {
+    return this.apiService.search(params).pipe(
+      map(results => results.map(substrateToprint))
+    );
+  }
+
+  getSubstrate$(author: string, name: string, version?: string): Observable<Print> {
+    return this.apiService.getSubstrate(author, name, version).pipe(
+      map(substrateToprint)
+    );
+  }
+
+  getVersions$(author: string, name: string): Observable<any[]> {
+    return this.apiService.getVersions(author, name).pipe(
+      map(results => results.map(r => ({
+        tag: r.version,
+        date: r.created_at.slice(0, 10),
+        notes: r.description || ''
+      })))
+    );
+  }
+
+  getTrending$(): Observable<Print[]> {
+    return this.apiService.getTrending().pipe(
+      map(results => results.map(substrateToprint))
+    );
+  }
+
+  getTags$(): Observable<string[]> {
+    return this.apiService.getTags();
+  }
+
+  getDiff$(author: string, name: string, v1: string, base: string): Observable<any> {
+    return this.apiService.getDiff(author, name, v1, base);
   }
 }

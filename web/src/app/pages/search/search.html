@@ -5,108 +5,101 @@
       <span class="search-icon">
         <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4"/><path d="M11 11l3 3" stroke-linecap="round"/></svg>
       </span>
-      <input [(ngModel)]="inputVal" name="searchInput" placeholder="Search prints…" class="search-input">
+      <input [ngModel]="inputVal()" (ngModelChange)="inputVal.set($event)" name="searchInput" placeholder="Search substrates…" class="search-input">
     </div>
   </form>
 
   <div class="search-layout">
     <!-- Filters -->
     <div>
-      <div class="filter-heading">Language</div>
-      @for (l of languages; track l) {
+      <div class="filter-heading">Tags</div>
+      @for (tag of filteredTags; track tag) {
         <label class="filter-item">
-          <input type="checkbox" [checked]="filterLanguage.includes(l)" (change)="toggleLang(l)">
-          <span>{{ l }}</span>
-          <span class="filter-count">{{ getLangCount(l) }}</span>
+          <input type="checkbox" [checked]="selectedTags().includes(tag)" (change)="toggleTag(tag)">
+          <span>{{ tag }}</span>
         </label>
       }
-      <div class="filter-heading">License</div>
-      @for (l of licenses; track l) {
-        <label class="filter-item">
-          <input type="checkbox" [checked]="filterLicense.includes(l)" (change)="toggleLicense(l)">
-          <span>{{ l }}</span>
-          <span class="filter-count">{{ getLicenseCount(l) }}</span>
-        </label>
-      }
-      @if (hasFilters) {
-        <button class="link-btn clear-filters" (click)="clearFilters()">Clear filters</button>
+      @if (selectedTags().length > 0) {
+        <button class="link-btn clear-filters" (click)="selectedTags.set([])">Clear tags</button>
       }
     </div>
 
     <!-- Results -->
     <div>
-      <div class="section-header">
-        <span class="text-base text-muted">
-          {{ results.length }} result{{ results.length !== 1 ? 's' : '' }}
-          @if (query) {
-            for <strong class="text-dark">"{{ query }}"</strong>
-          }
-        </span>
-        <select [(ngModel)]="sort" name="sort" class="sort-select">
-          <option value="stars">Most starred</option>
-          <option value="recent">Recently updated</option>
-          <option value="name">Name A–Z</option>
-        </select>
-      </div>
+      @if (error()) {
+        <div class="error-banner">{{ error() }}</div>
+      }
 
-      @if (results.length === 0) {
-        <div class="empty-state">
-          No prints found.
-          <button class="link-btn" (click)="clearSearch()">Clear search</button>
-        </div>
+      @if (loading() && results().length === 0) {
+        <div class="loading-state">Loading substrates…</div>
       } @else {
-        @for (p of results; track p.id) {
-          <div class="result-row" (click)="navigateToPrint(p.id)">
-            @if (p.verified || p.community) {
-              <div class="result-badges">
-                @if (p.verified) {
-                  <span class="badge badge--verified">Verified</span>
-                }
-                @if (p.community) {
-                  <span class="badge badge--community">Community</span>
-                }
-              </div>
+        <div class="section-header">
+          <span class="text-base text-muted">
+            {{ results().length }} result{{ results().length !== 1 ? 's' : '' }}
+            @if (query()) {
+              for <strong class="text-dark">"{{ query() }}"</strong>
             }
-            <div class="result-content" [class.has-badge]="p.verified || p.community">
-              <div class="result-title-row">
-                <span class="result-name">
-                  <span><span class="text-muted">{{ p.author }}/</span>{{ p.name }}</span>
+          </span>
+          <select [ngModel]="sort()" (ngModelChange)="sort.set($event)" name="sort" class="sort-select">
+            <option value="recent">Recently updated</option>
+            <option value="name">Name A–Z</option>
+          </select>
+        </div>
+
+        @if (results().length === 0) {
+          <div class="empty-state">
+            No substrates found.
+            <button class="link-btn" (click)="clearSearch()">Clear search</button>
+          </div>
+        } @else {
+          @for (p of results(); track p.id) {
+            <div class="result-row" (click)="navigateToPrint(p.author, p.name)">
+              @if (p.verified || p.community) {
+                <div class="result-badges">
                   @if (p.verified) {
-                    <span title="Verified print" class="icon-badge">
-                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" fill="#166534"/><path d="M4.5 8.5l2.5 2.5 4.5-5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </span>
+                    <span class="badge badge--verified">Verified</span>
                   }
                   @if (p.community) {
-                    <span title="Community favourite" class="icon-badge">
-                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" fill="#92400e"/><path d="M8 4l1.1 2.2 2.4.35-1.75 1.7.41 2.4L8 9.5l-2.16 1.15.41-2.4L4.5 6.55l2.4-.35L8 4z" fill="#fde68a"/></svg>
-                    </span>
+                    <span class="badge badge--community">Community</span>
                   }
-                </span>
-                <span class="tag-list">
-                  @for (t of p.tags.slice(0,3); track t) {
-                    <span class="tag">{{ t }}</span>
-                  }
-                </span>
-              </div>
-              <p class="result-desc">{{ p.description }}</p>
-              <div class="result-meta">
-                <span class="meta-item">
-                  <span class="lang-dot"></span>
-                  {{ p.language }}
-                </span>
-                <span class="meta-item">
-                  <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg>
-                  {{ p.stars.toLocaleString() }}
-                </span>
-                <span class="meta-item">
-                  <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M5 3.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm0 2.122a2.25 2.25 0 10-1.5 0v.878A2.25 2.25 0 005.75 8.5h1.5v2.128a2.251 2.251 0 101.5 0V8.5h1.5a2.25 2.25 0 002.25-2.25v-.878a2.25 2.25 0 10-1.5 0v.878a.75.75 0 01-.75.75h-4.5A.75.75 0 015 6.25v-.878zm3.75 7.378a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm3-8.75a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>
-                  {{ p.forks }}
-                </span>
-                <span class="meta-text">{{ p.license }}</span>
-                <span class="meta-text">Updated {{ p.updated }}</span>
+                </div>
+              }
+              <div class="result-content" [class.has-badge]="p.verified || p.community">
+                <div class="result-title-row">
+                  <span class="result-name">
+                    <span><span class="text-muted">{{ p.author }}/</span>{{ p.name }}</span>
+                    @if (p.verified) {
+                      <span title="Verified substrate" class="icon-badge">
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" fill="#166534"/><path d="M4.5 8.5l2.5 2.5 4.5-5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      </span>
+                    }
+                    @if (p.community) {
+                      <span title="Community choice" class="icon-badge">
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" fill="#92400e"/><path d="M8 4l1.1 2.2 2.4.35-1.75 1.7.41 2.4L8 9.5l-2.16 1.15.41-2.4L4.5 6.55l2.4-.35L8 4z" fill="#fde68a"/></svg>
+                      </span>
+                    }
+                  </span>
+                  <span class="tag-list">
+                    @for (t of p.tags.slice(0,3); track t) {
+                      <span class="tag">{{ t }}</span>
+                    }
+                  </span>
+                </div>
+                <p class="result-desc">{{ p.description }}</p>
+                <div class="result-meta">
+                  <span class="meta-item">
+                    <span class="lang-dot"></span>
+                    {{ p.language }}
+                  </span>
+                  <span class="meta-text">Updated {{ p.updated }}</span>
+                </div>
               </div>
             </div>
-          </div>
+          }
+
+          @if (hasMore() && !loading()) {
+            <button class="pagination-btn" (click)="loadMore()">Load more</button>
+          }
         }
       }
     </div>
