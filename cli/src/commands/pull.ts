@@ -6,6 +6,7 @@ import { cancel, confirm, intro, outro } from "@clack/prompts";
 import * as tar from "tar";
 import { loadConfig } from "../config";
 import { checkInstalled } from "../deps";
+import type { DepEntry } from "../manifest";
 import { HttpRegistryClient } from "../registry";
 
 export interface PullOptions {
@@ -157,8 +158,8 @@ function parsePullName(name: string): [string, string, string | undefined] {
 	return [author, substrName, version];
 }
 
-async function checkMissingDeps(deps: any[]): Promise<any[]> {
-	const missing = [];
+async function checkMissingDeps(deps: DepEntry[]): Promise<DepEntry[]> {
+	const missing: DepEntry[] = [];
 
 	for (const dep of deps) {
 		const isInstalled = await checkInstalled(dep.name, dep.version);

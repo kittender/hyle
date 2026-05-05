@@ -73,7 +73,7 @@ function findFiles(
 				} else if (entry.isFile()) {
 					// Check if file matches any pattern
 					for (const pattern of patterns) {
-						if (isMatch(relPath, pattern, { matchBase: true })) {
+						if (isMatch(relPath, pattern)) {
 							if (!ignore.matches(relPath)) {
 								found.add(relPath);
 							}

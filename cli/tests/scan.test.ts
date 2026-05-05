@@ -46,10 +46,12 @@ describe("scan commands", () => {
       writeFileSync(join(dir, "docs", "architecture.md"), "# Arch\n");
       writeFileSync(join(dir, "src", "app.ts"), "// code\n");
 
-      await runScan("ontology", { dryRun: true });
+      await runScan("ontology", { dryRun: false });
 
       const manifest = load(readFileSync(join(dir, "hyle.yaml"), "utf8")) as any;
-      // Note: dryRun doesn't update manifest, but we test the functionality
+      expect(manifest.ontology).toBeDefined();
+      expect(manifest.ontology).toContain("CLAUDE.md");
+      expect(manifest.ontology).toContain("docs/architecture.md");
     } finally {
       rmSync(dir, { recursive: true });
       process.chdir("/");
@@ -66,9 +68,11 @@ describe("scan commands", () => {
       writeFileSync(join(dir, "docs", "api.md"), "# API\n");
       writeFileSync(join(dir, "docs", "config.secret.md"), "# Config\n");
 
-      await runScan("ontology", { dryRun: true });
+      await runScan("ontology", { dryRun: false });
 
       const manifest = load(readFileSync(join(dir, "hyle.yaml"), "utf8")) as any;
+      expect(manifest.ontology).toContain("docs/api.md");
+      expect(manifest.ontology).not.toContain("docs/config.secret.md");
     } finally {
       rmSync(dir, { recursive: true });
       process.chdir("/");
@@ -101,7 +105,12 @@ describe("scan commands", () => {
       writeFileSync(join(dir, "tsconfig.json"), '{}\n');
       writeFileSync(join(dir, "biome.json"), '{}\n');
 
-      await runScan("craft", { dryRun: true });
+      await runScan("craft", { dryRun: false });
+
+      const manifest = load(readFileSync(join(dir, "hyle.yaml"), "utf8")) as any;
+      expect(manifest.craft).toContain("package.json");
+      expect(manifest.craft).toContain("tsconfig.json");
+      expect(manifest.craft).toContain("biome.json");
     } finally {
       rmSync(dir, { recursive: true });
       process.chdir("/");
@@ -117,14 +126,11 @@ describe("scan commands", () => {
       writeFileSync(join(dir, "AGENTS.md"), "# Agents\n");
       writeFileSync(join(dir, ".claude", "agents", "researcher.md"), "# Researcher\n");
 
-      const logs: string[] = [];
-      const origLog = console.log;
-      console.log = (msg) => logs.push(msg);
-      try {
-        await runScan("identities", { dryRun: true });
-      } finally {
-        console.log = origLog;
-      }
+      await runScan("identities", { dryRun: false });
+
+      const manifest = load(readFileSync(join(dir, "hyle.yaml"), "utf8")) as any;
+      expect(manifest.identities).toContain("AGENTS.md");
+      expect(manifest.identities).toContain(".claude/agents/researcher.md");
     } finally {
       rmSync(dir, { recursive: true });
       process.chdir("/");
@@ -140,14 +146,11 @@ describe("scan commands", () => {
       writeFileSync(join(dir, "ETHICS.md"), "# Ethics\n");
       writeFileSync(join(dir, "evals", "fairness.ts"), "// test\n");
 
-      const logs: string[] = [];
-      const origLog = console.log;
-      console.log = (msg) => logs.push(msg);
-      try {
-        await runScan("ethics", { dryRun: true });
-      } finally {
-        console.log = origLog;
-      }
+      await runScan("ethics", { dryRun: false });
+
+      const manifest = load(readFileSync(join(dir, "hyle.yaml"), "utf8")) as any;
+      expect(manifest.ethics).toContain("ETHICS.md");
+      expect(manifest.ethics).toContain("evals/fairness.ts");
     } finally {
       rmSync(dir, { recursive: true });
       process.chdir("/");

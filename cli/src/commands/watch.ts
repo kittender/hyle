@@ -31,6 +31,22 @@ interface TurnStats {
 	lineNum: number;
 }
 
+interface AuditLogRecord {
+	type: string;
+	message?: {
+		usage?: {
+			input_tokens?: number;
+			output_tokens?: number;
+			cache_read_input_tokens?: number;
+			cache_creation_input_tokens?: number;
+		};
+	};
+	timestamp?: number;
+	model?: string;
+	requestId?: string;
+	gitBranch?: string;
+}
+
 interface SessionInfo {
 	sessionId: string;
 	jsonlPath: string;
@@ -292,7 +308,7 @@ function pollJSONLByLineCount(
 	}
 }
 
-function extractTurnStats(record: any, seq: number): TurnStats {
+function extractTurnStats(record: AuditLogRecord, seq: number): TurnStats {
 	const usage = record.message?.usage || {};
 	const timestamp = new Date(
 		record.timestamp || Date.now(),

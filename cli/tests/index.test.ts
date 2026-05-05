@@ -26,12 +26,8 @@ test("unknown command exits non-zero", () => {
 
 test("stub commands exit non-zero with message", () => {
   const stubs = [
-    ["search"],
     ["config", "get", "key"],
     ["config", "set", "key", "value"],
-    ["deps", "check"],
-    ["index"],
-    ["install", "extension"],
   ];
   for (const args of stubs) {
     const { exitCode, stderr } = spawnSync([...ENTRY, ...args]);

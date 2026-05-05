@@ -7,6 +7,14 @@ import { runPull } from "./commands/pull";
 import { runScan } from "./commands/scan";
 import { runValidate } from "./commands/validate";
 import { runWatch } from "./commands/watch";
+import { runSearch } from "./commands/search";
+import { runDepsCheck } from "./commands/deps";
+import { runInstall } from "./commands/install";
+import {
+	runIdentitiesStructure,
+	runOntologyStructure,
+} from "./commands/structure";
+import { runHyleIndex } from "./commands/hyle-index";
 
 const program = new Command()
 	.name("hyle")
@@ -106,12 +114,17 @@ program
 	.description("Scan and add ontology files to hyle.yaml")
 	.option("--dry-run", "Preview without writing")
 	.option("--add <file>", "Add single file without scanning")
+	.option("--structure", "LLM-powered: generate ontology index")
 	.action(async (path: string, cmd) => {
-		await runScan("ontology", {
-			path,
-			dryRun: !!cmd.dryRun,
-			add: cmd.add,
-		});
+		if (cmd.structure) {
+			await runOntologyStructure({ dryRun: !!cmd.dryRun });
+		} else {
+			await runScan("ontology", {
+				path,
+				dryRun: !!cmd.dryRun,
+				add: cmd.add,
+			});
+		}
 	});
 
 program
@@ -135,14 +148,14 @@ program
 	.option("--structure", "LLM-powered: refactor into hierarchical topology")
 	.action(async (path: string, cmd) => {
 		if (cmd.structure) {
-			console.error("--structure not implemented yet (requires LLM)");
-			process.exit(1);
+			await runIdentitiesStructure({ dryRun: !!cmd.dryRun });
+		} else {
+			await runScan("identities", {
+				path,
+				dryRun: !!cmd.dryRun,
+				add: cmd.add,
+			});
 		}
-		await runScan("identities", {
-			path,
-			dryRun: !!cmd.dryRun,
-			add: cmd.add,
-		});
 	});
 
 program
@@ -162,22 +175,41 @@ const config = program.command("config").description("Read/write .hyle config");
 config
 	.command("get <key>")
 	.description("Get config value")
-	.action(() => stub("config get"));
+	.action(() => {
+		console.error("hyle config get: not implemented yet");
+		process.exit(1);
+	});
 config
 	.command("set <key> <value>")
 	.description("Set config value")
-	.action(() => stub("config set"));
+	.action(() => {
+		console.error("hyle config set: not implemented yet");
+		process.exit(1);
+	});
 
 const deps = program.command("deps").description("Dependency resolution tools");
 deps
 	.command("check [name]")
 	.description("Show resolution status for declared deps")
-	.action(() => stub("deps check"));
+	.action(async (name: string) => {
+		await runDepsCheck(name);
+	});
 
 program
 	.command("search [query]")
 	.description("Search registry by name, tag, or description")
-	.action(() => stub("search"));
+	.option("--tag <tag>", "Filter by tag")
+	.option("--author <author>", "Filter by author")
+	.option("--limit <n>", "Max results (default 20)")
+	.option("--json", "Output JSON")
+	.action(async (query: string, cmd) => {
+		await runSearch(query || "", {
+			tag: cmd.tag,
+			author: cmd.author,
+			json: !!cmd.json,
+			limit: cmd.limit ? Number.parseInt(cmd.limit) : 20,
+		});
+	});
 
 // Extension commands (opt-in via hyle install)
 program
@@ -202,16 +234,15 @@ program
 	.description("LLM-powered metadata index → hyle.json (extension)")
 	.option("--dry-run", "Print to stdout instead of writing")
 	.option("--domain <name>", "Reindex one domain only")
-	.action(() => stub("index"));
+	.action(async (cmd) => {
+		await runHyleIndex({ dryRun: !!cmd.dryRun, domain: cmd.domain });
+	});
 
 program
 	.command("install <extension>")
 	.description("Install a Hylé extension")
-	.action(() => stub("install"));
+	.action(async (extension: string) => {
+		await runInstall(extension);
+	});
 
 program.parse();
-
-function stub(cmd: string): never {
-	console.error(`hyle ${cmd}: not implemented yet`);
-	process.exit(1);
-}

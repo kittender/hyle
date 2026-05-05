@@ -2,7 +2,7 @@ import { execSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import type { DepEntry } from "./manifest";
+import type { DepEntry, InstallMethod } from "./manifest";
 
 type OS = "macos" | "linux" | "windows";
 
@@ -83,7 +83,7 @@ export async function resolveInstallCommand(
 	if (dep.install?.[os]) {
 		const method = dep.install[os];
 		if (method && typeof method === "object" && "manager" in method) {
-			const installMethod = method as any;
+			const installMethod = method as InstallMethod;
 			if (installMethod.manager === "brew") {
 				return `brew install ${installMethod.pkg}`;
 			}
