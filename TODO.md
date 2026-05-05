@@ -82,12 +82,12 @@
 - [x] TODO 11 — `hyle watch` terminal UI
 - [x] TODO 12 — `hyle watch --audit` GDPR audit log
 - [x] TODO 13 — `hyle watch --split` context splitting
-- [ ] TODO 14 — `hyle identities --structure` LLM topology
-- [ ] TODO 15 — `hyle ontology --structure` LLM index
-- [ ] TODO 16 — `hyle index` unified metadata
-- [ ] TODO 17 — `hyle install <extension>`
-- [ ] TODO 18 — `hyle search <query>`
-- [ ] TODO 19 — `hyle deps check [name]`
+- [x] TODO 14 — `hyle identities --structure` LLM topology
+- [x] TODO 15 — `hyle ontology --structure` LLM index
+- [x] TODO 16 — `hyle index` unified metadata
+- [x] TODO 17 — `hyle install <extension>`
+- [x] TODO 18 — `hyle search <query>`
+- [x] TODO 19 — `hyle deps check [name]`
 
 ---
 
@@ -150,7 +150,11 @@
 - [x] Add path traversal tests (`.."` bypass)
 - [x] Add unbounded fallback depth tests
 - [x] Verify `validateManifest` in `runInit`
-- [ ] Add benchmark infrastructure
+- [x] Add benchmark infrastructure
+  - [x] `cli/benchmarks/manifest.bench.ts` (parseManifest, validateManifest)
+  - [x] `cli/benchmarks/ignore.bench.ts` (pattern matching)
+  - [x] `cli/scripts/bench.ts` runner
+  - [x] `bun run bench` script
 - [x] Coverage threshold: ≥75% line, ≥65% branch, 100% critical paths
 - [x] Add `biome.json` with security rules
 - [x] CodeQL SAST integration
@@ -531,7 +535,7 @@ Post-MVP expansion (0.2–0.3): Multi-platform binary distribution, registry UI/
 | Testing & Quality | ✅ Complete | 81 tests, biome.json, CodeQL, coverage gates, Windows CI |
 | Web frontend CSS | ✅ Complete | P1–P4 refinements done |
 | Packaging | ⏳ Not started | 5 platforms |
-| Extensions | 🟡 In Progress | 3/9 complete (watch 11-13), 6 pending |
+| Extensions | ✅ Complete | 9/9 complete (watch 11-13, structure 14-15, index 16, install 17, search 18, deps-check 19) |
 | Docs | ✅ Complete | SECURITY.md, CONTRIBUTING.md, LOCAL_TESTING.md, REGISTRY_API.md, MANIFEST_EXAMPLES.md, CONFIG_REFERENCE.md |
 
 ## Analysis
