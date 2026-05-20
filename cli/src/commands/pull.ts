@@ -7,6 +7,7 @@ import * as tar from "tar";
 import { loadConfig } from "../config";
 import { checkInstalled } from "../deps";
 import type { DepEntry } from "../manifest";
+import { upsertLockEntry, computeFileChecksums } from "../lock";
 import { HttpRegistryClient } from "../registry";
 
 export interface PullOptions {
@@ -105,6 +106,21 @@ export async function runPull(name: string, opts: PullOptions): Promise<void> {
 
 		if (process.stdin.isTTY !== false) {
 			console.log(`✓ Extracted ${substrate.version}`);
+		}
+
+		// Write lock entry
+		const files = computeFileChecksums(cwd, substrate.manifest);
+		upsertLockEntry(cwd, {
+			name: substrName,
+			author,
+			version: substrate.version,
+			bundle_checksum: computedChecksum,
+			pulled_at: new Date().toISOString(),
+			files,
+		});
+
+		if (process.stdin.isTTY !== false) {
+			console.log("✓ hyle.lock updated");
 		}
 
 		const manifestData = substrate.manifest;

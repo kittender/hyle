@@ -5,6 +5,7 @@ import { runDepsCheck } from "./commands/deps";
 import { runHyleIndex } from "./commands/hyle-index";
 import { runInit } from "./commands/init";
 import { runInstall } from "./commands/install";
+import { runOutdated } from "./commands/outdated";
 import { runPublish } from "./commands/publish";
 import { runPull } from "./commands/pull";
 import { runScan } from "./commands/scan";
@@ -13,7 +14,9 @@ import {
 	runIdentitiesStructure,
 	runOntologyStructure,
 } from "./commands/structure";
+import { runUpgrade } from "./commands/upgrade";
 import { runValidate } from "./commands/validate";
+import { runVerify } from "./commands/verify";
 import { runWatch } from "./commands/watch";
 
 const program = new Command()
@@ -60,6 +63,44 @@ program
 			});
 		},
 	);
+
+program
+	.command("outdated")
+	.description("Show substrates with newer versions available")
+	.option("--json", "Output JSON")
+	.action(async (opts: { json?: boolean }) => {
+		const globals = program.opts<{ offline?: boolean }>();
+		await runOutdated({
+			json: !!opts.json,
+			offline: !!globals.offline,
+		});
+	});
+
+program
+	.command("upgrade [name]")
+	.description("Upgrade substrate(s) to latest version")
+	.option("-y, --yes", "Skip confirmations")
+	.action(async (name: string, opts: { yes?: boolean }) => {
+		const globals = program.opts<{ offline?: boolean }>();
+		await runUpgrade(name, {
+			yes: !!opts.yes,
+			offline: !!globals.offline,
+		});
+	});
+
+program
+	.command("verify")
+	.description("Verify substrate integrity against hyle.lock")
+	.option("--registry", "Also check versions against registry")
+	.option("--json", "Output JSON")
+	.action(async (opts: { registry?: boolean; json?: boolean }) => {
+		const globals = program.opts<{ offline?: boolean }>();
+		await runVerify({
+			registry: !!opts.registry,
+			json: !!opts.json,
+			offline: !!globals.offline,
+		});
+	});
 
 program
 	.command("snapshot")
