@@ -1,5 +1,5 @@
 import { expect, test, describe } from "bun:test";
-import { mkdtempSync, writeFileSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import * as yaml from "js-yaml";
@@ -127,6 +127,49 @@ describe("lock", () => {
 			expect(entries.length).toBe(2);
 			expect(entries.some((e) => e.name === "substrate1")).toBe(true);
 			expect(entries.some((e) => e.name === "substrate2")).toBe(true);
+		} finally {
+			rmSync(dir, { recursive: true });
+		}
+	});
+
+	test("upsertLockEntry: extends_from persists through write/read", () => {
+		const dir = makeTmpDir();
+		try {
+			const entry: LockEntry = {
+				name: "child-substrate",
+				author: "acme",
+				version: "1.0.0",
+				bundle_checksum: "checksum1",
+				pulled_at: "2026-05-20T10:00:00Z",
+				extends_from: "alice/parent-substrate@2.0.0",
+				files: [],
+			};
+
+			upsertLockEntry(dir, entry);
+
+			const entries = readLock(dir);
+			expect(entries[0].extends_from).toBe("alice/parent-substrate@2.0.0");
+		} finally {
+			rmSync(dir, { recursive: true });
+		}
+	});
+
+	test("upsertLockEntry: extends_from absent when not set", () => {
+		const dir = makeTmpDir();
+		try {
+			const entry: LockEntry = {
+				name: "substrate",
+				author: "author",
+				version: "1.0.0",
+				bundle_checksum: "checksum1",
+				pulled_at: "2026-05-20T10:00:00Z",
+				files: [],
+			};
+
+			upsertLockEntry(dir, entry);
+
+			const entries = readLock(dir);
+			expect(entries[0].extends_from).toBeUndefined();
 		} finally {
 			rmSync(dir, { recursive: true });
 		}

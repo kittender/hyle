@@ -1,13 +1,13 @@
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { createGunzip } from "node:zlib";
-import { cancel, confirm, intro, outro } from "@clack/prompts";
+import { confirm, intro, outro } from "@clack/prompts";
 import * as tar from "tar";
 import { loadConfig } from "../config";
 import { checkInstalled } from "../deps";
+import { computeFileChecksums, upsertLockEntry } from "../lock";
 import type { DepEntry } from "../manifest";
-import { upsertLockEntry, computeFileChecksums } from "../lock";
+import { parseSubstrateRef } from "../manifest";
 import { HttpRegistryClient } from "../registry";
 
 export interface PullOptions {
@@ -70,6 +70,9 @@ export async function runPull(name: string, opts: PullOptions): Promise<void> {
 			console.log(
 				`Would extract ${substrate.version} (${bundleData.length} bytes)`,
 			);
+			if (substrate.manifest.extends) {
+				console.log(`  extends: ${substrate.manifest.extends}`);
+			}
 			return;
 		}
 
@@ -81,6 +84,67 @@ export async function runPull(name: string, opts: PullOptions): Promise<void> {
 			if (typeof confirmed !== "boolean" || !confirmed) {
 				outro("Cancelled.");
 				process.exit(0);
+			}
+		}
+
+		// If extends: extract parent first, then child overwrites
+		let extendsFrom: string | undefined;
+		if (substrate.manifest.extends) {
+			const [parentAuthor, parentName, parentVersion] = parseSubstrateRef(
+				substrate.manifest.extends,
+			);
+
+			if (process.stdin.isTTY !== false) {
+				console.log(
+					`Fetching parent ${parentAuthor}/${parentName}${parentVersion ? `@${parentVersion}` : ""}...`,
+				);
+			}
+
+			const parentSubstrate = parentVersion
+				? await registryClient.fetchVersion(
+						parentAuthor,
+						parentName,
+						parentVersion,
+					)
+				: await registryClient.fetchLatest(parentAuthor, parentName);
+
+			if (parentSubstrate.manifest.extends) {
+				throw new Error(
+					`Inheritance depth exceeded: ${parentAuthor}/${parentName} also has extends (max depth: 2)`,
+				);
+			}
+
+			const parentBundleData = await registryClient.fetchBundle(
+				parentAuthor,
+				parentName,
+				parentVersion,
+			);
+			const parentChecksum = createHash("sha256")
+				.update(parentBundleData)
+				.digest("hex");
+			if (parentChecksum !== parentSubstrate.checksum) {
+				throw new Error(
+					`Parent bundle checksum mismatch for ${parentAuthor}/${parentName}`,
+				);
+			}
+
+			if (process.stdin.isTTY !== false) {
+				console.log("Extracting parent...");
+			}
+
+			const parentTmpFile = join(cwd, ".hyle_parent_bundle.tar.gz");
+			writeFileSync(parentTmpFile, parentBundleData);
+			await tar.extract({ file: parentTmpFile, cwd, strict: true });
+			try {
+				require("node:fs").unlinkSync(parentTmpFile);
+			} catch {
+				/* ignore */
+			}
+
+			extendsFrom = `${parentAuthor}/${parentName}@${parentSubstrate.version}`;
+
+			if (process.stdin.isTTY !== false) {
+				console.log(`✓ Applied parent ${extendsFrom}`);
 			}
 		}
 
@@ -108,7 +172,7 @@ export async function runPull(name: string, opts: PullOptions): Promise<void> {
 			console.log(`✓ Extracted ${substrate.version}`);
 		}
 
-		// Write lock entry
+		// Write lock entry (files reflect merged state after parent+child extraction)
 		const files = computeFileChecksums(cwd, substrate.manifest);
 		upsertLockEntry(cwd, {
 			name: substrName,
@@ -116,6 +180,7 @@ export async function runPull(name: string, opts: PullOptions): Promise<void> {
 			version: substrate.version,
 			bundle_checksum: computedChecksum,
 			pulled_at: new Date().toISOString(),
+			extends_from: extendsFrom,
 			files,
 		});
 

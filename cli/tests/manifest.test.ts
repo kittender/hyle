@@ -1,6 +1,6 @@
 import { expect, test, describe } from "bun:test";
 import { dump } from "js-yaml";
-import { parseManifest, validateManifest, ManifestParseError } from "../src/manifest";
+import { parseManifest, validateManifest, validateExtendsRef, parseSubstrateRef, ManifestParseError } from "../src/manifest";
 
 // ---- Helpers ----
 
@@ -549,5 +549,84 @@ describe("validateManifest — warnings", () => {
     const m = parseManifest(yaml);
     const { errors } = validateManifest(m);
     expect(errors.some((e) => e.field.includes("fallback") && e.message.includes("too deep"))).toBe(true);
+  });
+});
+
+// ---- parseSubstrateRef ----
+
+describe("parseSubstrateRef", () => {
+  test("author/name → [author, name, undefined]", () => {
+    expect(parseSubstrateRef("alice/my-substrate")).toEqual(["alice", "my-substrate", undefined]);
+  });
+
+  test("author/name@version → [author, name, version]", () => {
+    expect(parseSubstrateRef("alice/my-substrate@1.2.3")).toEqual(["alice", "my-substrate", "1.2.3"]);
+  });
+
+  test("no slash → empty author", () => {
+    const [author] = parseSubstrateRef("noauthor");
+    expect(author).toBe("");
+  });
+});
+
+// ---- validateExtendsRef ----
+
+describe("validateExtendsRef", () => {
+  test("valid author/name → no error", () => {
+    expect(validateExtendsRef("alice/my-substrate")).toBeUndefined();
+  });
+
+  test("valid author/name@version → no error", () => {
+    expect(validateExtendsRef("alice/my-substrate@1.0.0")).toBeUndefined();
+  });
+
+  test("missing slash → error", () => {
+    expect(validateExtendsRef("noauthor")).toBeDefined();
+  });
+
+  test("invalid author slug → error", () => {
+    expect(validateExtendsRef("ALICE/my-substrate")).toBeDefined();
+  });
+
+  test("invalid name slug → error", () => {
+    expect(validateExtendsRef("alice/My Substrate")).toBeDefined();
+  });
+
+  test("invalid semver version → error", () => {
+    expect(validateExtendsRef("alice/my-substrate@notasemver")).toBeDefined();
+  });
+});
+
+// ---- validateManifest: extends field ----
+
+describe("validateManifest — extends field", () => {
+  test("valid extends author/name passes", () => {
+    const m = parseManifest(minimalYaml({ extends: "alice/base-substrate" }));
+    const { errors } = validateManifest(m);
+    expect(errors.filter((e) => e.field === "extends")).toHaveLength(0);
+  });
+
+  test("valid extends author/name@version passes", () => {
+    const m = parseManifest(minimalYaml({ extends: "alice/base-substrate@1.2.3" }));
+    const { errors } = validateManifest(m);
+    expect(errors.filter((e) => e.field === "extends")).toHaveLength(0);
+  });
+
+  test("invalid extends format → error", () => {
+    const m = parseManifest(minimalYaml({ extends: "not-valid" }));
+    const { errors } = validateManifest(m);
+    expect(errors.some((e) => e.field === "extends")).toBe(true);
+  });
+
+  test("circular extends (self) → error", () => {
+    const m = parseManifest(minimalYaml({ extends: "alice/my-substrate" }));
+    const { errors } = validateManifest(m);
+    expect(errors.some((e) => e.field === "extends" && e.message.includes("Circular"))).toBe(true);
+  });
+
+  test("extends with invalid version → error", () => {
+    const m = parseManifest(minimalYaml({ extends: "alice/base-substrate@bad" }));
+    const { errors } = validateManifest(m);
+    expect(errors.some((e) => e.field === "extends")).toBe(true);
   });
 });

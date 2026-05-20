@@ -45,6 +45,7 @@ export interface HyleManifest {
 	tags?: string[];
 	url?: string;
 	forks?: string[];
+	extends?: string;
 
 	models: Models;
 
@@ -133,6 +134,7 @@ export function parseManifest(yaml: string): HyleManifest {
 		tags: coerceStringArray(obj.tags),
 		url: coerceString(obj.url),
 		forks: coerceStringArray(obj.forks),
+		extends: coerceString(obj.extends),
 		models: {
 			primary: parseModelConfig(modelsRaw.primary, "models.primary"),
 			secondary: parseModelConfig(modelsRaw.secondary, "models.secondary"),
@@ -341,6 +343,22 @@ export function validateManifest(m: HyleManifest): ValidationResult {
 		warnings.push({ field: "description", message: "Missing description" });
 	}
 
+	// extends
+	if (m.extends !== undefined) {
+		const extendsErr = validateExtendsRef(m.extends);
+		if (extendsErr) {
+			errors.push({ field: "extends", message: extendsErr });
+		} else {
+			const [extAuthor, extName] = parseSubstrateRef(m.extends);
+			if (extAuthor === m.author && extName === m.name) {
+				errors.push({
+					field: "extends",
+					message: "Circular extends: substrate cannot extend itself",
+				});
+			}
+		}
+	}
+
 	// models — true = check local fallback warning (only at top level)
 	validateModelConfig(
 		m.models.primary,
@@ -494,6 +512,48 @@ function coerceString(v: unknown): string | undefined {
 function coerceStringArray(v: unknown): string[] | undefined {
 	if (!Array.isArray(v)) return undefined;
 	return v.map((item) => String(item));
+}
+
+// Parses "author/name" or "author/name@version" → [author, name, version?]
+export function parseSubstrateRef(
+	ref: string,
+): [string, string, string | undefined] {
+	let version: string | undefined;
+	let target = ref;
+
+	if (target.includes("@")) {
+		const at = target.lastIndexOf("@");
+		version = target.slice(at + 1);
+		target = target.slice(0, at);
+	}
+
+	const slash = target.indexOf("/");
+	if (slash === -1) return ["", "", undefined];
+
+	const author = target.slice(0, slash);
+	const name = target.slice(slash + 1);
+	return [author, name, version];
+}
+
+// Returns an error string if the ref is invalid, undefined if valid
+export function validateExtendsRef(ref: string): string | undefined {
+	const [author, name, version] = parseSubstrateRef(ref);
+
+	if (!author || !name) {
+		return "Must be in format 'author/name' or 'author/name@version'";
+	}
+	if (!SLUG_RE.test(author)) {
+		return `Author part '${author}' must be a URL-safe slug (lowercase alphanumeric and hyphens)`;
+	}
+	if (!SLUG_RE.test(name)) {
+		return `Name part '${name}' must be a URL-safe slug (lowercase alphanumeric and hyphens)`;
+	}
+	if (version !== undefined) {
+		if (!semver.valid(version)) {
+			return `Version '${version}' must be a valid semver string (x.y.z)`;
+		}
+	}
+	return undefined;
 }
 
 function isUnsafePath(p: string, root = "."): boolean {
