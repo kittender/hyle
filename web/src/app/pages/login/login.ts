@@ -1,19 +1,16 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule],
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
 export class LoginComponent {
-  email = '';
-  password = '';
   error = '';
   loading = false;
 
@@ -22,22 +19,18 @@ export class LoginComponent {
     private router: Router,
   ) {}
 
-  submit(e: Event) {
-    e.preventDefault();
-    this.error = '';
-    if (!this.email || !this.password) {
-      this.error = 'Please fill in all fields.';
-      return;
-    }
+  loginWithGitHub() {
     this.loading = true;
-    setTimeout(() => {
-      this.authService.mockLogin(this.email);
-      this.loading = false;
-      this.router.navigate(['/']);
-    }, 800);
+    this.authService.loginWithGitHub();
+    // Note: page will redirect to GitHub OAuth
   }
 
-  goTo(path: string) {
-    this.router.navigate([path]);
+  mockLogin() {
+    this.loading = true;
+    setTimeout(() => {
+      this.authService.mockLogin('demo@example.com');
+      this.loading = false;
+      this.router.navigate(['/profile']);
+    }, 500);
   }
 }

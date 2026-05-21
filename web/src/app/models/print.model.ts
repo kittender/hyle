@@ -35,10 +35,12 @@ export interface Print {
 }
 
 export interface AuthUser {
+  id?: number;
   name: string;
   username: string;
   email: string;
   avatar?: string | null;
+  token?: string;
 }
 
 export interface ActivityItem {
