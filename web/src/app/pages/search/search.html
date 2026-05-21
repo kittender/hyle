@@ -76,6 +76,11 @@
                     }
                   </span>
                 </div>
+                @if (p.badges && p.badges.length > 0) {
+                  <div style="margin: 0.5rem 0;">
+                    <app-badge-list [badges]="p.badges"></app-badge-list>
+                  </div>
+                }
                 <p class="result-desc">{{ p.description }}</p>
                 <div class="result-meta">
                   <span class="meta-text">v{{ p.version }}</span>

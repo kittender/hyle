@@ -4,6 +4,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { DataService } from '../../services/data.service';
+import { ApiService } from '../../services/api.service';
 import { Print, ActivityItem } from '../../models/print.model';
 
 const SOCIAL_DEFS = [
@@ -54,6 +55,7 @@ export class ProfileComponent implements OnInit {
   constructor(
     public authService: AuthService,
     private dataService: DataService,
+    private apiService: ApiService,
     private router: Router,
     private route: ActivatedRoute,
   ) {}
@@ -65,10 +67,41 @@ export class ProfileComponent implements OnInit {
 
     if (this.authService.user()) {
       const username = this.authService.user()!.username;
-      this.myPrints = this.dataService.PRINTS.filter(p => p.author === username);
+      this.loadAuthorProfile(username);
     }
     this.starredPrints = this.dataService.MOCK_STARRED;
     this.activity = this.dataService.MOCK_ACTIVITY;
+  }
+
+  loadAuthorProfile(username: string) {
+    this.apiService.getAuthor(username).subscribe({
+      next: (profile) => {
+        this.myPrints = profile.substrates.map((s: any) => ({
+          id: `${s.author}/${s.name}`,
+          author: s.author,
+          name: s.name,
+          stars: s.star_count || 0,
+          forks: 0,
+          pulls: { month: 0, half: 0, year: 0, all: 0 },
+          description: s.description || '',
+          longDesc: s.description || '',
+          language: '',
+          license: '',
+          updated: s.created_at || '',
+          tags: s.tags || [],
+          verified: false,
+          versions: [],
+          tree: {}
+        }));
+        if (profile.bio) {
+          this.bio.set(profile.bio);
+        }
+      },
+      error: () => {
+        // Fallback to mock data
+        this.myPrints = this.dataService.PRINTS.filter(p => p.author === username);
+      }
+    });
   }
 
   get totalStars(): string {

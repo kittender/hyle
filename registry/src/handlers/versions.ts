@@ -1,5 +1,6 @@
 import type { IDatabase } from "../db";
 import type { SubstrateResponse } from "../types";
+import { computeAllBadges } from "./badges";
 
 export function handleVersions(
   author: string,
@@ -19,6 +20,10 @@ export function handleVersions(
   const results: SubstrateResponse[] = records.map((record) => {
     const manifest = JSON.parse(record.manifest_json);
     const bundleUrl = `${baseUrl}/bundles/${record.bundle_path}`;
+    const star_count = db.getStarCount(record.author, record.name);
+    const avg_rating = db.getAvgRating(record.author, record.name);
+    const scan_result = db.getScan(record.id);
+    const badges = computeAllBadges(record.author, record.name, db, scan_result);
 
     return {
       author: record.author,
@@ -33,6 +38,10 @@ export function handleVersions(
       manifest,
       bundle_url: bundleUrl,
       created_at: record.created_at,
+      star_count,
+      avg_rating,
+      scan_result,
+      badges,
     };
   });
 

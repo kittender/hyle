@@ -26,6 +26,9 @@
               <span class="tag-light">{{ t }}</span>
             }
           </div>
+          @if (print()?.badges && print()!.badges!.length > 0) {
+            <app-badge-list [badges]="print()!.badges!"></app-badge-list>
+          }
         </div>
         <div class="pull-box">
           <div class="pull-box__label">Pull this substrate</div>
@@ -33,6 +36,11 @@
             <code class="pull-box__code">hyle pull {{ print()?.author }}/{{ print()?.name }}</code>
             <app-copy-button [text]="'hyle pull ' + (print()?.author || '') + '/' + (print()?.name || '')" class="text-muted-light"></app-copy-button>
           </div>
+          <app-star-button
+            [author]="print()?.author || ''"
+            [name]="print()?.name || ''"
+            (starsChanged)="onStarsChanged($event)">
+          </app-star-button>
         </div>
       </div>
     </div>
@@ -52,6 +60,11 @@
   @if (tab() === 'readme') {
     <div class="container readme-tab">
       <div class="readme-body" [innerHTML]="getReadmeHtml()"></div>
+      <app-review-form
+        [author]="print()?.author || ''"
+        [name]="print()?.name || ''"
+        (reviewSubmitted)="onReviewSubmitted($event)">
+      </app-review-form>
     </div>
   }
 

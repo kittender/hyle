@@ -1,6 +1,7 @@
 import type { IDatabase } from "../db";
 import { extractToken } from "./auth";
 import { verifyJwt } from "../jwt";
+import { notifyNewStar } from "./notifications";
 
 export async function handleToggleStar(
   author: string,
@@ -21,6 +22,11 @@ export async function handleToggleStar(
 
   const starred = db.toggleStar(payload.sub, author, name);
   const count = db.getStarCount(author, name);
+
+  // Send notification if just starred
+  if (starred) {
+    notifyNewStar(author, name, count, db).catch(err => console.error("Notification error:", err));
+  }
 
   return new Response(JSON.stringify({ starred, count }), {
     status: 200,

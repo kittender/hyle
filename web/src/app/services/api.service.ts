@@ -16,6 +16,15 @@ export interface SubstrateResponse {
   manifest: any; // HyleManifest from CLI
   bundle_url: string;
   created_at: string;
+  star_count?: number;
+  avg_rating?: number;
+  scan_result?: any;
+  badges?: any[];
+  tree?: any;
+  id?: string;
+  tag?: string;
+  date?: string;
+  notes?: string;
 }
 
 export interface AuthorProfile {
@@ -23,6 +32,10 @@ export interface AuthorProfile {
   substrate_count: number;
   total_versions: number;
   substrates: SubstrateResponse[];
+  bio?: string;
+  avatar_url?: string;
+  website?: string;
+  star_count_total?: number;
 }
 
 export interface DiffResponse {
@@ -30,6 +43,24 @@ export interface DiffResponse {
   v2: string;
   left: string;
   right: string;
+}
+
+export interface StarResponse {
+  count: number;
+  viewer_starred: boolean;
+}
+
+export interface Review {
+  id?: string;
+  username: string;
+  rating: number;
+  body?: string;
+  created_at?: string;
+}
+
+export interface ToggleStarResponse {
+  starred: boolean;
+  count: number;
 }
 
 export interface SearchParams {
@@ -122,6 +153,46 @@ export class ApiService {
     return this.http.get<DiffResponse>(url).pipe(
       catchError(err => {
         console.error('Failed to fetch diff:', err);
+        throw err;
+      })
+    );
+  }
+
+  getStars(author: string, name: string): Observable<StarResponse> {
+    const url = `${this.baseUrl}/substrates/${author}/${name}/stars`;
+    return this.http.get<StarResponse>(url).pipe(
+      catchError(err => {
+        console.error('Failed to fetch stars:', err);
+        return of({ count: 0, viewer_starred: false });
+      })
+    );
+  }
+
+  toggleStar(author: string, name: string): Observable<ToggleStarResponse> {
+    const url = `${this.baseUrl}/substrates/${author}/${name}/star`;
+    return this.http.post<ToggleStarResponse>(url, {}).pipe(
+      catchError(err => {
+        console.error('Failed to toggle star:', err);
+        throw err;
+      })
+    );
+  }
+
+  getReviews(author: string, name: string): Observable<Review[]> {
+    const url = `${this.baseUrl}/substrates/${author}/${name}/reviews`;
+    return this.http.get<Review[]>(url).pipe(
+      catchError(err => {
+        console.error('Failed to fetch reviews:', err);
+        return of([]);
+      })
+    );
+  }
+
+  submitReview(author: string, name: string, rating: number, body?: string): Observable<Review> {
+    const url = `${this.baseUrl}/substrates/${author}/${name}/reviews`;
+    return this.http.post<Review>(url, { rating, body }).pipe(
+      catchError(err => {
+        console.error('Failed to submit review:', err);
         throw err;
       })
     );

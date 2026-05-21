@@ -5,6 +5,7 @@ import { runDepsCheck } from "./commands/deps";
 import { runHyleIndex } from "./commands/hyle-index";
 import { runInit } from "./commands/init";
 import { runInstall } from "./commands/install";
+import { runLogin, logout } from "./commands/login";
 import { runOutdated } from "./commands/outdated";
 import { runPublish } from "./commands/publish";
 import { runPull } from "./commands/pull";
@@ -33,6 +34,21 @@ program
 	.action(async (opts: { yes?: boolean }) => {
 		const globals = program.opts<{ offline?: boolean }>();
 		await runInit({ yes: !!opts.yes, offline: !!globals.offline });
+	});
+
+program
+	.command("login")
+	.description("Authenticate with GitHub")
+	.option("--registry <url>", "Custom registry URL")
+	.action(async (opts: { registry?: string }) => {
+		await runLogin({ registryUrl: opts.registry });
+	});
+
+program
+	.command("logout")
+	.description("Remove stored authentication")
+	.action(async () => {
+		logout();
 	});
 
 program

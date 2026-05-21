@@ -1,5 +1,6 @@
 import { Component, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule, DomSanitizer, SafeHtml } from '@angular/common';
+import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ApiService, SubstrateResponse, DiffResponse } from '../../services/api.service';
@@ -8,12 +9,15 @@ import { FileViewerComponent } from '../../components/file-viewer/file-viewer';
 import { DiffViewComponent } from '../../components/diff-view/diff-view';
 import { QuickstartPanelComponent } from '../../components/quickstart-panel/quickstart-panel';
 import { CopyButtonComponent } from '../../components/copy-button/copy-button';
+import { StarButtonComponent } from '../../components/star-button/star-button';
+import { ReviewFormComponent } from '../../components/review-form/review-form';
+import { BadgeListComponent } from '../../components/badge-list/badge-list';
 import { marked } from 'marked';
 
 @Component({
   selector: 'app-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, FileTreeComponent, FileViewerComponent, DiffViewComponent, QuickstartPanelComponent, CopyButtonComponent],
+  imports: [CommonModule, FormsModule, FileTreeComponent, FileViewerComponent, DiffViewComponent, QuickstartPanelComponent, CopyButtonComponent, StarButtonComponent, ReviewFormComponent, BadgeListComponent],
   templateUrl: './detail.html',
   styleUrl: './detail.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -145,5 +149,13 @@ export class DetailComponent implements OnInit {
 
   get diffRightLabel(): string {
     return `hyle.yaml @ ${this.diffV1()}`;
+  }
+
+  onStarsChanged(count: number) {
+    // Could update UI here if needed
+  }
+
+  onReviewSubmitted(review: any) {
+    // Could update UI here if needed
   }
 }

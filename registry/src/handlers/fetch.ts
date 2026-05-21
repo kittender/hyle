@@ -1,6 +1,7 @@
 import type { IDatabase } from "../db";
 import type { IStorage } from "../storage";
 import type { SubstrateResponse } from "../types";
+import { computeAllBadges } from "./badges";
 
 export async function handleFetch(
   author: string,
@@ -29,6 +30,8 @@ export async function handleFetch(
   const bundleUrl = `${baseUrl}/bundles/${record.bundle_path}`;
   const star_count = db.getStarCount(record.author, record.name);
   const avg_rating = db.getAvgRating(record.author, record.name);
+  const scan_result = db.getScan(record.id);
+  const badges = computeAllBadges(record.author, record.name, db, scan_result);
 
   const response: SubstrateResponse = {
     author: record.author,
@@ -45,6 +48,8 @@ export async function handleFetch(
     created_at: record.created_at,
     star_count,
     avg_rating,
+    scan_result,
+    badges,
   };
 
   return new Response(JSON.stringify(response), {

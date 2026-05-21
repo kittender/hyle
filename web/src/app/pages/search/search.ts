@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ApiService, SubstrateResponse } from '../../services/api.service';
+import { BadgeListComponent } from '../../components/badge-list/badge-list';
 
 @Component({
   selector: 'app-search',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, BadgeListComponent],
   templateUrl: './search.html',
   styleUrl: './search.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -129,7 +130,7 @@ export class SearchComponent implements OnInit {
     this.syncUrl();
   }
 
-  private syncUrl() {
+  syncUrl() {
     const queryParams: any = {};
     if (this.query()) queryParams['q'] = this.query();
     if (this.sort() !== 'recent') queryParams['sort'] = this.sort();

@@ -1,6 +1,7 @@
 import type { IDatabase } from "../db";
 import { extractToken } from "./auth";
 import { verifyJwt } from "../jwt";
+import { notifyNewReview } from "./notifications";
 
 export async function handleSubmitReview(
   author: string,
@@ -30,6 +31,14 @@ export async function handleSubmitReview(
     }
 
     const review = db.upsertReview(payload.sub, author, name, body.rating, body.body);
+
+    // Send notification
+    const reviewer = db.getUser(payload.sub);
+    if (reviewer) {
+      notifyNewReview(author, name, reviewer.username, body.rating, body.body, db).catch(err =>
+        console.error("Notification error:", err)
+      );
+    }
 
     return new Response(JSON.stringify(review), {
       status: 201,
