@@ -15,10 +15,30 @@ const auth = createAuthFromEnv();
 db.init();
 await storage.init();
 
+const corsOrigin = process.env.HYLE_WEB_ORIGIN || "*";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": corsOrigin,
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
+
+const addCorsHeaders = (response: Response): Response => {
+  Object.entries(corsHeaders).forEach(([key, value]) => {
+    response.headers.set(key, value);
+  });
+  return response;
+};
+
 const server = Bun.serve({
   port: PORT,
   fetch: async (req: Request) => {
-    return await route(req, db, storage, auth, BASE_URL);
+    if (req.method === "OPTIONS") {
+      const response = new Response(null, { status: 204 });
+      return addCorsHeaders(response);
+    }
+    const response = await route(req, db, storage, auth, BASE_URL);
+    return addCorsHeaders(response);
   },
 });
 

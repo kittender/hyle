@@ -1,0 +1,40 @@
+name: hyle
+version: "0.1.0"
+summary: AI context substrate manager
+description: |
+  Package, share, and install versioned snapshots of AI agent workflows.
+  Manages CLAUDE.md, agent identities, MCP configs, and ethics policies.
+
+grade: stable
+confinement: strict
+
+architectures:
+  - build-on: amd64
+    run-on: amd64
+  - build-on: arm64
+    run-on: arm64
+
+parts:
+  hyle-binary:
+    plugin: dump
+    source: ../dist/
+    organize:
+      hyle-linux-x64: usr/bin/hyle-x64
+      hyle-linux-arm64: usr/bin/hyle-arm64
+    override-build: |
+      # Link the correct binary based on build architecture
+      if [ "$SNAPCRAFT_TARGET_ARCH" = "amd64" ]; then
+        cp hyle-linux-x64 hyle
+      else
+        cp hyle-linux-arm64 hyle
+      fi
+      mkdir -p "$SNAPCRAFT_PART_INSTALL/usr/bin"
+      cp hyle "$SNAPCRAFT_PART_INSTALL/usr/bin/"
+
+apps:
+  hyle:
+    command: usr/bin/hyle
+    plugs:
+      - home
+      - network
+      - network-bind

@@ -1,14 +1,14 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { CommonModule, DomSanitizer, SafeHtml } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { DataService } from '../../services/data.service';
-import { Print } from '../../models/print.model';
+import { ApiService, SubstrateResponse, DiffResponse } from '../../services/api.service';
 import { FileTreeComponent } from '../../components/file-tree/file-tree';
 import { FileViewerComponent } from '../../components/file-viewer/file-viewer';
 import { DiffViewComponent } from '../../components/diff-view/diff-view';
 import { QuickstartPanelComponent } from '../../components/quickstart-panel/quickstart-panel';
 import { CopyButtonComponent } from '../../components/copy-button/copy-button';
+import { marked } from 'marked';
 
 @Component({
   selector: 'app-detail',
@@ -16,15 +16,16 @@ import { CopyButtonComponent } from '../../components/copy-button/copy-button';
   imports: [CommonModule, FormsModule, FileTreeComponent, FileViewerComponent, DiffViewComponent, QuickstartPanelComponent, CopyButtonComponent],
   templateUrl: './detail.html',
   styleUrl: './detail.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DetailComponent implements OnInit {
-  print = signal<Print | undefined>(undefined);
-  versions = signal<any[]>([]);
+  print = signal<SubstrateResponse | undefined>(undefined);
+  versions = signal<SubstrateResponse[]>([]);
   tab = signal<string>('readme');
   selectedFile = signal<string | null>(null);
   diffV1 = signal('');
   diffV2 = signal('');
-  diffContent = signal<{ left: string; right: string } | null>(null);
+  diffContent = signal<DiffResponse | null>(null);
   releasesView = signal<'list' | 'grid'>('list');
   loading = signal(false);
   error = signal<string | null>(null);
@@ -34,7 +35,8 @@ export class DetailComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    public dataService: DataService,
+    private apiService: ApiService,
+    private sanitizer: DomSanitizer,
   ) {}
 
   ngOnInit() {
@@ -47,7 +49,7 @@ export class DetailComponent implements OnInit {
       this.loading.set(true);
       this.error.set(null);
 
-      this.dataService.getSubstrate$(author, name).subscribe({
+      this.apiService.getSubstrate(author, name).subscribe({
         next: (print) => {
           this.print.set(print);
           this.loading.set(false);
@@ -58,12 +60,13 @@ export class DetailComponent implements OnInit {
         }
       });
 
-      this.dataService.getVersions$(author, name).subscribe({
+      this.apiService.getVersions(author, name).subscribe({
         next: (versions) => {
           this.versions.set(versions);
           if (versions.length > 1) {
-            this.diffV1.set(versions[0].tag);
-            this.diffV2.set(versions[1].tag);
+            // Set diffV1 to latest, diffV2 to previous
+            this.diffV1.set(versions[0].version);
+            this.diffV2.set(versions[1].version);
             this.loadDiff();
           }
         },
@@ -85,15 +88,31 @@ export class DetailComponent implements OnInit {
     this.setTab('diff');
   }
 
+  onDiffV1Change(v1: string) {
+    this.diffV1.set(v1);
+    this.loadDiff();
+  }
+
+  onDiffV2Change(v2: string) {
+    this.diffV2.set(v2);
+    this.loadDiff();
+  }
+
   private loadDiff() {
     if (!this.diffV1() || !this.diffV2()) return;
-    this.dataService.getDiff$(this.author(), this.name(), this.diffV1(), this.diffV2())
+    this.apiService.getDiff(this.author(), this.name(), this.diffV1(), this.diffV2())
       .subscribe({
         next: (diff) => {
-          this.diffContent.set({ left: diff.left, right: diff.right });
+          this.diffContent.set(diff);
         },
         error: () => {} // Silently fail diff loading
       });
+  }
+
+  getReadmeHtml(): SafeHtml {
+    const text = this.print()?.description || '';
+    const html = marked(text);
+    return this.sanitizer.bypassSecurityTrustHtml(html as string);
   }
 
   onFileSelected(path: string) {
@@ -116,7 +135,15 @@ export class DetailComponent implements OnInit {
     return this.diffContent()?.left || '';
   }
 
+  get diffLeftLabel(): string {
+    return `hyle.yaml @ ${this.diffV2()}`;
+  }
+
   get diffRight(): string {
     return this.diffContent()?.right || '';
+  }
+
+  get diffRightLabel(): string {
+    return `hyle.yaml @ ${this.diffV1()}`;
   }
 }

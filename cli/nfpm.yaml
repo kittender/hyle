@@ -1,0 +1,29 @@
+name: hyle
+arch: amd64
+platform: linux
+version: "0.1.0"
+maintainer: Kittender <hello@hyle.dev>
+description: AI context substrate manager
+homepage: https://hyle.dev
+license: MIT
+
+contents:
+  - src: dist/hyle-linux-x64
+    dst: /usr/local/bin/hyle
+    file_info:
+      mode: 0755
+
+  - src: ../README.md
+    dst: /usr/share/doc/hyle/README.md
+    file_info:
+      mode: 0644
+
+scripts:
+  postinstall: scripts/postinstall.sh
+
+deb:
+  summary: Package, share, and install versioned AI agent workflow snapshots
+
+rpm:
+  group: Applications/System
+  summary: Package, share, and install versioned AI agent workflow snapshots

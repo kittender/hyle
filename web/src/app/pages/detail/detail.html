@@ -18,49 +18,20 @@
         <div>
           <h1 class="detail-title">
             <span><span class="detail-title__author">{{ print()?.author }}/</span>{{ print()?.name }}</span>
-            @if (print()?.verified) {
-              <span title="Verified print" class="icon-badge">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" fill="#166534"/><path d="M4.5 8.5l2.5 2.5 4.5-5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-            }
-            @if (print()?.community) {
-              <span title="Community favourite" class="icon-badge">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" fill="#92400e"/><path d="M8 4l1.1 2.2 2.4.35-1.75 1.7.41 2.4L8 9.5l-2.16 1.15.41-2.4L4.5 6.55l2.4-.35L8 4z" fill="#fde68a"/></svg>
-              </span>
-            }
           </h1>
-          @if (print()?.verified || print()?.community) {
-            <div class="badge-row">
-              @if (print()?.verified) {
-                <span class="badge badge--verified">Verified</span>
-              }
-              @if (print()?.community) {
-                <span class="badge badge--community">Community</span>
-              }
-            </div>
-          }
           <p class="detail-desc">{{ print()?.description }}</p>
           <div class="detail-meta">
-            <span class="meta-item--light">
-              <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg>
-              {{ (print()?.stars || 0).toLocaleString() }} stars
-            </span>
-            <span class="meta-item--light">
-              <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M5 3.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm0 2.122a2.25 2.25 0 10-1.5 0v.878A2.25 2.25 0 005.75 8.5h1.5v2.128a2.251 2.251 0 101.5 0V8.5h1.5a2.25 2.25 0 002.25-2.25v-.878a2.25 2.25 0 10-1.5 0v.878a.75.75 0 01-.75.75h-4.5A.75.75 0 015 6.25v-.878zm3.75 7.378a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm3-8.75a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>
-              {{ (print()?.forks || 0) }} forks
-            </span>
-            <span class="meta-item--light">{{ print()?.license }}</span>
-            <span class="meta-item--light">{{ print()?.language }}</span>
+            <span class="meta-item--light">v{{ print()?.version }}</span>
             @for (t of print()?.tags || []; track t) {
               <span class="tag-light">{{ t }}</span>
             }
           </div>
         </div>
         <div class="pull-box">
-          <div class="pull-box__label">Pull this blueprint</div>
+          <div class="pull-box__label">Pull this substrate</div>
           <div class="pull-box__inner">
-            <code class="pull-box__code">hyle pull {{ print()?.id }}</code>
-            <app-copy-button [text]="'hyle pull ' + (print()?.id || '')" class="text-muted-light"></app-copy-button>
+            <code class="pull-box__code">hyle pull {{ print()?.author }}/{{ print()?.name }}</code>
+            <app-copy-button [text]="'hyle pull ' + (print()?.author || '') + '/' + (print()?.name || '')" class="text-muted-light"></app-copy-button>
           </div>
         </div>
       </div>
@@ -72,7 +43,7 @@
     <div class="container">
       <button class="detail-tab" [class.active]="tab() === 'readme'" (click)="setTab('readme')">README</button>
       <button class="detail-tab" [class.active]="tab() === 'files'" (click)="setTab('files')">Files</button>
-      <button class="detail-tab" [class.active]="tab() === 'versions'" (click)="setTab('versions')">Versions ({{ (print()?.versions || []).length }})</button>
+      <button class="detail-tab" [class.active]="tab() === 'versions'" (click)="setTab('versions')">Versions ({{ versions().length }})</button>
       <button class="detail-tab" [class.active]="tab() === 'diff'" (click)="setTab('diff')">Compare</button>
     </div>
   </div>
@@ -80,22 +51,7 @@
   <!-- README -->
   @if (tab() === 'readme') {
     <div class="container readme-tab">
-      <div class="readme-body">
-        <h1>{{ print()?.name }}</h1>
-        <p>{{ print()?.longDesc || print()?.description }}</p>
-        <h2>Folders</h2>
-        <ul>
-          <li><code>ontology/</code> — Source material and domain knowledge</li>
-          <li><code>identities/</code> — Agent roles, hierarchy, and delegation</li>
-          <li><code>craft/</code> — Code conventions, examples, and workflows</li>
-          <li><code>ethics/</code> — Policies, constraints, and compliance rules</li>
-        </ul>
-        <h2>Usage</h2>
-        <pre><code>cd my-project/
-hyle pull {{ print()?.id }}</code></pre>
-        <h2>License</h2>
-        <p>Released under the {{ print()?.license }} license.</p>
-      </div>
+      <div class="readme-body" [innerHTML]="getReadmeHtml()"></div>
     </div>
   }
 
@@ -132,27 +88,18 @@ hyle pull {{ print()?.id }}</code></pre>
     <div class="container content-section">
       <div class="versions-header">
         <h3 class="section-title--detail">Releases</h3>
-        <!-- View toggle -->
-        <div class="view-toggle">
-          <button (click)="releasesView.set('list')" class="view-toggle__btn" [class.active]="releasesView() === 'list'">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="0" y="1" width="14" height="2" rx="1"/><rect x="0" y="6" width="14" height="2" rx="1"/><rect x="0" y="11" width="14" height="2" rx="1"/></svg>
-          </button>
-          <button (click)="releasesView.set('grid')" class="view-toggle__btn" [class.active]="releasesView() === 'grid'">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="0" y="0" width="6" height="6" rx="1"/><rect x="8" y="0" width="6" height="6" rx="1"/><rect x="0" y="8" width="6" height="6" rx="1"/><rect x="8" y="8" width="6" height="6" rx="1"/></svg>
-          </button>
-        </div>
         <!-- Compare selectors -->
         <div class="compare-bar">
           <span class="compare-bar__label">Compare</span>
-          <select [ngModel]="diffV1()" (ngModelChange)="diffV1.set($event)" name="diffV1" class="sort-select text-sm">
-            @for (v of versions(); track v.tag) {
-              <option [value]="v.tag">{{ v.tag }}</option>
+          <select [ngModel]="diffV1()" (ngModelChange)="onDiffV1Change($event)" name="diffV1" class="sort-select text-sm">
+            @for (v of versions(); track v.version) {
+              <option [value]="v.version">{{ v.version }}</option>
             }
           </select>
           <span class="arrow-sep">→</span>
-          <select [ngModel]="diffV2()" (ngModelChange)="diffV2.set($event)" name="diffV2" class="sort-select" style="font-size:12px;">
-            @for (v of versions(); track v.tag) {
-              <option [value]="v.tag">{{ v.tag }}</option>
+          <select [ngModel]="diffV2()" (ngModelChange)="onDiffV2Change($event)" name="diffV2" class="sort-select" style="font-size:12px;">
+            @for (v of versions(); track v.version) {
+              <option [value]="v.version">{{ v.version }}</option>
             }
           </select>
           <button class="btn-primary btn-sm" (click)="setTab('diff')">View diff</button>
@@ -161,38 +108,24 @@ hyle pull {{ print()?.id }}</code></pre>
 
       @if (releasesView() === 'list') {
         <div class="versions-list">
-          @for (v of versions(); track v.tag; let i = $index) {
+          @for (v of versions(); track v.version; let i = $index) {
             <div class="version-row" [class.latest]="i === 0">
               <div class="version-row__tag">
-                <div class="version-row__tag-label">{{ v.tag }}</div>
+                <div class="version-row__tag-label">v{{ v.version }}</div>
                 @if (i === 0) {
                   <span class="badge-latest">latest</span>
                 }
               </div>
               <div class="version-row__body">
-                <p class="version-notes">{{ v.notes }}</p>
                 <div class="flex-gap-2">
-                  <code class="code-sm">hyle pull {{ print()?.id }}&#64;{{ v.tag }}</code>
-                  <app-copy-button [text]="'hyle pull ' + (print()?.id || '') + '@' + v.tag"></app-copy-button>
+                  <code class="code-sm">hyle pull {{ print()?.author }}/{{ print()?.name }}@{{ v.version }}</code>
+                  <app-copy-button [text]="'hyle pull ' + (print()?.author || '') + '/' + (print()?.name || '') + '@' + v.version"></app-copy-button>
                 </div>
               </div>
               <div class="version-row__aside">
-                <div class="version-row__aside-date">{{ v.date }}</div>
-                <button class="link-btn link-btn--sm" (click)="setTabAndDiffV2(v.tag)">diff →</button>
+                <div class="version-row__aside-date">{{ v.created_at | date: 'short' }}</div>
+                <button class="link-btn link-btn--sm" (click)="setTabAndDiffV2(v.version)">diff →</button>
               </div>
-            </div>
-          }
-        </div>
-      } @else {
-        <div class="versions-grid">
-          @for (v of versions(); track v.tag; let i = $index) {
-            <div class="version-card" [class.latest]="i === 0">
-              <div class="version-card__header">
-                <span class="version-card__tag">{{ v.tag }}</span>
-                @if (i === 0) { <span class="badge-latest">latest</span> }
-              </div>
-              <div class="version-card__date">{{ v.date }}</div>
-              <button class="link-btn link-btn--xs" (click)="setTabAndDiffV2(v.tag)">diff →</button>
             </div>
           }
         </div>
@@ -205,15 +138,15 @@ hyle pull {{ print()?.id }}</code></pre>
     <div class="container diff-tab-wrap">
       <div class="version-select-bar">
         <span class="version-select-label">Compare</span>
-        <select [ngModel]="diffV1()" (ngModelChange)="diffV1.set($event)" name="diffV1b" class="sort-select">
-          @for (v of versions(); track v.tag) {
-            <option [value]="v.tag">{{ v.tag }}</option>
+        <select [ngModel]="diffV1()" (ngModelChange)="onDiffV1Change($event)" name="diffV1b" class="sort-select">
+          @for (v of versions(); track v.version) {
+            <option [value]="v.version">{{ v.version }}</option>
           }
         </select>
         <span class="arrow-sep">→</span>
-        <select [ngModel]="diffV2()" (ngModelChange)="diffV2.set($event)" name="diffV2b" class="sort-select">
-          @for (v of versions(); track v.tag) {
-            <option [value]="v.tag">{{ v.tag }}</option>
+        <select [ngModel]="diffV2()" (ngModelChange)="onDiffV2Change($event)" name="diffV2b" class="sort-select">
+          @for (v of versions(); track v.version) {
+            <option [value]="v.version">{{ v.version }}</option>
           }
         </select>
         <span class="compare-label">Showing: hyle.yaml manifest</span>
@@ -221,8 +154,8 @@ hyle pull {{ print()?.id }}</code></pre>
       <app-diff-view
         [left]="diffLeft"
         [right]="diffRight"
-        [leftLabel]="'hyle.yaml @ ' + diffV2()"
-        [rightLabel]="'hyle.yaml @ ' + diffV1()">
+        [leftLabel]="diffLeftLabel"
+        [rightLabel]="diffRightLabel">
       </app-diff-view>
       <p class="compare-tip">
         Comparing manifest changes between versions.

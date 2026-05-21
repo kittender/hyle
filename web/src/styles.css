@@ -1044,10 +1044,19 @@
     border-right: 1px solid var(--border);
   }
 
+  .copy-diff-btn {
+    margin-left: auto; font-size: 12px; padding: 4px 8px; border: 1px solid var(--border); background: transparent; cursor: pointer;
+  }
+
+  .diff-content {
+    flex: 1; overflow-x: auto;
+  }
+
   .diff-body {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    max-height: 400px;
+    min-height: 300px;
+    max-height: 70vh;
     overflow-y: auto;
   }
 

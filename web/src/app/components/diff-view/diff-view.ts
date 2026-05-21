@@ -1,10 +1,11 @@
-import { Component, Input, OnChanges } from '@angular/core';
+import { Component, Input, OnChanges, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { diffLines } from 'diff';
 
-type DiffClass = 'same' | 'changed' | 'removed' | 'added' | 'empty';
+type DiffClass = 'same' | 'removed' | 'added';
 
 interface DiffLine {
-  lineNum: number | null;
+  lineNum: number;
   text: string;
   cls: DiffClass;
 }
@@ -18,27 +19,29 @@ interface DiffLine {
       <div class="diff-header">
         <div class="diff-label removed-label">{{ leftLabel }}</div>
         <div class="diff-label added-label">{{ rightLabel }}</div>
+        <button class="copy-diff-btn" (click)="copyDiff()">Copy diff</button>
       </div>
       <div class="diff-body">
         <div class="diff-side">
-          @for (line of leftLines; track $index) {
+          @for (line of leftLines(); track $index) {
             <div class="diff-line" [class]="'diff-' + line.cls">
-              <span class="diff-ln">{{ line.lineNum !== null ? line.lineNum : '' }}</span>
-              <span>{{ line.text }}</span>
+              <span class="diff-ln">{{ line.lineNum }}</span>
+              <span class="diff-content">{{ line.text }}</span>
             </div>
           }
         </div>
         <div class="diff-side">
-          @for (line of rightLines; track $index) {
+          @for (line of rightLines(); track $index) {
             <div class="diff-line" [class]="'diff-' + line.cls">
-              <span class="diff-ln">{{ line.lineNum !== null ? line.lineNum : '' }}</span>
-              <span>{{ line.text }}</span>
+              <span class="diff-ln">{{ line.lineNum }}</span>
+              <span class="diff-content">{{ line.text }}</span>
             </div>
           }
         </div>
       </div>
     </div>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DiffViewComponent implements OnChanges {
   @Input() left = '';
@@ -46,43 +49,49 @@ export class DiffViewComponent implements OnChanges {
   @Input() leftLabel = '';
   @Input() rightLabel = '';
 
-  leftLines: DiffLine[] = [];
-  rightLines: DiffLine[] = [];
+  leftLines = signal<DiffLine[]>([]);
+  rightLines = signal<DiffLine[]>([]);
 
   ngOnChanges() {
     this.computeDiff();
   }
 
   private computeDiff() {
-    const lLines = (this.left || '').split('\n');
-    const rLines = (this.right || '').split('\n');
-    const maxLen = Math.max(lLines.length, rLines.length);
+    const changes = diffLines(this.left || '', this.right || '');
+    const leftLines: DiffLine[] = [];
+    const rightLines: DiffLine[] = [];
+    let leftLineNum = 1;
+    let rightLineNum = 1;
 
-    this.leftLines = [];
-    this.rightLines = [];
+    changes.forEach(change => {
+      const lines = change.value.split('\n').filter((_, i, arr) => i < arr.length - 1);
 
-    for (let i = 0; i < maxLen; i++) {
-      const l = lLines[i];
-      const r = rLines[i];
-      const cls = this.classify(l, r);
+      if (change.removed) {
+        lines.forEach(text => {
+          leftLines.push({ lineNum: leftLineNum++, text, cls: 'removed' });
+        });
+      } else if (change.added) {
+        lines.forEach(text => {
+          rightLines.push({ lineNum: rightLineNum++, text, cls: 'added' });
+        });
+      } else {
+        lines.forEach(text => {
+          leftLines.push({ lineNum: leftLineNum++, text, cls: 'same' });
+          rightLines.push({ lineNum: rightLineNum++, text, cls: 'same' });
+        });
+      }
+    });
 
-      this.leftLines.push({
-        lineNum: l !== undefined ? i + 1 : null,
-        text: l || '',
-        cls: cls === 'added' ? 'empty' : cls,
-      });
-      this.rightLines.push({
-        lineNum: r !== undefined ? i + 1 : null,
-        text: r || '',
-        cls: cls === 'removed' ? 'empty' : cls,
-      });
-    }
+    this.leftLines.set(leftLines);
+    this.rightLines.set(rightLines);
   }
 
-  private classify(l: string | undefined, r: string | undefined): DiffClass {
-    if (l === r) return 'same';
-    if (l === undefined) return 'added';
-    if (r === undefined) return 'removed';
-    return 'changed';
+  copyDiff() {
+    const leftText = this.leftLines().map(l => l.text).join('\n');
+    const rightText = this.rightLines().map(l => l.text).join('\n');
+    const unified = `--- ${this.leftLabel}\n+++ ${this.rightLabel}\n` +
+      this.leftLines().filter(l => l.cls !== 'same').map(l => `-${l.text}`).join('\n') + '\n' +
+      this.rightLines().filter(l => l.cls !== 'same').map(l => `+${l.text}`).join('\n');
+    navigator.clipboard.writeText(unified);
   }
 }

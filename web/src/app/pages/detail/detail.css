@@ -9,6 +9,14 @@
 /* ── Header layout ── */
 .detail-header__body { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
 
+/* ── Mobile layout (<768px) ── */
+@media (max-width: 768px) {
+  .detail-header__body { flex-direction: column; }
+  .pull-box { width: 100%; }
+  .files-layout { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; }
+  .file-sidebar-col { display: none; }
+}
+
 /* ── Title / meta ── */
 .detail-title { font-family: var(--mono); font-size: 22px; font-weight: 600; color: var(--white); margin: 0 0 8px; display: flex; align-items: center; gap: 10px; }
 .detail-title__author { opacity: 0.6; }

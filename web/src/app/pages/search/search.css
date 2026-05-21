@@ -5,9 +5,22 @@
 
 /* ── Layout ── */
 .search-layout { display: grid; grid-template-columns: 200px 1fr; gap: 40px; }
+.filter-sidebar { display: flex; flex-direction: column; gap: 24px; }
+.results-col { }
+
+/* ── Filter input ── */
+.filter-input { display: block; width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; }
 
 /* ── Filter heading spacing ── */
+.filter-heading { margin-bottom: 12px; }
 .filter-heading + .filter-heading { margin-top: 24px; }
 
 /* ── Clear filters ── */
 .clear-filters { margin-top: 16px; font-size: 12px; }
+
+/* ── Mobile layout (<768px) ── */
+@media (max-width: 768px) {
+  .search-layout { grid-template-columns: 1fr; gap: 24px; }
+  .filter-sidebar { order: 2; }
+  .results-col { order: 1; }
+}

@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of, catchError } from 'rxjs';
 import { API_BASE_URL } from '../app.config';
 
 export interface SubstrateResponse {
@@ -58,37 +58,72 @@ export class ApiService {
     if (params.limit !== undefined) queryParams.set('limit', String(params.limit));
 
     const url = `${this.baseUrl}/substrates?${queryParams.toString()}`;
-    return this.http.get<SubstrateResponse[]>(url);
+    return this.http.get<SubstrateResponse[]>(url).pipe(
+      catchError(err => {
+        console.error('Search failed:', err);
+        return of([]);
+      })
+    );
   }
 
   getSubstrate(author: string, name: string, version?: string): Observable<SubstrateResponse> {
     const versionPart = version ? `@${version}` : '';
     const url = `${this.baseUrl}/substrates/${author}/${name}${versionPart}`;
-    return this.http.get<SubstrateResponse>(url);
+    return this.http.get<SubstrateResponse>(url).pipe(
+      catchError(err => {
+        console.error('Failed to fetch substrate:', err);
+        throw err;
+      })
+    );
   }
 
   getVersions(author: string, name: string): Observable<SubstrateResponse[]> {
     const url = `${this.baseUrl}/substrates/${author}/${name}/versions`;
-    return this.http.get<SubstrateResponse[]>(url);
+    return this.http.get<SubstrateResponse[]>(url).pipe(
+      catchError(err => {
+        console.error('Failed to fetch versions:', err);
+        return of([]);
+      })
+    );
   }
 
   getTrending(limit: number = 20): Observable<SubstrateResponse[]> {
     const url = `${this.baseUrl}/trending?limit=${limit}`;
-    return this.http.get<SubstrateResponse[]>(url);
+    return this.http.get<SubstrateResponse[]>(url).pipe(
+      catchError(err => {
+        console.error('Failed to fetch trending:', err);
+        return of([]);
+      })
+    );
   }
 
   getTags(): Observable<string[]> {
     const url = `${this.baseUrl}/tags`;
-    return this.http.get<string[]>(url);
+    return this.http.get<string[]>(url).pipe(
+      catchError(err => {
+        console.error('Failed to fetch tags:', err);
+        return of([]);
+      })
+    );
   }
 
   getAuthor(author: string): Observable<AuthorProfile> {
     const url = `${this.baseUrl}/authors/${author}`;
-    return this.http.get<AuthorProfile>(url);
+    return this.http.get<AuthorProfile>(url).pipe(
+      catchError(err => {
+        console.error('Failed to fetch author profile:', err);
+        throw err;
+      })
+    );
   }
 
   getDiff(author: string, name: string, v1: string, base: string): Observable<DiffResponse> {
     const url = `${this.baseUrl}/substrates/${author}/${name}@${v1}/diff?base=${base}`;
-    return this.http.get<DiffResponse>(url);
+    return this.http.get<DiffResponse>(url).pipe(
+      catchError(err => {
+        console.error('Failed to fetch diff:', err);
+        throw err;
+      })
+    );
   }
 }

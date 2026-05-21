@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>hyle</id>
+    <version>0.1.0</version>
+    <title>Hylé</title>
+    <authors>Kittender</authors>
+    <projectUrl>https://hyle.dev</projectUrl>
+    <licenseUrl>https://github.com/kittender/hyle/blob/main/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>AI context substrate manager — package, share, and install versioned snapshots of AI agent workflows. Manages CLAUDE.md, agent identities, MCP configs, and ethics policies.</description>
+    <tags>ai cli developer-tools substrate</tags>
+    <copyright>Kittender</copyright>
+  </metadata>
+</package>

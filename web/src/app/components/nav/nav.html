@@ -4,11 +4,17 @@
       <img src="assets/golden-lotus-icon.png" alt="Hylé">
       <span>Hylé</span>
     </button>
-    <div class="nav-links">
+    <div class="nav-links" [class.open]="menuOpen()">
       <button class="nav-link" [class.active]="isActive('/search') || currentPath === '/'" (click)="goTo('/search')">Browse</button>
       <button class="nav-link" [class.active]="isActive('/docs')" (click)="goTo('/docs')">Docs</button>
       <button class="nav-link" [class.active]="isActive('/enterprise')" (click)="goTo('/enterprise')">Enterprise</button>
     </div>
+
+    <button class="nav-hamburger" (click)="toggleMenu()" [class.open]="menuOpen()">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
     <div class="nav-actions">
       <form (submit)="handleSearch($event)" class="nav-search-form">
         <div class="nav-search-wrap">

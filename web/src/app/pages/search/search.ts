@@ -1,9 +1,8 @@
-import { Component, OnInit, signal, computed, effect } from '@angular/core';
+import { Component, OnInit, signal, effect, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { DataService } from '../../services/data.service';
-import { Print } from '../../models/print.model';
+import { ApiService, SubstrateResponse } from '../../services/api.service';
 
 @Component({
   selector: 'app-search',
@@ -11,49 +10,65 @@ import { Print } from '../../models/print.model';
   imports: [CommonModule, FormsModule],
   templateUrl: './search.html',
   styleUrl: './search.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SearchComponent implements OnInit {
   query = signal('');
   inputVal = signal('');
   sort = signal<'recent' | 'name'>('recent');
   selectedTags = signal<string[]>([]);
-  results = signal<Print[]>([]);
+  authorFilter = signal('');
+  results = signal<SubstrateResponse[]>([]);
   allTags = signal<string[]>([]);
   loading = signal(false);
   error = signal<string | null>(null);
   offset = signal(0);
   hasMore = signal(false);
   limit = 20;
+  private initialized = false;
 
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    public dataService: DataService,
+    private apiService: ApiService,
   ) {
-    // Auto-run search when query/sort/tags change
+    // Auto-run search when query/sort/tags/author change (after init)
     effect(() => {
+      if (!this.initialized) return;
       const q = this.query();
       const s = this.sort();
       const tags = this.selectedTags();
+      const author = this.authorFilter();
       this.offset.set(0);
       this.runSearch();
     });
   }
 
   ngOnInit() {
-    // Load tags for filter
-    this.dataService.getTags$().subscribe({
+    // Load all tags for filter
+    this.apiService.getTags().subscribe({
       next: (tags) => this.allTags.set(tags),
       error: () => {} // Silently fail tag loading
     });
 
-    // Load initial query from URL
+    // Load initial params from URL synchronously first
     this.route.queryParams.subscribe(params => {
       const q = params['q'] || '';
-      const tag = params['tag'] || '';
+      const sort = params['sort'] || 'recent';
+      const tags = params['tags'] ? params['tags'].split(',').filter((t: string) => t) : [];
+      const author = params['author'] || '';
+
       this.query.set(q);
       this.inputVal.set(q);
-      if (tag) this.selectedTags.set([tag]);
+      this.sort.set(sort);
+      this.selectedTags.set(tags);
+      this.authorFilter.set(author);
+
+      // Now mark as initialized and trigger search
+      if (!this.initialized) {
+        this.initialized = true;
+        this.runSearch();
+      }
     });
   }
 
@@ -62,24 +77,32 @@ export class SearchComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    this.dataService.search$({
+    // Request limit+1 to determine if there are more results
+    const requestLimit = this.limit + 1;
+
+    this.apiService.search({
       q: this.query() || undefined,
+      author: this.authorFilter() || undefined,
       tags: tagsParam,
       sort: this.sort(),
       offset: this.offset(),
-      limit: this.limit,
+      limit: requestLimit,
     }).subscribe({
       next: (results) => {
+        // Check if we got more than limit (indicates hasMore)
+        this.hasMore.set(results.length > this.limit);
+        // Only store up to limit results
+        const displayResults = results.slice(0, this.limit);
+
         if (this.offset() === 0) {
-          this.results.set(results);
+          this.results.set(displayResults);
         } else {
-          this.results.set([...this.results(), ...results]);
+          this.results.set([...this.results(), ...displayResults]);
         }
-        this.hasMore.set(results.length >= this.limit);
         this.loading.set(false);
       },
       error: (err) => {
-        this.error.set(err.message || 'Failed to load substrates');
+        this.error.set(err?.message || 'Failed to load substrates');
         this.loading.set(false);
       }
     });
@@ -87,21 +110,33 @@ export class SearchComponent implements OnInit {
 
   toggleTag(tag: string) {
     const current = this.selectedTags();
-    if (current.includes(tag)) {
-      this.selectedTags.set(current.filter(t => t !== tag));
-    } else {
-      this.selectedTags.set([...current, tag]);
-    }
+    const updated = current.includes(tag)
+      ? current.filter(t => t !== tag)
+      : [...current, tag];
+    this.selectedTags.set(updated);
+    this.syncUrl();
   }
 
   get filteredTags(): string[] {
-    return this.allTags().slice(0, 10);
+    return this.allTags();
   }
 
   handleSearch(e: Event) {
     e.preventDefault();
-    this.query.set(this.inputVal());
-    this.router.navigate(['/search'], { queryParams: { q: this.inputVal() } });
+    const q = this.inputVal();
+    this.query.set(q);
+    this.offset.set(0);
+    this.syncUrl();
+  }
+
+  private syncUrl() {
+    const queryParams: any = {};
+    if (this.query()) queryParams['q'] = this.query();
+    if (this.sort() !== 'recent') queryParams['sort'] = this.sort();
+    if (this.selectedTags().length > 0) queryParams['tags'] = this.selectedTags().join(',');
+    if (this.authorFilter()) queryParams['author'] = this.authorFilter();
+
+    this.router.navigate(['/search'], { queryParams });
   }
 
   navigateToPrint(author: string, name: string) {
@@ -117,6 +152,7 @@ export class SearchComponent implements OnInit {
     this.query.set('');
     this.inputVal.set('');
     this.selectedTags.set([]);
+    this.authorFilter.set('');
     this.offset.set(0);
     this.results.set([]);
     this.router.navigate(['/search']);

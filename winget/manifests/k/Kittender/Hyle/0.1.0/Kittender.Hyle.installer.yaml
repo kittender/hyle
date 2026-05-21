@@ -1,0 +1,14 @@
+PackageIdentifier: Kittender.Hyle
+PackageVersion: 0.1.0
+MinimumOSVersion: 10.0.0.0
+InstallerType: portable
+InstallModes:
+  - interactive
+  - silent
+Installers:
+  - Architecture: x64
+    InstallerUrl: https://github.com/kittender/hyle/releases/download/v0.1.0/hyle-windows-x64.exe
+    InstallerSha256: PLACEHOLDER_SHA256_X64
+    PortableCommandAlias: hyle
+ManifestType: installer
+ManifestVersion: 1.6.0

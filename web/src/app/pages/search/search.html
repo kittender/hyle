@@ -11,21 +11,28 @@
 
   <div class="search-layout">
     <!-- Filters -->
-    <div>
-      <div class="filter-heading">Tags</div>
-      @for (tag of filteredTags; track tag) {
-        <label class="filter-item">
-          <input type="checkbox" [checked]="selectedTags().includes(tag)" (change)="toggleTag(tag)">
-          <span>{{ tag }}</span>
-        </label>
-      }
-      @if (selectedTags().length > 0) {
-        <button class="link-btn clear-filters" (click)="selectedTags.set([])">Clear tags</button>
-      }
+    <div class="filter-sidebar">
+      <div>
+        <div class="filter-heading">Author</div>
+        <input [ngModel]="authorFilter()" (ngModelChange)="authorFilter.set($event); syncUrl()" name="authorFilter" placeholder="Filter by author…" class="filter-input">
+      </div>
+
+      <div>
+        <div class="filter-heading">Tags</div>
+        @for (tag of filteredTags; track tag) {
+          <label class="filter-item">
+            <input type="checkbox" [checked]="selectedTags().includes(tag)" (change)="toggleTag(tag)">
+            <span>{{ tag }}</span>
+          </label>
+        }
+        @if (selectedTags().length > 0) {
+          <button class="link-btn clear-filters" (click)="selectedTags.set([]); syncUrl()">Clear tags</button>
+        }
+      </div>
     </div>
 
     <!-- Results -->
-    <div>
+    <div class="results-col">
       @if (error()) {
         <div class="error-banner">{{ error() }}</div>
       }
@@ -35,12 +42,16 @@
       } @else {
         <div class="section-header">
           <span class="text-base text-muted">
-            {{ results().length }} result{{ results().length !== 1 ? 's' : '' }}
+            @if (hasMore()) {
+              {{ limit }}+ results
+            } @else {
+              {{ results().length }} result{{ results().length !== 1 ? 's' : '' }}
+            }
             @if (query()) {
               for <strong class="text-dark">"{{ query() }}"</strong>
             }
           </span>
-          <select [ngModel]="sort()" (ngModelChange)="sort.set($event)" name="sort" class="sort-select">
+          <select [ngModel]="sort()" (ngModelChange)="sort.set($event); syncUrl()" name="sort" class="sort-select">
             <option value="recent">Recently updated</option>
             <option value="name">Name A–Z</option>
           </select>
@@ -52,32 +63,12 @@
             <button class="link-btn" (click)="clearSearch()">Clear search</button>
           </div>
         } @else {
-          @for (p of results(); track p.id) {
+          @for (p of results(); track p.checksum) {
             <div class="result-row" (click)="navigateToPrint(p.author, p.name)">
-              @if (p.verified || p.community) {
-                <div class="result-badges">
-                  @if (p.verified) {
-                    <span class="badge badge--verified">Verified</span>
-                  }
-                  @if (p.community) {
-                    <span class="badge badge--community">Community</span>
-                  }
-                </div>
-              }
-              <div class="result-content" [class.has-badge]="p.verified || p.community">
+              <div class="result-content">
                 <div class="result-title-row">
                   <span class="result-name">
                     <span><span class="text-muted">{{ p.author }}/</span>{{ p.name }}</span>
-                    @if (p.verified) {
-                      <span title="Verified substrate" class="icon-badge">
-                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" fill="#166534"/><path d="M4.5 8.5l2.5 2.5 4.5-5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                      </span>
-                    }
-                    @if (p.community) {
-                      <span title="Community choice" class="icon-badge">
-                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" fill="#92400e"/><path d="M8 4l1.1 2.2 2.4.35-1.75 1.7.41 2.4L8 9.5l-2.16 1.15.41-2.4L4.5 6.55l2.4-.35L8 4z" fill="#fde68a"/></svg>
-                      </span>
-                    }
                   </span>
                   <span class="tag-list">
                     @for (t of p.tags.slice(0,3); track t) {
@@ -87,11 +78,7 @@
                 </div>
                 <p class="result-desc">{{ p.description }}</p>
                 <div class="result-meta">
-                  <span class="meta-item">
-                    <span class="lang-dot"></span>
-                    {{ p.language }}
-                  </span>
-                  <span class="meta-text">Updated {{ p.updated }}</span>
+                  <span class="meta-text">v{{ p.version }}</span>
                 </div>
               </div>
             </div>
