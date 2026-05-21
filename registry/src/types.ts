@@ -86,11 +86,24 @@ export interface AuthorProfile {
   substrates: SubstrateResponse[];
 }
 
+export interface BreakingChange {
+  severity: "breaking" | "warning";
+  category:
+    | "model_change"
+    | "dependency_removed"
+    | "dependency_downgrade"
+    | "files_removed"
+    | "provider_change"
+    | "extends_changed";
+  detail: string;
+}
+
 export interface DiffResponse {
   v1: string;
   v2: string;
   left: string;
   right: string;
+  breaking_changes?: BreakingChange[];
 }
 
 export interface DepResolutionResult {

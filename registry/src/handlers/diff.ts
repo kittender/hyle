@@ -2,6 +2,7 @@ import { dump } from "js-yaml";
 import type { IDatabase } from "../db";
 import type { DiffResponse } from "../types";
 import type { HyleManifest } from "../../../cli/src/manifest";
+import { detectBreakingChanges } from "../breaking-changes";
 
 export function handleDiff(
   author: string,
@@ -32,11 +33,15 @@ export function handleDiff(
     const leftYaml = dump(manifestBase, { lineWidth: -1 });
     const rightYaml = dump(manifest1, { lineWidth: -1 });
 
+    // Detect breaking changes (from baseV → v1)
+    const breakingChanges = detectBreakingChanges(manifestBase, manifest1);
+
     const response: DiffResponse = {
       v1,
       v2: baseV,
       left: leftYaml,
       right: rightYaml,
+      ...(breakingChanges.length > 0 && { breaking_changes: breakingChanges }),
     };
 
     return new Response(JSON.stringify(response), {
