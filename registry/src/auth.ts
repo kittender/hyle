@@ -1,3 +1,6 @@
+import { verifyJwt } from "./jwt";
+import type { JwtPayload } from "./types";
+
 export interface IAuth {
   verifyToken(token: string): boolean;
 }
@@ -15,6 +18,10 @@ export class ApiKeyAuth implements IAuth {
     if (this.allowInsecure) return true;
     return this.validTokens.has(token);
   }
+}
+
+export async function verifyJwtToken(token: string, jwtSecret: string): Promise<JwtPayload | null> {
+  return verifyJwt(token, jwtSecret);
 }
 
 export function createAuthFromEnv(): IAuth {

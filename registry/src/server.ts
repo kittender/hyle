@@ -7,6 +7,7 @@ const PORT = parseInt(process.env.PORT || "3000");
 const DB_PATH = process.env.DB_PATH || "./hyle-registry.db";
 const BUNDLES_PATH = process.env.BUNDLES_PATH || "./bundles";
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
+const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-key-change-in-production";
 
 const db = new SQLiteDatabase(DB_PATH);
 const storage = new LocalStorage(BUNDLES_PATH);
@@ -37,7 +38,7 @@ const server = Bun.serve({
       const response = new Response(null, { status: 204 });
       return addCorsHeaders(response);
     }
-    const response = await route(req, db, storage, auth, BASE_URL);
+    const response = await route(req, db, storage, auth, BASE_URL, JWT_SECRET);
     return addCorsHeaders(response);
   },
 });

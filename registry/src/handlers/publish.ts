@@ -5,12 +5,14 @@ import type { IDatabase } from "../db";
 import type { IStorage } from "../storage";
 import type { IAuth } from "../auth";
 import { scanManifest, scanBundleFiles } from "../scan";
+import { verifyJwt } from "../jwt";
 
 export async function handlePublish(
   req: Request,
   db: IDatabase,
   storage: IStorage,
-  auth: IAuth
+  auth: IAuth,
+  jwtSecret: string = ""
 ): Promise<Response> {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -21,8 +23,19 @@ export async function handlePublish(
   }
 
   const token = authHeader.slice(7);
-  if (!auth.verifyToken(token)) {
-    return new Response(JSON.stringify({ error: "Invalid API token" }), {
+  let manifestAuthorUsername: string | null = null;
+
+  // Try JWT verification first (for OAuth users)
+  if (jwtSecret) {
+    const jwtPayload = await verifyJwt(token, jwtSecret);
+    if (jwtPayload) {
+      manifestAuthorUsername = jwtPayload.username;
+    }
+  }
+
+  // Fall back to API key verification
+  if (!manifestAuthorUsername && !auth.verifyToken(token)) {
+    return new Response(JSON.stringify({ error: "Invalid API token or JWT" }), {
       status: 403,
       headers: { "Content-Type": "application/json" },
     });
@@ -67,6 +80,19 @@ export async function handlePublish(
       status: 400,
       headers: { "Content-Type": "application/json" },
     });
+  }
+
+  // If using JWT auth, enforce manifest.author === authenticated username
+  if (manifestAuthorUsername && manifest.author !== manifestAuthorUsername) {
+    return new Response(
+      JSON.stringify({
+        error: `Manifest author "${manifest.author}" does not match authenticated user "${manifestAuthorUsername}"`,
+      }),
+      {
+        status: 403,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
   }
 
   // Rate limiting: check max publishes per hour

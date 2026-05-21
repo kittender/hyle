@@ -1,5 +1,25 @@
 import type { HyleManifest } from "../../../cli/src/manifest";
 
+export interface User {
+  id: number;
+  github_id: string;
+  username: string;
+  email?: string;
+  email_verified: boolean;
+  avatar_url?: string;
+  bio?: string;
+  website?: string;
+  created_at: string;
+  last_login?: string;
+}
+
+export interface JwtPayload {
+  sub: number;
+  username: string;
+  iat: number;
+  exp: number;
+}
+
 export interface RegistryRecord {
   id: number;
   author: string;
@@ -29,7 +49,7 @@ export interface ScanResult {
 }
 
 export interface Badge {
-  type: "security_scanned" | "security_warning" | "security_flagged" | "new_author";
+  type: "security_scanned" | "security_warning" | "security_flagged" | "verified" | "community" | "popular";
   label: string;
   variant: "success" | "warning" | "danger" | "info";
 }
@@ -49,6 +69,8 @@ export interface SubstrateResponse {
   created_at: string;
   scan_result?: ScanResult;
   badges?: Badge[];
+  star_count?: number;
+  avg_rating?: number;
 }
 
 export interface SecurityReport {
@@ -84,6 +106,10 @@ export interface AuthorProfile {
   substrate_count: number;
   total_versions: number;
   substrates: SubstrateResponse[];
+  bio?: string;
+  avatar_url?: string;
+  website?: string;
+  star_count_total?: number;
 }
 
 export interface BreakingChange {
@@ -96,6 +122,26 @@ export interface BreakingChange {
     | "provider_change"
     | "extends_changed";
   detail: string;
+}
+
+export interface Review {
+  id: number;
+  username: string;
+  avatar_url?: string;
+  rating: number;
+  body?: string;
+  created_at: string;
+}
+
+export interface StarResponse {
+  starred: boolean;
+  count: number;
+}
+
+export interface NotificationPrefs {
+  email_on_star: boolean;
+  email_on_review: boolean;
+  email_on_new_version: boolean;
 }
 
 export interface DiffResponse {

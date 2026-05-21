@@ -11,6 +11,8 @@ export function handleSearch(
   const results: SubstrateResponse[] = records.map((record) => {
     const manifest = JSON.parse(record.manifest_json);
     const bundleUrl = `${baseUrl}/bundles/${record.bundle_path}`;
+    const star_count = db.getStarCount(record.author, record.name);
+    const avg_rating = db.getAvgRating(record.author, record.name);
 
     return {
       author: record.author,
@@ -25,6 +27,8 @@ export function handleSearch(
       manifest,
       bundle_url: bundleUrl,
       created_at: record.created_at,
+      star_count,
+      avg_rating,
     };
   });
 

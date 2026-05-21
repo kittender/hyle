@@ -27,6 +27,8 @@ export async function handleFetch(
 
   const manifest = JSON.parse(record.manifest_json);
   const bundleUrl = `${baseUrl}/bundles/${record.bundle_path}`;
+  const star_count = db.getStarCount(record.author, record.name);
+  const avg_rating = db.getAvgRating(record.author, record.name);
 
   const response: SubstrateResponse = {
     author: record.author,
@@ -41,6 +43,8 @@ export async function handleFetch(
     manifest,
     bundle_url: bundleUrl,
     created_at: record.created_at,
+    star_count,
+    avg_rating,
   };
 
   return new Response(JSON.stringify(response), {
@@ -70,6 +74,9 @@ export async function handleFetchBundle(
       headers: { "Content-Type": "application/json" },
     });
   }
+
+  // Increment install count
+  db.incrementInstallCount(author, name);
 
   const bundleData = await storage.retrieveBundle(record.bundle_path);
 

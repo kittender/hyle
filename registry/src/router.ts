@@ -12,12 +12,19 @@ import { handleAuthor } from "./handlers/author";
 import { handleDiff } from "./handlers/diff";
 import { handleChecksums } from "./handlers/checksums";
 import { handleSecurityReport } from "./handlers/security";
+import { handleGithubOAuth, handleGithubCallback, handleGetMe, handleUpdateMe, handleGetNotificationPrefs, handleUpdateNotificationPrefs } from "./handlers/auth";
+import { handleToggleStar, handleGetStars } from "./handlers/stars";
+import { handleSubmitReview, handleGetReviews } from "./handlers/reviews";
 
 const SUBSTRATE_RE = /^\/substrates\/([a-z0-9-]+)\/([a-z0-9-]+)(?:@([a-z0-9\.\-]+))?(?:\/bundle)?$/;
 const VERSIONS_RE = /^\/substrates\/([a-z0-9-]+)\/([a-z0-9-]+)\/versions$/;
 const CHECKSUMS_RE = /^\/substrates\/([a-z0-9-]+)\/([a-z0-9-]+)@([a-z0-9\.\-]+)\/checksums$/;
 const SECURITY_RE = /^\/substrates\/([a-z0-9-]+)\/([a-z0-9-]+)@([a-z0-9\.\-]+)\/security-report$/;
 const DIFF_RE = /^\/substrates\/([a-z0-9-]+)\/([a-z0-9-]+)@([a-z0-9\.\-]+)\/diff$/;
+const STAR_RE = /^\/substrates\/([a-z0-9-]+)\/([a-z0-9-]+)\/star$/;
+const STARS_RE = /^\/substrates\/([a-z0-9-]+)\/([a-z0-9-]+)\/stars$/;
+const REVIEWS_POST_RE = /^\/substrates\/([a-z0-9-]+)\/([a-z0-9-]+)\/reviews$/;
+const REVIEWS_GET_RE = /^\/substrates\/([a-z0-9-]+)\/([a-z0-9-]+)\/reviews$/;
 const AUTHOR_RE = /^\/authors\/([a-z0-9-]+)$/;
 const BUNDLES_RE = /^\/bundles\/(.+\.tar\.gz)$/;
 
@@ -26,7 +33,8 @@ export async function route(
   db: IDatabase,
   storage: IStorage,
   auth: IAuth,
-  baseUrl: string
+  baseUrl: string,
+  jwtSecret: string = ""
 ): Promise<Response> {
   const url = new URL(req.url);
   const pathname = url.pathname;
@@ -38,6 +46,30 @@ export async function route(
     });
   }
 
+  if (pathname === "/auth/github" && req.method === "GET") {
+    return await handleGithubOAuth(req, db);
+  }
+
+  if (pathname === "/auth/github/callback" && req.method === "GET") {
+    return await handleGithubCallback(req, db);
+  }
+
+  if (pathname === "/auth/me" && req.method === "GET") {
+    return await handleGetMe(req, db, jwtSecret);
+  }
+
+  if (pathname === "/auth/me" && req.method === "PATCH") {
+    return await handleUpdateMe(req, db, jwtSecret);
+  }
+
+  if (pathname === "/auth/me/notifications" && req.method === "GET") {
+    return await handleGetNotificationPrefs(req, db, jwtSecret);
+  }
+
+  if (pathname === "/auth/me/notifications" && req.method === "PATCH") {
+    return await handleUpdateNotificationPrefs(req, db, jwtSecret);
+  }
+
   if (pathname === "/tags" && req.method === "GET") {
     return handleTags(db);
   }
@@ -45,6 +77,34 @@ export async function route(
   if (pathname === "/trending" && req.method === "GET") {
     const limit = url.searchParams.get("limit");
     return handleTrending(limit ? parseInt(limit) : 20, db, baseUrl);
+  }
+
+  const starMatch = pathname.match(STAR_RE);
+  if (starMatch && req.method === "POST") {
+    const author = starMatch[1];
+    const name = starMatch[2];
+    return await handleToggleStar(author, name, req, db, jwtSecret);
+  }
+
+  const starsMatch = pathname.match(STARS_RE);
+  if (starsMatch && req.method === "GET") {
+    const author = starsMatch[1];
+    const name = starsMatch[2];
+    return await handleGetStars(author, name, req, db, jwtSecret);
+  }
+
+  const reviewsPostMatch = pathname.match(REVIEWS_POST_RE);
+  if (reviewsPostMatch && req.method === "POST") {
+    const author = reviewsPostMatch[1];
+    const name = reviewsPostMatch[2];
+    return await handleSubmitReview(author, name, req, db, jwtSecret);
+  }
+
+  const reviewsGetMatch = pathname.match(REVIEWS_GET_RE);
+  if (reviewsGetMatch && req.method === "GET") {
+    const author = reviewsGetMatch[1];
+    const name = reviewsGetMatch[2];
+    return handleGetReviews(author, name, db);
   }
 
   const authorMatch = pathname.match(AUTHOR_RE);
@@ -76,7 +136,7 @@ export async function route(
   }
 
   if (pathname === "/substrates" && req.method === "POST") {
-    return await handlePublish(req, db, storage, auth);
+    return await handlePublish(req, db, storage, auth, jwtSecret);
   }
 
   if (pathname === "/deps" && req.method === "GET") {
