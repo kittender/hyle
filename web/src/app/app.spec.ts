@@ -5,7 +5,7 @@ describe('App', () => {
   // Bun doesn't fully support Angular component compilation with external templates.
   // Use `ng test` for full Angular component testing with CLI test runner.
 
-  it.skip('should create the app', () => {
+  it('should create the app', () => {
     const fixture = TestBed.createComponent(App);
     const app = fixture.componentInstance;
     expect(app).toBeTruthy();

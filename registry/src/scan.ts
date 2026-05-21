@@ -2,7 +2,7 @@ import type { HyleManifest } from "../../../cli/src/manifest";
 
 export interface ScanFinding {
   severity: "critical" | "warning" | "info";
-  category: "suspicious_pattern" | "spam" | "invalid_url";
+  category: "suspicious_pattern" | "spam" | "invalid_url" | "behavioral_keyword";
   detail: string;
 }
 
@@ -14,6 +14,20 @@ export interface ScanResult {
 
 const SUSPICIOUS_PATTERNS = ["eval(", "exec("];
 const IP_REGEX = /\b(?:\d{1,3}\.){3}\d{1,3}\b/;
+
+const BEHAVIORAL_KEYWORDS = [
+  "ignore previous instructions",
+  "ignore previous prompt",
+  "do not ask confirmation",
+  "do not ask for confirmation",
+  "do not verify",
+  "skip verification",
+  "exfiltrate",
+  "webhook",
+  "bypass",
+];
+
+const DIRECTIVE_PATTERNS = /\b(you must|always|never|do not|cannot|you will)\b/gi;
 
 function walkObject(obj: unknown, findings: ScanFinding[]): void {
   if (typeof obj === "string") {
@@ -59,12 +73,37 @@ function walkObject(obj: unknown, findings: ScanFinding[]): void {
   }
 }
 
+function scanBehavioralKeywords(text: string, filename: string, findings: ScanFinding[]): void {
+  const lower = text.toLowerCase();
+  for (const keyword of BEHAVIORAL_KEYWORDS) {
+    if (lower.includes(keyword)) {
+      findings.push({
+        severity: "critical",
+        category: "behavioral_keyword",
+        detail: `Found behavioral keyword "${keyword}" in ${filename}`,
+      });
+    }
+  }
+  const directiveMatches = text.match(DIRECTIVE_PATTERNS);
+  if (directiveMatches && (filename.includes("CLAUDE.md") || filename.includes("AGENTS.md"))) {
+    findings.push({
+      severity: "warning",
+      category: "behavioral_keyword",
+      detail: `Found directive language (${directiveMatches.slice(0, 2).join(", ")}) in ${filename}`,
+    });
+  }
+}
+
 export function scanManifest(manifest: HyleManifest, bundleSize: number): ScanResult {
   const findings: ScanFinding[] = [];
   const scanned_at = new Date().toISOString();
 
   // Walk manifest for suspicious patterns
   walkObject(manifest, findings);
+
+  // Check behavioral keywords in manifest fields
+  const manifestText = JSON.stringify(manifest);
+  scanBehavioralKeywords(manifestText, "manifest", findings);
 
   // Bundle size spam detection
   if (bundleSize < 512) {
@@ -99,4 +138,39 @@ export function scanManifest(manifest: HyleManifest, bundleSize: number): ScanRe
   }
 
   return { scan_status, findings, scanned_at };
+}
+
+export function scanBundleFiles(bundleData: Uint8Array): ScanFinding[] {
+  const findings: ScanFinding[] = [];
+
+  try {
+    const bundleStr = Buffer.from(bundleData).toString("utf-8", 0, Math.min(500000, bundleData.length));
+
+    for (const keyword of BEHAVIORAL_KEYWORDS) {
+      if (bundleStr.toLowerCase().includes(keyword)) {
+        findings.push({
+          severity: "critical",
+          category: "behavioral_keyword",
+          detail: `Found behavioral keyword "${keyword}" in bundle files`,
+        });
+      }
+    }
+
+    const directiveMatches = bundleStr.match(DIRECTIVE_PATTERNS);
+    if (directiveMatches && (bundleStr.includes("CLAUDE.md") || bundleStr.includes("AGENTS.md"))) {
+      findings.push({
+        severity: "warning",
+        category: "behavioral_keyword",
+        detail: `Found directive language in instruction files (${directiveMatches.slice(0, 2).join(", ")})`,
+      });
+    }
+  } catch (e) {
+    findings.push({
+      severity: "info",
+      category: "suspicious_pattern",
+      detail: `Bundle behavioral scan: ${(e as Error).message}`,
+    });
+  }
+
+  return findings;
 }

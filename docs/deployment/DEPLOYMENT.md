@@ -143,9 +143,7 @@ aws --version   # should print: aws-cli/2.x.x ...
 # 2. Bun — to build the CLI
 curl -fsSL https://bun.sh/install | bash
 
-# 3. Node / npm — to build the Angular website
-# Download from https://nodejs.org (LTS version)
-node --version  # should print v20.x.x or higher
+# (Bun covers both CLI and Angular builds — no separate Node/npm installation needed)
 ```
 
 ### Configure AWS CLI with your credentials
@@ -176,10 +174,10 @@ aws configure
 cd web
 
 # Install dependencies (first time only)
-npm install
+bun install
 
 # Production build — outputs to web/dist/hyle-registry/browser/
-npm run build
+bun run build
 ```
 
 After the build, verify the output exists:
@@ -593,18 +591,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: web/package-lock.json
+      - uses: oven-sh/setup-bun@v2
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
         working-directory: web
 
       - name: Build Angular app
-        run: npm run build
+        run: bun run build
         working-directory: web
 
       - uses: aws-actions/configure-aws-credentials@v4

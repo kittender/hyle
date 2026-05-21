@@ -4,7 +4,7 @@ import type { HyleManifest } from "../../../cli/src/manifest";
 import type { IDatabase } from "../db";
 import type { IStorage } from "../storage";
 import type { IAuth } from "../auth";
-import { scanManifest } from "../scan";
+import { scanManifest, scanBundleFiles } from "../scan";
 
 export async function handlePublish(
   req: Request,
@@ -133,7 +133,23 @@ export async function handlePublish(
 
   // Run security scan asynchronously
   queueMicrotask(() => {
-    const scanResult = scanManifest(manifest, bundleData.length);
+    const manifestScan = scanManifest(manifest, bundleData.length);
+    const bundleScanFindings = scanBundleFiles(bundleData);
+    const allFindings = [...manifestScan.findings, ...bundleScanFindings];
+
+    let scan_status: "clean" | "flagged" | "warning" = "clean";
+    if (allFindings.some((f) => f.severity === "critical")) {
+      scan_status = "flagged";
+    } else if (allFindings.some((f) => f.severity === "warning")) {
+      scan_status = "warning";
+    }
+
+    const scanResult = {
+      scan_status,
+      findings: allFindings,
+      scanned_at: new Date().toISOString(),
+    };
+
     db.insertScan(record.id, scanResult);
     if (scanResult.scan_status === "flagged") {
       const topFinding = scanResult.findings.find((f) => f.severity === "critical");
