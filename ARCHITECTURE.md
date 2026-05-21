@@ -2,6 +2,9 @@
 
 This document captures architectural principles, known design issues, and proposed improvements.
 
+**For implementation status and release readiness, see [PRODUCTION_READINESS_REVIEW.md](PRODUCTION_READINESS_REVIEW.md).**
+**For current/next development tasks, see [TODO.md](TODO.md).**
+
 ---
 
 ## Known Design Issues & Proposed Fixes
@@ -171,9 +174,32 @@ Fallback resolution tries each entry in order; skips entries whose provider repo
 
 ---
 
+---
+
+## Implementation Status
+
+| Issue | Status | Details |
+|-------|--------|---------|
+| 1. Registry trust model | ⏳ Partial | Pattern scans done; behavioral keywords pending (Phase 5D) |
+| 2. Client lock-in | ❌ Not started | CLI scans don't find non-Claude clients; Phase 5D task |
+| 3. `hyle watch --split` | ⏳ Proposed | Replace with `--budget` cost tracking (Phase 5D) |
+| 4. GDPR audit trail | ⏳ Proposed | Move to enterprise extension (Phase 5D) |
+| 5. Model-pin email | ✅ Resolved | Implemented as CLI warning on push + `hyle outdated` |
+| 6. `hyle.json` weight | ⏳ Proposed | Switch to user-declared priority in hyle.yaml (Phase 5D) |
+| 7. No private registry | ❌ Not started | Phase 5B: self-hosted + org namespace |
+| 8. No drift detection | ✅ Resolved | hyle.lock + outdated + upgrade + verify (v0.2.0) |
+| 9. No CI integration | ✅ Resolved | `hyle verify` with exit codes (v0.2.0) |
+| 10. No composition | ✅ Resolved | `extends` field implemented (v0.2.0) |
+
+For details, see [PRODUCTION_READINESS_REVIEW.md](PRODUCTION_READINESS_REVIEW.md) (implementation status) and [TODO.md](TODO.md) (roadmap).
+
+---
+
 ## See Also
 
 - README.md — product overview
 - CONFIG_REFERENCE.md — hyle.yaml schema reference
 - CONTRIBUTING.md — development setup
 - LOCAL_TESTING.md — testing workflow
+- PRODUCTION_READINESS_REVIEW.md — release readiness audit
+- TODO.md — roadmap and next phases

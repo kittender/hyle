@@ -338,14 +338,255 @@ curl -s "https://api.hyle.dev/substrates/author/name/1.0.0" | \
 - **API keys** never logged or cached in plaintext
 - **CORS** restricted to `https://*.hyle.dev` and configured registries
 
+### Stars & Community Features
+
+**Toggle Star**
+
+**Endpoint**: `POST /substrates/:author/:name/stars`
+
+**Headers**: `Authorization: Bearer <auth-token>`
+
+**Body**:
+```json
+{ "starred": true }
+```
+
+**Response** (200 OK):
+```json
+{ "starred": true, "total_stars": 42 }
+```
+
+---
+
+**Get Substrate Reviews**
+
+**Endpoint**: `GET /substrates/:author/:name/reviews`
+
+**Query Parameters**:
+- `limit` (integer, optional, default: 10)
+- `offset` (integer, optional, default: 0)
+- `sort` (string, optional): `recent`, `helpful`, `rating` (default: `recent`)
+
+**Response** (200 OK):
+```json
+{
+  "reviews": [
+    {
+      "id": "rev_123",
+      "author": "user_456",
+      "rating": 5,
+      "text": "Excellent substrate!",
+      "created_at": "2026-05-20T10:00:00Z",
+      "helpful_count": 3
+    }
+  ],
+  "avg_rating": 4.7,
+  "total_reviews": 12,
+  "has_more": false
+}
+```
+
+---
+
+**Submit Review**
+
+**Endpoint**: `POST /substrates/:author/:name/reviews`
+
+**Headers**: `Authorization: Bearer <auth-token>`
+
+**Body**:
+```json
+{
+  "rating": 5,
+  "text": "Great substrate, highly recommended!"
+}
+```
+
+**Response** (201 Created):
+```json
+{
+  "id": "rev_123",
+  "rating": 5,
+  "text": "Great substrate, highly recommended!",
+  "created_at": "2026-05-20T10:00:00Z"
+}
+```
+
+---
+
+### User Accounts & Authentication
+
+**GitHub OAuth Callback**
+
+**Endpoint**: `POST /auth/github/callback`
+
+**Body**:
+```json
+{ "code": "github_auth_code_from_oauth_flow" }
+```
+
+**Response** (200 OK):
+```json
+{
+  "token": "auth_token_for_api_requests",
+  "user": {
+    "id": "user_123",
+    "username": "example-user",
+    "avatar": "https://github.com/example-user.png",
+    "email": "user@example.com"
+  }
+}
+```
+
+---
+
+**Get User Profile**
+
+**Endpoint**: `GET /accounts/me`
+
+**Headers**: `Authorization: Bearer <auth-token>`
+
+**Response** (200 OK):
+```json
+{
+  "id": "user_123",
+  "username": "example-user",
+  "email": "user@example.com",
+  "avatar": "https://github.com/example-user.png",
+  "bio": "Substrate author",
+  "website": "https://example.com",
+  "verified": true,
+  "created_at": "2026-05-01T00:00:00Z"
+}
+```
+
+---
+
+**Get Author Portfolio**
+
+**Endpoint**: `GET /authors/:username`
+
+**Response** (200 OK):
+```json
+{
+  "username": "author-name",
+  "avatar": "https://github.com/author-name.png",
+  "bio": "Creator of cool substrates",
+  "website": "https://author.com",
+  "verified": true,
+  "substrates": [
+    {
+      "name": "java-springboot",
+      "version": "1.0.0",
+      "stars": 150,
+      "avg_rating": 4.8,
+      "downloads": 5000,
+      "published_at": "2026-04-01T00:00:00Z"
+    }
+  ],
+  "total_substrates": 5,
+  "total_stars": 500,
+  "avg_rating": 4.6
+}
+```
+
+---
+
+**Notification Preferences**
+
+**Endpoint**: `PUT /accounts/me/notification-prefs`
+
+**Headers**: `Authorization: Bearer <auth-token>`
+
+**Body**:
+```json
+{
+  "email_on_stars": true,
+  "email_on_reviews": true,
+  "email_on_new_versions": true,
+  "email_digest_frequency": "daily"
+}
+```
+
+**Response** (200 OK):
+```json
+{
+  "email_on_stars": true,
+  "email_on_reviews": true,
+  "email_on_new_versions": true,
+  "email_digest_frequency": "daily"
+}
+```
+
+---
+
+### Security & Badges
+
+**Get Security Report**
+
+**Endpoint**: `GET /substrates/:author/:name/:version/security-report`
+
+**Response** (200 OK):
+```json
+{
+  "version": "1.0.0",
+  "scanned_at": "2026-05-20T10:00:00Z",
+  "security_status": "passed",
+  "findings": [],
+  "badges": [
+    {
+      "name": "security_scanned",
+      "label": "Security Scanned",
+      "description": "Automated security scan passed"
+    },
+    {
+      "name": "verified_author",
+      "label": "Verified Author",
+      "description": "Author identity verified"
+    },
+    {
+      "name": "popular",
+      "label": "Popular",
+      "description": "1000+ installations"
+    }
+  ]
+}
+```
+
+---
+
+**Get Checksums**
+
+**Endpoint**: `GET /substrates/:author/:name/:version/checksums`
+
+**Response** (200 OK):
+```json
+{
+  "manifest_sha256": "abc123...",
+  "bundle_sha256": "xyz789..."
+}
+```
+
+---
+
 ## Changelog
 
-### API v1.0.0 (Current)
+### API v2.0.0 (Current – Phase 4)
+
+- All core endpoints from v1.0.0
+- **New**: Stars, reviews, ratings
+- **New**: User accounts + GitHub OAuth
+- **New**: Author portfolios
+- **New**: Email notifications
+- **New**: Security badges + reports
+- Rate limiting: per-endpoint (search/publish 10 req/min, general 30 req/min)
+- Bundle size limit: 50MB
+
+### API v1.0.0 (Legacy)
 
 - Initial stable API
 - Endpoints: search, fetch, publish, resolve, versions
 - Rate limiting: 10 req/min per key
-- Bundle size limit: 50MB
 
 ## Examples
 

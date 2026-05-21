@@ -55,6 +55,14 @@ Hylé strictly validates all file paths to prevent directory traversal attacks:
 - HTTP registries require explicit `HYLE_ALLOW_INSECURE=1` environment variable
 - Localhost registries require explicit `HYLE_ALLOW_INSECURE=1` for development
 
+### User Accounts & Email Notifications
+
+- User accounts are optional (needed for stars, reviews, portfolios, email notifications)
+- GitHub OAuth used for sign-in (no password storage by Hylé; GitHub handles OAuth securely)
+- Email notifications sent via Resend (third-party provider); verify privacy policy
+- Users can disable email notifications in account settings (`email_on_stars`, `email_on_reviews`, etc.)
+- Email addresses are never sold or shared with third parties
+
 ### Manifest Validation
 
 All manifests are validated against a strict schema on load:
@@ -69,7 +77,11 @@ All manifests are validated against a strict schema on load:
 
 2. **Manifest Execution**: Hylé does not execute code in manifests. All operations are data-driven and non-malicious by design.
 
-3. **Authentication**: Registry access currently uses API keys passed via environment variables. Never commit API keys to version control.
+3. **Authentication**: Two methods:
+   - GitHub OAuth (web UI): Tokens stored securely by browser (OAuth redirects)
+   - CLI Auth: `hyle login` uses OAuth device flow; tokens stored in `~/.hyle/auth.json` (user-readable, not encrypted)
+   - API Keys: Legacy method; passed via environment variables (never commit)
+   - Never share auth tokens; treat them like passwords
 
 ## Security Best Practices
 
@@ -100,5 +112,5 @@ For security-related questions (not vulnerability reports), open a discussion on
 
 ---
 
-**Last Updated**: 2026-05-04  
-**Version**: 1.0
+**Last Updated**: 2026-05-21 (Phase 4: added OAuth, email, user account security notes)  
+**Version**: 1.1
