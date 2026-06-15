@@ -1,5 +1,5 @@
 import { execSync } from "node:child_process";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { cancel, confirm, intro, isCancel, outro, text } from "@clack/prompts";
 import { dump } from "js-yaml";
@@ -91,24 +91,6 @@ export async function runInit(opts: {
 		version,
 		...(description ? { description } : {}),
 		...(tags?.length ? { tags } : {}),
-		models: {
-			primary: {
-				provider: "anthropic",
-				model: "claude-sonnet-4-6",
-				tags: ["saas", "paid"],
-				fallback: [
-					{ provider: "ollama", model: "qwen2.5:14b", tags: ["local", "free"] },
-				],
-			},
-			secondary: {
-				provider: "anthropic",
-				model: "claude-haiku-4-5",
-				tags: ["saas", "paid"],
-				fallback: [
-					{ provider: "ollama", model: "qwen2.5:7b", tags: ["local", "free"] },
-				],
-			},
-		},
 	};
 
 	const validation = validateManifest(manifest);
@@ -128,13 +110,11 @@ export async function runInit(opts: {
 	const ignorePath = join(cwd, ".hyleignore");
 	if (!existsSync(ignorePath)) writeFileSync(ignorePath, DEFAULT_HYLEIGNORE);
 
-	injectHyleReference(cwd, name, author, version);
-
 	if (opts.yes) {
 		console.log(`Created hyle.yaml (${name} by ${author} v${version})`);
 	} else {
 		outro(
-			"Created hyle.yaml — edit models block, then run `hyle push` to publish.",
+			"Created hyle.yaml — scan files and add recommendations, then run `hyle push` to publish.",
 		);
 	}
 }
@@ -185,23 +165,6 @@ function getGitAuthor(): string {
 	}
 }
 
-export function injectHyleReference(
-	cwd: string,
-	name: string,
-	author: string,
-	version: string,
-): void {
-	const claudeMdPath = join(cwd, "CLAUDE.md");
-	if (!existsSync(claudeMdPath)) return;
-
-	const content = readFileSync(claudeMdPath, "utf8");
-	const marker = "<!-- hyle-blueprint: ";
-	if (content.includes(marker)) return; // Already injected
-
-	const reference = `<!-- hyle-blueprint: ${author}/${name}@${version} — see hyle.yaml for models, .hyle for config -->`;
-	const updated = `${reference}\n${content}`;
-	writeFileSync(claudeMdPath, updated);
-}
 
 type Fetcher = (url: string, init?: RequestInit) => Promise<Response>;
 

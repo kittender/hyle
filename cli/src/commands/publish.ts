@@ -153,17 +153,20 @@ function collectFilesForBundle(
 ): string[] {
 	const files: Set<string> = new Set();
 
-	for (const category of [
-		"ontology",
-		"craft",
-		"identities",
-		"ethics",
-	] as const) {
-		const paths = manifest[category];
-		if (paths) {
-			for (const p of paths) {
-				if (!ignorePatterns.matches(p)) {
-					files.add(p);
+	const blueprint = manifest.blueprint;
+	if (blueprint) {
+		for (const category of [
+			"ontology",
+			"craft",
+			"identities",
+			"ethics",
+		] as const) {
+			const paths = blueprint[category];
+			if (paths) {
+				for (const p of paths) {
+					if (!ignorePatterns.matches(p)) {
+						files.add(p);
+					}
 				}
 			}
 		}

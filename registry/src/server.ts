@@ -23,7 +23,7 @@ await storage.init();
 
 const corsOrigin = process.env.HYLE_WEB_ORIGIN;
 if (!corsOrigin) {
-  console.error("ERROR: HYLE_WEB_ORIGIN environment variable is required (e.g., https://app.hyle.dev)");
+  console.error("ERROR: HYLE_WEB_ORIGIN environment variable is required (e.g., https://app.hylé.com)");
   process.exit(1);
 }
 

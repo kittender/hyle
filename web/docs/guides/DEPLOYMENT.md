@@ -42,7 +42,7 @@
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                        USER'S BROWSER                           │
-│                     https://app.hyle.dev                        │
+│                     https://app.hylé.com                        │
 └────────────────────────────┬────────────────────────────────────┘
                              │ HTTPS (static files)
                     ┌────────▼────────┐
@@ -52,7 +52,7 @@
 
 ┌──────────────────────────────────────────────────────────────────┐
 │                    SUBSTRATE REGISTRY API                        │
-│                   https://registry.hyle.dev                      │
+│                   https://registry.hylé.com                      │
 │                                                                  │
 │   hyle push/pull  →  Bun Server (any VPS/container host)         │
 │                            │                                     │
@@ -314,7 +314,7 @@ CloudFront takes 5–15 minutes to deploy globally. Your site will then be at:
 ```bash
 # Register a domain (or skip if you already have one elsewhere)
 aws route53domains register-domain \
-  --domain-name hyle.dev \
+  --domain-name hylé.com \
   --duration-in-years 1 \
   --admin-contact file://contact.json \
   --registrant-contact file://contact.json \
@@ -323,7 +323,7 @@ aws route53domains register-domain \
 
 # Create a hosted zone for DNS records
 aws route53 create-hosted-zone \
-  --name hyle.dev \
+  --name hylé.com \
   --caller-reference "hyle-$(date +%s)"
 # Note the "Id" in the output: /hostedzone/XXXXXXXXXX
 ```
@@ -337,8 +337,8 @@ If your domain is registered **outside AWS** (Namecheap, Cloudflare, etc.), copy
 ```bash
 # Request a certificate — MUST be us-east-1 for CloudFront
 aws acm request-certificate \
-  --domain-name hyle.dev \
-  --subject-alternative-names "*.hyle.dev" \
+  --domain-name hylé.com \
+  --subject-alternative-names "*.hylé.com" \
   --validation-method DNS \
   --region us-east-1
 # Note the "CertificateArn" in the output
@@ -354,11 +354,11 @@ Add the CNAME record shown in the output to Route 53. ACM auto-validates within 
 
 Then update your CloudFront distribution in the AWS console:
 1. Go to **CloudFront** → your distribution → **Edit**
-2. **Alternate domain names (CNAMEs):** add `hyle.dev` and `www.hyle.dev`
+2. **Alternate domain names (CNAMEs):** add `hylé.com` and `www.hylé.com`
 3. **Custom SSL certificate:** select the ACM certificate you just created
 4. Save and wait ~5 minutes for deploy
 
-Add a Route 53 A record pointing `hyle.dev` to your CloudFront domain:
+Add a Route 53 A record pointing `hylé.com` to your CloudFront domain:
 
 ```bash
 aws route53 change-resource-record-sets \
@@ -367,7 +367,7 @@ aws route53 change-resource-record-sets \
     "Changes": [{
       "Action": "CREATE",
       "ResourceRecordSet": {
-        "Name": "hyle.dev",
+        "Name": "hylé.com",
         "Type": "A",
         "AliasTarget": {
           "HostedZoneId": "Z2FDTNDATAQYW2",
@@ -381,7 +381,7 @@ aws route53 change-resource-record-sets \
 
 > `Z2FDTNDATAQYW2` is CloudFront's fixed hosted zone ID — always the same for everyone.
 
-Your site is now live at `https://hyle.dev` with HTTPS and a global CDN.
+Your site is now live at `https://hylé.com` with HTTPS and a global CDN.
 
 ---
 
@@ -445,7 +445,7 @@ https://hyle-releases.s3.amazonaws.com/releases/latest/hyle-macos-arm64
 https://hyle-releases.s3.amazonaws.com/releases/latest/hyle-windows-x64.exe
 ```
 
-Or via CloudFront for speed: create a second CloudFront distribution pointing to `hyle-releases` and use `https://releases.hyle.dev/releases/latest/hyle-linux-x64`.
+Or via CloudFront for speed: create a second CloudFront distribution pointing to `hyle-releases` and use `https://releases.hylé.com/releases/latest/hyle-linux-x64`.
 
 ### B3. Write the install script
 
@@ -481,7 +481,7 @@ detect_platform() {
       ;;
     *)
       echo "Unsupported OS: ${OS}" >&2
-      echo "For Windows, visit: https://hyle.dev/install" >&2
+      echo "For Windows, visit: https://hylé.com/install" >&2
       exit 1
       ;;
   esac
@@ -557,12 +557,12 @@ unzip ~/hyle-registry.zip -d ~/hyle
 cat > ~/.env.hyle <<EOF
 PORT=3000
 DB_PATH=/data/hyle-registry.db
-BASE_URL=https://registry.hyle.dev
+BASE_URL=https://registry.hylé.com
 JWT_SECRET=$(openssl rand -hex 32)
-HYLE_WEB_ORIGIN=https://app.hyle.dev
+HYLE_WEB_ORIGIN=https://app.hylé.com
 GITHUB_CLIENT_ID=your_github_app_id
 GITHUB_CLIENT_SECRET=your_github_app_secret
-FRONTEND_URL=https://app.hyle.dev
+FRONTEND_URL=https://app.hylé.com
 RESEND_API_KEY=your_resend_key
 HYLE_RATE_LIMIT=10
 EOF
@@ -582,7 +582,7 @@ sudo apt install -y caddy
 
 # Configure
 sudo tee /etc/caddy/Caddyfile <<EOF
-registry.hyle.dev {
+registry.hylé.com {
   reverse_proxy localhost:3000
 }
 EOF
@@ -804,7 +804,7 @@ Create `Formula/hyle.rb` in that repo:
 # Formula/hyle.rb
 class Hyle < Formula
   desc "AI context substrate manager"
-  homepage "https://hyle.dev"
+  homepage "https://hylé.com"
   version "0.1.0"
   license "MIT"
 
@@ -926,7 +926,7 @@ choco/
     <version>0.1.0</version>
     <title>Hylé</title>
     <authors>Kittender</authors>
-    <projectUrl>https://hyle.dev</projectUrl>
+    <projectUrl>https://hylé.com</projectUrl>
     <licenseUrl>https://github.com/kittender/hyle/blob/main/LICENSE</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>AI context substrate manager — package, share, and install versioned AI agent workflows.</description>
@@ -993,7 +993,7 @@ Create a GitHub repo `scoop-hyle` with a JSON manifest:
 {
   "version": "0.1.0",
   "description": "AI context substrate manager",
-  "homepage": "https://hyle.dev",
+  "homepage": "https://hylé.com",
   "license": "MIT",
   "architecture": {
     "64bit": {
@@ -1057,7 +1057,7 @@ PackageName: Hylé
 License: MIT
 ShortDescription: AI context substrate manager
 Description: Package, share, and install versioned snapshots of AI agent workflows.
-PackageUrl: https://hyle.dev
+PackageUrl: https://hylé.com
 ManifestType: defaultLocale
 ManifestVersion: 1.6.0
 ```
@@ -1097,9 +1097,9 @@ name: hyle
 arch: amd64           # build a separate one for arm64
 platform: linux
 version: "0.1.0"
-maintainer: Kittender <hello@hyle.dev>
+maintainer: Kittender <hello@hylé.com>
 description: AI context substrate manager
-homepage: https://hyle.dev
+homepage: https://hylé.com
 license: MIT
 
 contents:
@@ -1249,7 +1249,7 @@ sudo snap install hyle
 The `install.sh` created in Part B is the universal fallback for all platforms. Expose it at a clean URL:
 
 ```
-curl -fsSL https://hyle.dev/install | bash
+curl -fsSL https://hylé.com/install | bash
 ```
 
 This requires adding a CloudFront behavior that proxies `/install` to the S3 install.sh file.
@@ -1266,7 +1266,7 @@ brew tap kittender/hyle && brew install hyle
 
 **macOS / Linux (curl)**
 ```bash
-curl -fsSL https://hyle.dev/install | bash
+curl -fsSL https://hylé.com/install | bash
 ```
 
 **Windows (winget)**

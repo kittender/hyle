@@ -18,7 +18,6 @@ import {
 import { runUpgrade } from "./commands/upgrade";
 import { runValidate } from "./commands/validate";
 import { runVerify } from "./commands/verify";
-import { runWatch } from "./commands/watch";
 
 const program = new Command()
 	.name("hyle")
@@ -269,23 +268,6 @@ program
 	});
 
 // Extension commands (opt-in via hyle install)
-program
-	.command("watch")
-	.description("Live token consumption monitor (extension)")
-	.option("--audit", "Write hash-chained hyle-audit.log")
-	.option(
-		"--split <threshold>",
-		"Split context at threshold (e.g. 80% or 10000)",
-	)
-	.action(async (cmd) => {
-		const globals = program.opts<{ offline?: boolean }>();
-		await runWatch({
-			audit: !!cmd.audit,
-			split: cmd.split,
-			offline: !!globals.offline,
-		});
-	});
-
 program
 	.command("index")
 	.description("LLM-powered metadata index → hyle.json (extension)")

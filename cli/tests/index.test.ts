@@ -56,8 +56,8 @@ test("init --yes hyle.yaml contains name derived from dir", () => {
     spawnSync([...ENTRY, "init", "--yes", "--offline"], { cwd: dir });
     const manifest = readFileSync(join(dir, "hyle.yaml"), "utf8");
     expect(manifest).toContain("version: 0.1.0");
-    expect(manifest).toContain("provider: anthropic");
-    expect(manifest).toContain("provider: ollama");
+    expect(manifest).toContain("name: hyle-my-proj");
+    expect(manifest).toContain("author:");
   } finally {
     rmSync(dir, { recursive: true });
   }

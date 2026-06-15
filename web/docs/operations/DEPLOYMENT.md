@@ -1,405 +1,527 @@
-# Hylé Deployment & Operations
+# Hylé Deployment Guide
 
-Production deployment guide, monitoring, and incident response.
+Self-host Hylé registry. Three proven setups, from simple to industrial-grade.
+
+**Choose your path:**
+- **5-minute test?** → [DEPLOYMENT_QUICK_START.md](DEPLOYMENT_QUICK_START.md) (Docker + SQLite, local only)
+- **Production (teams <500)?** → [Tier 2](#tier-2-intermediate-teamsprodu) (VPS + PostgreSQL)
+- **High availability (500+ users)?** → [Tier 3](#tier-3-enterprise-high-scale) (multi-node, replicated DB)
 
 ---
 
-## Pre-Deployment
+## Tier 1: Simplest (Startup/Testing)
 
-### Required Environment Variables
+**Stack:** Bun + SQLite + Vercel/Railway/Render + GitHub OAuth
+
+**Time to deploy:** 10 minutes  
+**Cost:** Free-$20/month  
+**Suitable for:** Teams <50, internal use, prototyping, GitHub-as-primary
+
+### Architecture
+
+```
+GitHub OAuth ← Your App → Bun HTTP Server → SQLite (file on disk)
+```
+
+⚠️ **Data persistence:** Some platforms (Vercel) restart containers without persisting disk — data loss on redeploy. SQLite best for local testing only. Use **Tier 2 (PostgreSQL)** for durability.
+
+### Setup
+
+**1. Create GitHub OAuth app**
+
+1. Go to [github.com/settings/developers](https://github.com/settings/developers)
+2. Click "OAuth Apps" → "New OAuth App"
+3. Authorization callback URL: `https://your-registry.example.com/auth/callback`
+4. Copy `CLIENT_ID` and `CLIENT_SECRET`
+
+**2. Environment config**
+
+Create `.env` (Vercel/Railway/Render dashboard):
 
 ```bash
-# Registry server (required)
+# Server
 PORT=3000
 DB_PATH=/data/hyle-registry.db
-BASE_URL=https://registry.hyle.dev
-JWT_SECRET=$(openssl rand -hex 32)            # Generate new
-HYLE_WEB_ORIGIN=https://app.hyle.dev          # Explicit, not wildcard
-GITHUB_CLIENT_ID=your_github_oauth_app_id
-GITHUB_CLIENT_SECRET=your_github_oauth_secret
-FRONTEND_URL=https://app.hyle.dev
-RESEND_API_KEY=your_resend_api_key
-HYLE_RATE_LIMIT=10                            # publishes/hour
+BASE_URL=https://your-registry.example.com
+JWT_SECRET=$(openssl rand -hex 32)
 
-# Web frontend (Angular build-time)
-ANGULAR_API_BASE_URL=https://registry.hyle.dev
-ANGULAR_GITHUB_CLIENT_ID=same_as_registry
+# OAuth
+GITHUB_CLIENT_ID=<your-client-id>
+GITHUB_CLIENT_SECRET=<your-client-secret>
+
+# Email (optional, use Resend free tier)
+RESEND_API_KEY=<your-resend-key>
+
+# Limits
+HYLE_RATE_LIMIT=10  # publishes/hour
+MAX_BLUEPRINT_SIZE=100M
 ```
 
-**Never hardcode. Use secret management:**
-- GitHub Secrets (for CI/CD)
-- AWS Secrets Manager (for production)
-- `.env.local` in development (never commit)
+**3. Deploy**
 
-### Infrastructure
+### Option A: Vercel (Web UI only)
 
-```mermaid
-graph LR
-    Users["Users"]
-    WAF["WAF<br/>CloudFlare"]
-    LB["Load Balancer"]
-    Registry["Registry<br/>Bun HTTP"]
-    DB["SQLite<br/>/data/hyle.db"]
-    GitHub["GitHub<br/>raw.githubusercontent.com<br/>blueprint files"]
-    Email["Resend<br/>Email Service"]
-    
-    Users -->|HTTPS| WAF -->|Rate limit| LB -->|:3000| Registry
-    Registry -->|Read/Write| DB
-    Registry -->|Fetch files| GitHub
-    Registry -->|Send notifications| Email
-    
-    style Registry fill:#42b983
-    style DB fill:#90a4ae
-    style GitHub fill:#000
-    style Email fill:#ffc40e
+```bash
+git push origin main
+# Vercel auto-deploys on push
 ```
 
-### Pre-Deploy Checklist
+### Option B: Railway (Registry + Web)
 
-**Week 1:**
-- [ ] Staging environment (separate AWS account or namespace)
-- [ ] HTTPS certificates (TLS 1.3+) for `registry.hyle.dev`
-- [ ] WAF configured (CloudFlare or AWS WAF) with rate limiting
-- [ ] CloudWatch or DataDog for logs + metrics
-- [ ] Database backups (daily, 30-day retention, tested restore)
-- [ ] DNS records for `registry.hyle.dev`, `api.hyle.dev`, `app.hyle.dev`
-- [ ] SPF/DKIM/DMARC for Resend email
+```bash
+# Install Railway CLI
+npm i -g @railway/cli
 
-**Week 2:**
-- [ ] Monitoring alerts configured
-- [ ] On-call rotation established
-- [ ] Incident runbooks written (see below)
-- [ ] Rollback procedure tested
-- [ ] Load test at 10x expected volume (see Performance section)
+# Login
+railway login
+
+# Create project
+railway init
+
+# Link .env
+railway variables
+
+# Deploy
+railway up
+```
+
+### Option C: Render
+
+```bash
+# Create new Web Service
+# Repository: your-fork of hyle
+# Build command: bun install && bun run build
+# Start command: bun run start
+```
+
+### Data backup
+
+SQLite file lives in `/data/hyle-registry.db`. Daily backup script:
+
+```bash
+0 2 * * * docker exec hyle-registry cp /data/hyle-registry.db /backups/hyle-$(date +\%Y-\%m-\%d).db
+```
+
+Keep last 30 days locally; sync to cloud storage for durability.
 
 ---
 
-## Deployment Architecture
+## Tier 2: Intermediate (Teams/Production)
 
-### Single-Node (v0.2.0)
+**Stack:** Bun + PostgreSQL + VPS (DigitalOcean/Linode/Hetzner) + SSL/TLS
 
-Acceptable for beta. **Single point of failure.**
+**Time to deploy:** 1-2 hours  
+**Cost:** $15-40/month  
+**Suitable for:** Teams 50-500, production use, custom domain, HA not required
 
-```
-Internet → WAF (CloudFlare) → 1 Bun server (port 3000) → SQLite + disk
-```
-
-**Pros:** Simple, fast to deploy  
-**Cons:** No HA, disk failure = data loss, no scaling
-
-### Multi-Node (v0.3+)
-
-Upgrade when demand exceeds single-node capacity.
+### Architecture
 
 ```
-Internet → WAF → Load Balancer → [Bun server 1] \
-                                  [Bun server 2] → PostgreSQL + replication
-                                  [Bun server 3] /
-                                  
-                                → Redis cache (search, sessions)
-                                → S3 bucket (manifest backups)
+CloudFlare (WAF + DNS) → VPS (Bun, 2GB RAM) → PostgreSQL (managed or self-hosted)
 ```
 
-**Pros:** HA, scales horizontally, data replicated  
-**Cons:** Complexity, cost, PostgreSQL migration needed
+### Setup
 
----
+**1. Provision VPS**
 
-## Monitoring & Observability
+DigitalOcean Droplet example:
+- OS: Ubuntu 22.04 LTS
+- Size: 2GB RAM, 1 vCPU
+- Region: Choose closest to users
 
-### SLO Targets (First 6 weeks)
+```bash
+# SSH into droplet
+ssh root@<IP>
 
-| Endpoint | Metric | Target | Impact |
-|----------|--------|--------|--------|
-| `GET /substrates?q=...` | p99 latency | <500ms | Search latency |
-| `GET /substrates/{author}/{name}@{version}` | p99 latency | <500ms | Detail page load |
-| `POST /substrates` (publish) | p99 latency | <2s | Publish feedback |
-| `GET /auth/github/callback` | p99 latency | <500ms | Login flow |
-| Registry | Uptime | 99.5% | Availability |
-| Database | Disk usage | <80% | Alert before full |
+# Update system
+apt update && apt upgrade -y
 
-### Alerting Rules
+# Install Bun
+curl -fsSL https://bun.sh/install | bash
 
-```
-ERROR RATE > 1%
-  → Page oncall immediately
-
-P99 LATENCY > 2 seconds
-  → Page oncall (check CPU/memory/DB)
-
-DATABASE DISK > 80%
-  → Warn (not page); start cleanup
-
-JWT_SECRET not set at startup
-  → FAIL STARTUP (orchestration catches)
-
-HYLE_WEB_ORIGIN not set at startup
-  → FAIL STARTUP
-
-Security scan pending > 60 seconds
-  → Log warning (async OK for bundle, not manifest)
+# Install PostgreSQL
+apt install -y postgresql postgresql-contrib
 ```
 
-### Logging
+**2. Create database**
 
-**Always log:**
-- All authentication attempts (login, publish, token refresh)
-- All security scan findings (flagged/warning substrates)
-- All manifest publishes (author, version, timestamp)
-- All rate limit rejections (IP, endpoint, reason)
-- All errors (stack trace, context, user)
+```bash
+sudo -u postgres psql
 
-**Do NOT log:**
-- Bearer tokens or JWT secrets
-- User passwords
-- API keys
-- Full manifest content (log size instead)
+-- Inside psql:
+CREATE DATABASE hyle_registry;
+CREATE USER hyle_user WITH PASSWORD 'your-secure-password';
+ALTER ROLE hyle_user SET client_encoding TO 'utf8';
+ALTER ROLE hyle_user SET default_transaction_isolation TO 'read committed';
+ALTER ROLE hyle_user SET default_transaction_deferrable TO on;
+GRANT ALL PRIVILEGES ON DATABASE hyle_registry TO hyle_user;
+\q
+```
 
-**Format:** Structured JSON (machine-parseable)
+**3. Configure environment**
 
-```json
-{
-  "timestamp": "2026-05-21T14:23:00Z",
-  "level": "info",
-  "event": "substrate_published",
-  "author": "jane-doe",
-  "substrate": "claude-typescript@1.0.0",
-  "size_bytes": 48000,
-  "scan_status": "pending"
+```bash
+# Create /opt/hyle/.env
+sudo mkdir -p /opt/hyle
+sudo tee /opt/hyle/.env > /dev/null <<EOF
+# Server
+PORT=3000
+DB_URL=postgresql://hyle_user:your-secure-password@localhost:5432/hyle_registry
+BASE_URL=https://registry.your-domain.com
+JWT_SECRET=$(openssl rand -hex 32)
+
+# OAuth
+GITHUB_CLIENT_ID=<your-client-id>
+GITHUB_CLIENT_SECRET=<your-client-secret>
+
+# Email (optional, use Resend free tier)
+RESEND_API_KEY=<your-resend-key>
+
+# Rate limiting & quotas
+HYLE_RATE_LIMIT=50       # publishes/hour per user
+MAX_BLUEPRINT_SIZE=500M  # per blueprint
+EOF
+
+sudo chmod 600 /opt/hyle/.env
+```
+
+**4. Install application**
+
+```bash
+cd /opt/hyle
+git clone https://github.com/kittender/hyle.git .
+
+# Install dependencies
+bun install
+bun run build
+
+# Run migrations (if using schema)
+bun run migrations:up
+```
+
+**5. Systemd service**
+
+Create `/etc/systemd/system/hyle.service`:
+
+```ini
+[Unit]
+Description=Hylé Registry
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=hyle
+WorkingDirectory=/opt/hyle
+EnvironmentFile=/opt/hyle/.env
+ExecStart=/root/.bun/bin/bun run start
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable:
+
+```bash
+sudo systemctl enable hyle
+sudo systemctl start hyle
+sudo systemctl status hyle
+```
+
+**6. Reverse proxy (Nginx)**
+
+```nginx
+server {
+    listen 80;
+    server_name registry.your-domain.com;
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name registry.your-domain.com;
+
+    ssl_certificate /etc/letsencrypt/live/registry.your-domain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/registry.your-domain.com/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
 }
 ```
 
----
-
-## Incident Response Playbooks
-
-### Scenario 1: Malicious Substrate Published
-
-**Indicator:** Security scan flags substrate as critical (eval, exfiltrate, webhook keywords)
-
-**Response (5 min):**
-1. Get substrate ID: `SELECT id, author, name, version FROM substrates WHERE scan_status='flagged'`
-2. Mark hidden: `UPDATE substrates SET is_flagged=1, flag_reason='Manual: behavioral keywords detected' WHERE id=123`
-3. Announce in Slack: `#incidents` channel with substrate name, author, finding
-4. Do NOT delete (retain for audit trail + learning)
-5. Query who pulled it: `SELECT COUNT(*) FROM pull_logs WHERE substrate_id=123` (if tracking enabled)
-
-**Post-Incident (1 day):**
-- Notify affected users (email: "substrate you pulled was flagged")
-- Post-mortem: Why did async scan miss it? Should have been blocking.
-- Review keyword list (did we search for new vectors?)
-
-**Prevention:** See [SECURITY_AUDIT.md](SECURITY_AUDIT.md) for behavioral keyword expansion.
-
----
-
-### Scenario 2: Database Corruption or Disk Full
-
-**Indicator:** Database errors in logs, registry returns 500 on GET, publish blocked
-
-**Response (30 min):**
-1. Switch to read-only mode: Return 503 for all POST requests
-   ```
-   HealthCheck status: "read_only" (alerts team automatically)
-   ```
-2. Restore from backup (RTO: 1 hour from last backup)
-   ```bash
-   sqlite3 /data/hyle-registry-backup.db .schema | sqlite3 /data/hyle-registry.db
-   # Verify checksums match
-   ```
-3. Resume normal operation
-4. Post-mortem: Why wasn't backup tested? (weekly restore tests required)
-
-**Prevention:** Automated daily backups, weekly restore drills.
-
----
-
-### Scenario 3: Auth Token Compromise
-
-**Indicator:** Suspicious activity (mass publishes from single token, admin account locked)
-
-**Response (1 hour):**
-1. Rotate JWT_SECRET:
-   ```bash
-   export JWT_SECRET=$(openssl rand -hex 32)
-   # Redeploy registry
-   ```
-2. Announce: *"All JWT tokens invalidated. Please re-login."*
-3. Reset affected user accounts (force re-auth)
-4. Audit: Which tokens were issued? Who accessed with them?
-5. Rotate GITHUB_CLIENT_SECRET as well (GitHub OAuth app settings)
-
-**Prevention:** Monthly credential rotation. Alert on simultaneous logins from different IPs.
-
----
-
-### Scenario 4: DDoS Attack
-
-**Indicator:** Traffic spikes 10x normal, all requests timing out, error rate >50%
-
-**Response (5 min):**
-1. Enable WAF rate limiting aggressively
-   - CloudFlare: 10 req/sec per IP
-   - Alert but don't block legitimate users
-2. Assess: Is traffic legitimate (search spike) or attack?
-   - Check IP geo distribution (attackers often from few countries)
-   - Check User-Agent (bots vs browsers)
-3. Mitigate:
-   - Block known attacker IPs (WAF allowlist)
-   - Enable CAPTCHA on search endpoint
-   - Enable IP allowlist (whitelist known users)
-4. Scale horizontally (if legitimate surge):
-   - Add Bun server instances behind load balancer
-   - Monitor auto-scaling metrics
-
-**Prevention:** Load test at 10x volume before launch. WAF rules tuned for false-positive rate <1%.
-
----
-
-### Scenario 5: Registry Service Down (500 errors)
-
-**Indicator:** All endpoints return 500, logs show crash
-
-**Response (2 min):**
-1. Check service status:
-   ```bash
-   curl https://registry.hyle.dev/health → should return { status: "ok", version: "0.2.0" }
-   ```
-2. View recent logs: `tail -50 /var/log/hyle-registry.log`
-3. If crash (OOM, crash loop):
-   - Restart service: `systemctl restart hyle-registry`
-   - Monitor for re-crash
-4. If persistent:
-   - Rollback to last known-good version
-   - Trigger incident postmortem
-
-**Prevention:** Health check endpoint. Auto-restart on crash (systemd). Liveness probes on load balancer.
-
----
-
-## Day 1 Post-Deployment (30 min monitoring)
+Enable & restart:
 
 ```bash
-# 1. Health check
-curl https://registry.hyle.dev/health
-# Expected: { "status": "ok", "version": "0.2.0" }
-
-# 2. Web UI loads
-curl https://app.hyle.dev -s | head -20
-# Expected: HTML, no JS errors
-
-# 3. Test publish
-hyle login --registry https://registry.hyle.dev
-hyle push  # test substrate
-
-# 4. Test search
-hyle search hyle
-# Expected: test substrate appears
-
-# 5. Test pull
-hyle pull org/test-substrate
-# Expected: extracts successfully, hyle.lock created
-
-# 6. Tail logs
-tail -f /var/log/hyle-registry.log
-# Expected: no ERROR or WARN lines
+sudo certbot certonly --standalone -d registry.your-domain.com
+sudo systemctl enable nginx
+sudo systemctl restart nginx
 ```
 
-**If any fail:** Rollback immediately, post-mortem same-day.
+**7. Backups**
 
----
-
-## Long-Term Operations (Months 1–6)
-
-### Week 1–4: Stabilize
-
-- Monitor for errors, false-positive scans, DDoS
-- Respond to user-reported issues (<1 hour SLA)
-- Rotate credentials monthly
-- Weekly log review (spot trends)
-
-### Week 5–8: Optimize
-
-- Analyze search latency: add indexes if p99 > 500ms
-- Monitor bundle sizes: warn users if > 50MB
-- Cache layer? (Redis) if search > 100k QPS
-- Migrate bundles to S3 if disk approaching 70%
-
-### Week 9–12: Harden
-
-- Load test at 10x volume
-- Test disaster recovery (restore from backup)
-- Add multi-node deployment (PostgreSQL + replicas)
-- Enable security headers (CSP, HSTS, X-Frame-Options)
-
-### Week 13+: Scale
-
-- Multi-region deployment (if global users)
-- Private registry support (enterprise demand)
-- Advanced analytics (download trends, substrate lifecycle)
-- Dependency graph visualization
-
----
-
-## Disaster Recovery
-
-### RTO/RPO Targets
-
-| Scenario | RTO | RPO |
-|----------|-----|-----|
-| Single-node disk failure | 1 hour | 1 day (last backup) |
-| Registry service crash | 5 min (auto-restart) | 0 min (RAM cache) |
-| Database corruption | 2 hours (restore + verify) | 1 day |
-| Security incident (token leak) | 30 min (rotate secret) | 0 min |
-
-### Backup Strategy
+Automated daily PostgreSQL dumps:
 
 ```bash
-# Daily backup (cron job at 2 AM UTC)
-sqlite3 /data/hyle-registry.db ".backup /backups/hyle-registry-$(date +%Y%m%d).db"
-
-# Retention: 30 days
-find /backups -name "hyle-registry-*.db" -mtime +30 -delete
-
-# Weekly restore test (simulate production restore)
-sqlite3 /backups/hyle-registry-latest.db "SELECT COUNT(*) FROM substrates;"
-# Alert if count doesn't match production
+# Create /usr/local/bin/backup-hyle.sh
+#!/bin/bash
+DATE=$(date +%Y%m%d_%H%M%S)
+pg_dump hyle_registry | gzip > /backups/hyle_$DATE.sql.gz
+# Keep last 30 days
+find /backups -name "hyle_*.sql.gz" -mtime +30 -delete
 ```
 
-### Rollback Procedure
+Cron:
 
-**If v0.2.0 has critical bug:**
+```bash
+0 2 * * * /usr/local/bin/backup-hyle.sh
+```
 
-1. Identify last known-good version (v0.1.9)
-2. Tag current as `v0.2.0-broken` (preserve for analysis)
-3. Deploy v0.1.9: `git checkout v0.1.9 && bun run build`
-4. Restart: `systemctl restart hyle-registry`
-5. Verify: health check + smoke tests
-6. Announce: Rolled back, investigating
-7. Post-mortem: How did this get to prod? (CI gate failure?)
+Test restore monthly: `pg_restore -d test_db /backups/hyle_LATEST.sql.gz` to verify backups work.
 
-**Time: ~10 minutes.** Requires:
-- Previous version built and tested
-- Rollback documented in runbook
-- Team familiar with deployment process
+**8. Monitoring**
 
----
+Watch key metrics — upgrade to Tier 3 if approaching limits:
 
-## Success Metrics (First 6 weeks)
+| Metric | Warning | Action |
+|--------|---------|--------|
+| CPU >70% sustained | Tier 2 too slow | Add more vCPU or → Tier 3 |
+| Memory >2GB usage | Low headroom | Increase VPS size or → Tier 3 |
+| DB connections at limit (100) | PgBouncer needed | Enable pooling or → Tier 3 |
+| Disk >80% full | Data loss risk | Add storage or → Tier 3 |
+| P99 latency >500ms | Performance degrading | → Tier 3 (multiple replicas) |
+| >500 concurrent users | Single-node bottleneck | → Tier 3 (load balancer) |
 
-| Metric | Target | Action if missed |
-|--------|--------|------------------|
-| Uptime | 99.5% | Page oncall if <99%; root-cause post-mortem |
-| Search p99 latency | <500ms | Add database indexes or caching |
-| Publish latency | <2s | Profile handler; check manifest scan time |
-| Security incidents | 0 | Immediate investigation + containment |
-| False positive scans | <5% | Keyword list review + expand |
-| User signups | 100+ | Announce on social; reach out to early users |
-| Substrates published | 50+ | Real usage signal; good health indicator |
+Quick setup: Install [Prometheus + Node Exporter](https://prometheus.io/docs/prometheus/latest/getting_started/) to track CPU, memory, disk. Set alerts in PagerDuty or similar.
 
 ---
 
-**Document version:** v0.2.0  
-**Last updated:** 2026-05-21  
-**Maintained by:** Ops team  
-**Review cycle:** Monthly (or post-incident)
+## Tier 3: Enterprise (High-Scale)
+
+**Stack:** Docker Compose or Kubernetes + PostgreSQL HA + Load Balancer
+
+**Time to deploy:** 2-4 hours (Compose) or 4-8 hours (Kubernetes)  
+**Cost:** $100-500+/month depending on scale  
+**Suitable for:** Teams 500+, high availability SLA, incident response team
+
+### When to Use Tier 3
+
+| Need | Choose |
+|------|--------|
+| >500 concurrent users, need failover | Tier 3 (required) |
+| SLA uptime ≥99.5%, on-call rotation | Tier 3 (required) |
+| Multi-region, <100ms latency | Custom (beyond this guide) |
+| Kubernetes already in use | Tier 3 + adapt existing platform |
+| "Growing past Tier 2 in 3 months?" | Stay Tier 2, plan Tier 3 migration |
+
+### Quick Start: Docker Compose
+
+Create `docker-compose.yml`:
+
+```yaml
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: hyle_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: hyle_registry
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - hyle-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hyle_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  registry:
+    image: oven/bun:latest
+    command: bun run start
+    working_dir: /app
+    environment:
+      PORT: 3000
+      DB_URL: postgresql://hyle_user:${DB_PASSWORD}@postgres:5432/hyle_registry
+      BASE_URL: https://registry.your-domain.com
+      JWT_SECRET: ${JWT_SECRET}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
+    volumes:
+      - .:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - hyle-net
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
+
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+    ports:
+      - "443:443"
+    depends_on:
+      - registry
+    networks:
+      - hyle-net
+
+volumes:
+  postgres-data:
+
+networks:
+  hyle-net:
+```
+
+Deploy:
+
+```bash
+export DB_PASSWORD=$(openssl rand -base64 32)
+export JWT_SECRET=$(openssl rand -base64 32)
+export GITHUB_CLIENT_ID=your-id
+export GITHUB_CLIENT_SECRET=your-secret
+
+docker-compose up -d
+docker-compose logs -f registry
+```
+
+### Kubernetes
+
+Use existing managed Kubernetes (EKS, GKE, AKS) or self-hosted K3s.
+
+Key requirements:
+- PostgreSQL HA cluster (managed service: AWS RDS, Google Cloud SQL, or [Helm PostgreSQL chart](https://github.com/bitnami/charts/tree/main/bitnami/postgresql))
+- Hylé replicas ≥3 with resource limits (0.5 CPU, 512MB memory per pod)
+- Ingress controller (Nginx, Traefik) + TLS
+
+See [Kubernetes documentation](https://kubernetes.io/docs/setup/) and adapt existing cluster patterns to Hylé deployment. No Kubernetes expertise required if using managed PostgreSQL.
+
+### High Availability: PostgreSQL
+
+Setup: Primary + Standby with automatic failover.
+
+See [PostgreSQL streaming replication](https://www.postgresql.org/docs/current/warm-standby.html) for detailed setup. Quick overview:
+1. Primary replicates WAL to standby via network
+2. Standby stays hot (can serve read-only queries)
+3. Use [PgBouncer](https://www.pgbouncer.org/config.html) for connection pooling (max 1000 connections, pool size 25-50)
+
+### Monitoring
+
+Setup Prometheus + Alertmanager: [Prometheus getting started](https://prometheus.io/docs/prometheus/latest/getting_started/)
+
+Hylé exposes metrics on `/metrics` (port 9090). Key alerts:
+- Error rate >1% (5m window)
+- DB connections >80 (pooling limit)
+- Disk >90% (backup + restore risk)
+- Pod restarts (memory leak check)
+
+---
+
+## Quick Decision Tree
+
+| Situation | Choose |
+|-----------|--------|
+| Testing locally, personal project | Tier 1 (Vercel) + local SQLite |
+| Small team (10-100), private registry, $20-50/mo budget | Tier 2 (VPS + PostgreSQL) |
+| Team >500, need 99.5% uptime, compliance audit trails | Tier 3 (HA + Kubernetes) |
+| "Not sure, grow-as-you-go" | Start Tier 2, easy migration to Tier 3 later |
+
+---
+
+## Enterprise Adoption Path
+
+**Why self-host?**
+
+1. **Full control** — Data stays on your infrastructure
+2. **Compliance** — Meets HIPAA, SOC 2, GDPR, FedRAMP requirements
+3. **Customization** — Extend with internal policies, SSO, audit logging
+4. **Cost at scale** — Cheaper than SaaS once you have 500+ users
+
+**Getting started (Week 1-4):**
+
+- Week 1: Spin up Tier 2 in staging (VPS + PostgreSQL)
+- Week 2: Configure OAuth (GitHub or internal IdP), test authentication
+- Week 3: Load test, set up backups, document runbooks
+- Week 4: Deploy to production, migrate users
+
+**Checklist for production:**
+
+- [ ] HTTPS/TLS enabled (certificate auto-renewal with Let's Encrypt)
+- [ ] Database backups automated (daily, 30-day retention, tested restore)
+- [ ] Monitoring & alerting (Prometheus, PagerDuty, or similar)
+- [ ] Logging centralized (CloudWatch, ELK, or Datadog)
+- [ ] Rate limiting configured (CloudFlare or application-level)
+- [ ] CDN caching (CloudFlare, Akamai, or similar)
+- [ ] On-call rotation scheduled
+- [ ] Incident response runbooks written
+- [ ] Disaster recovery tested (failover, rollback)
+
+**Enterprise features to add:**
+
+- SAML/OIDC for SSO (not just GitHub)
+- Audit logging (who pulled/pushed what, when)
+- Policy-as-code (CEL rules for blueprint validation)
+- Rate limiting per team/org
+- Quota management (max storage, downloads, etc.)
+- Custom integrations (Slack notifications, Jira sync, etc.)
+
+---
+
+## Troubleshooting
+
+### "Connection refused" / "Cannot connect to registry"
+
+```bash
+# Check service is running
+systemctl status hyle
+
+# Check port is open
+netstat -tlnp | grep 3000
+
+# Check firewall
+ufw status
+ufw allow 443/tcp
+```
+
+### "Database connection pool exhausted"
+
+Increase PgBouncer pool size:
+
+```ini
+default_pool_size = 50  # Increase from 25
+```
+
+Or add connection pooling middleware (PgBouncer, ProxySQL).
+
+### "Out of memory" / High CPU
+
+Check Bun heap usage:
+
+```bash
+# Increase heap
+NODE_OPTIONS="--max-old-space-size=1024" bun run start
+```
+
+Or horizontally scale (add more replicas in Kubernetes).
+
+---
+
+## Next Steps
+
+- **Custom registry?** Check [REGISTRY_API.md](../reference/REGISTRY_API.md) for full API spec
+- **Need help?** Open an issue at [github.com/kittender/hyle/issues](https://github.com/kittender/hyle/issues)
+- **Contributing deployment templates?** PR welcome at [github.com/kittender/hyle](https://github.com/kittender/hyle)

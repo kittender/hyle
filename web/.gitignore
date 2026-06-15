@@ -6,6 +6,9 @@
 /out-tsc
 /bazel-out
 
+# Generated build artifacts
+/public/docs-data.json
+
 # Node
 /node_modules
 npm-debug.log

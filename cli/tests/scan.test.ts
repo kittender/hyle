@@ -20,16 +20,6 @@ function createManifest(dir: string) {
     name: "test-substrate",
     author: "test-author",
     version: "0.1.0",
-    models: {
-      primary: {
-        provider: "anthropic",
-        model: "claude-sonnet-4-6",
-      },
-      secondary: {
-        provider: "anthropic",
-        model: "claude-haiku-4-5",
-      },
-    },
   };
   writeFileSync(join(dir, "hyle.yaml"), dump(manifest, { lineWidth: 80 }));
 }
@@ -49,9 +39,9 @@ describe("scan commands", () => {
       await runScan("ontology", { dryRun: false });
 
       const manifest = load(readFileSync(join(dir, "hyle.yaml"), "utf8")) as any;
-      expect(manifest.ontology).toBeDefined();
-      expect(manifest.ontology).toContain("CLAUDE.md");
-      expect(manifest.ontology).toContain("docs/architecture.md");
+      expect(manifest.blueprint?.ontology).toBeDefined();
+      expect(manifest.blueprint?.ontology).toContain("CLAUDE.md");
+      expect(manifest.blueprint?.ontology).toContain("docs/architecture.md");
     } finally {
       rmSync(dir, { recursive: true });
       process.chdir("/");
@@ -71,8 +61,8 @@ describe("scan commands", () => {
       await runScan("ontology", { dryRun: false });
 
       const manifest = load(readFileSync(join(dir, "hyle.yaml"), "utf8")) as any;
-      expect(manifest.ontology).toContain("docs/api.md");
-      expect(manifest.ontology).not.toContain("docs/config.secret.md");
+      expect(manifest.blueprint?.ontology).toContain("docs/api.md");
+      expect(manifest.blueprint?.ontology).not.toContain("docs/config.secret.md");
     } finally {
       rmSync(dir, { recursive: true });
       process.chdir("/");
@@ -89,7 +79,7 @@ describe("scan commands", () => {
       await runScan("ontology", { add: "CUSTOM.md" });
 
       const manifest = load(readFileSync(join(dir, "hyle.yaml"), "utf8")) as any;
-      expect(manifest.ontology).toContain("CUSTOM.md");
+      expect(manifest.blueprint?.ontology).toContain("CUSTOM.md");
     } finally {
       rmSync(dir, { recursive: true });
       process.chdir("/");
@@ -108,9 +98,9 @@ describe("scan commands", () => {
       await runScan("craft", { dryRun: false });
 
       const manifest = load(readFileSync(join(dir, "hyle.yaml"), "utf8")) as any;
-      expect(manifest.craft).toContain("package.json");
-      expect(manifest.craft).toContain("tsconfig.json");
-      expect(manifest.craft).toContain("biome.json");
+      expect(manifest.blueprint?.craft).toContain("package.json");
+      expect(manifest.blueprint?.craft).toContain("tsconfig.json");
+      expect(manifest.blueprint?.craft).toContain("biome.json");
     } finally {
       rmSync(dir, { recursive: true });
       process.chdir("/");
@@ -129,8 +119,8 @@ describe("scan commands", () => {
       await runScan("identities", { dryRun: false });
 
       const manifest = load(readFileSync(join(dir, "hyle.yaml"), "utf8")) as any;
-      expect(manifest.identities).toContain("AGENTS.md");
-      expect(manifest.identities).toContain(".claude/agents/researcher.md");
+      expect(manifest.blueprint?.identities).toContain("AGENTS.md");
+      expect(manifest.blueprint?.identities).toContain(".claude/agents/researcher.md");
     } finally {
       rmSync(dir, { recursive: true });
       process.chdir("/");
@@ -149,8 +139,8 @@ describe("scan commands", () => {
       await runScan("ethics", { dryRun: false });
 
       const manifest = load(readFileSync(join(dir, "hyle.yaml"), "utf8")) as any;
-      expect(manifest.ethics).toContain("ETHICS.md");
-      expect(manifest.ethics).toContain("evals/fairness.ts");
+      expect(manifest.blueprint?.ethics).toContain("ETHICS.md");
+      expect(manifest.blueprint?.ethics).toContain("evals/fairness.ts");
     } finally {
       rmSync(dir, { recursive: true });
       process.chdir("/");
@@ -165,16 +155,8 @@ describe("scan commands", () => {
         name: "test",
         author: "test",
         version: "0.1.0",
-        ontology: ["existing.md"],
-        models: {
-          primary: {
-            provider: "anthropic",
-            model: "claude-sonnet-4-6",
-          },
-          secondary: {
-            provider: "anthropic",
-            model: "claude-haiku-4-5",
-          },
+        blueprint: {
+          ontology: ["existing.md"],
         },
       };
       writeFileSync(join(dir, "hyle.yaml"), dump(manifest, { lineWidth: 80 }));
@@ -183,7 +165,7 @@ describe("scan commands", () => {
       await runScan("ontology", { add: "existing.md" });
 
       const updated = load(readFileSync(join(dir, "hyle.yaml"), "utf8")) as any;
-      const count = (updated.ontology || []).filter((f: string) => f === "existing.md").length;
+      const count = (updated.blueprint?.ontology || []).filter((f: string) => f === "existing.md").length;
       expect(count).toBe(1);
     } finally {
       rmSync(dir, { recursive: true });

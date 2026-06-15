@@ -130,18 +130,21 @@ function updateManifest(
 	newFiles: string[],
 	dryRun: boolean,
 ): void {
-	const current = manifest[category] || [];
+	if (!manifest.blueprint) {
+		manifest.blueprint = {};
+	}
+	const current = manifest.blueprint[category] || [];
 	const allFiles = Array.from(new Set([...current, ...newFiles])).sort();
 
 	if (dryRun) {
-		console.log(`Would update ${category}:`);
+		console.log(`Would update blueprint.${category}:`);
 		for (const f of allFiles) {
 			console.log(`  + ${f}`);
 		}
 		return;
 	}
 
-	manifest[category] = allFiles;
+	manifest.blueprint[category] = allFiles;
 
 	const validation = validateManifest(manifest);
 	if (validation.errors.length > 0) {

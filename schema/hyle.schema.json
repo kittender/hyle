@@ -96,11 +96,6 @@
           "minLength": 1,
           "description": "Model family alias (e.g. claude-sonnet-4-6)"
         },
-        "model_pin": {
-          "type": "string",
-          "minLength": 1,
-          "description": "Exact checkpoint for reproducibility (opt-in)"
-        },
         "tags": {
           "type": "array",
           "items": { "type": "string" },

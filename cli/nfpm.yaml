@@ -4,7 +4,7 @@ platform: linux
 version: "0.1.0"
 maintainer: Kittender <hello@hyle.dev>
 description: AI context substrate manager
-homepage: https://hyle.dev
+homepage: https://hylé.com
 license: MIT
 
 contents:

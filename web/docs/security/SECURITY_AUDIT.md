@@ -130,7 +130,7 @@ export const environment = {
 ```typescript
 const corsOrigin = process.env.HYLE_WEB_ORIGIN;
 if (!corsOrigin) {
-  console.error("ERROR: HYLE_WEB_ORIGIN must be set (e.g., https://registry.hyle.dev)");
+  console.error("ERROR: HYLE_WEB_ORIGIN must be set (e.g., https://registry.hylé.com)");
   process.exit(1);
 }
 ```

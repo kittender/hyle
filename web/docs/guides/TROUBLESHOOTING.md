@@ -54,7 +54,7 @@ hyle search java spring    # Find similar blueprints
 hyle pull org/name --dry-run  # Verify syntax before pulling
 ```
 
-Check registry at `https://registry.hyle.dev` (or custom remote in `.hyle`).
+Check registry at `https://registry.hylé.com` (or custom remote in `.hyle`).
 
 ---
 
@@ -195,21 +195,45 @@ The flagged version remains visible (with reason), but new version is clean.
 
 ---
 
-## hyle watch (extension)
+### "Dependency installed but version doesn't match"
 
-### "requires ANTHROPIC_API_KEY"
-
-**Cause**: Extension command `hyle watch` needs API key, not set.
+**Cause**: Tool installed, but version constraint isn't satisfied (e.g., you have 2.x, blueprint needs >=3.0).
 
 **Fix**:
 ```bash
-export ANTHROPIC_API_KEY=sk-...
-hyle watch
+# Check what you have
+cedar --version        # You: 2.9.0
+# Needed: >=3.0
 
-# Or save to ~/.hyle for persistent use
-hyle install hyle-watch
-# Prompted to save key
+# Upgrade (macOS)
+brew upgrade cedar
+
+# Or from source
+cargo install cedar --force
+
+# Verify
+cedar --version        # Now: 3.0.0
+hyle pull org/blueprint  # Should succeed
 ```
+
+---
+
+### "Blueprint file is too large to download"
+
+**Cause**: Blueprint contains large files (>100MB PDFs, datasets, models) that exceed network or disk quota.
+
+**Workaround:**
+```bash
+# Pull without large files
+hyle pull org/blueprint --exclude "*.pdf" --exclude "*.bin"
+
+# Or manually fetch from GitHub
+git clone https://github.com/author/repo
+cd repo
+# Check out specific git tag: git checkout hyle-v1.0.0
+```
+
+**Note:** Hylé stores manifests in registry, not file bundles. Large files must be pulled directly from GitHub (raw.githubusercontent.com), which respects GitHub's rate limits.
 
 ---
 
@@ -241,7 +265,7 @@ hyle install hyle-watch
 **Fix**:
 ```yaml
 .hyle:
-  remote_url: https://registry.hyle.dev    # Correct
+  remote_url: https://registry.hylé.com    # Correct
 ```
 
 For localhost development:
@@ -278,10 +302,6 @@ Minimal `hyle.yaml`:
 name: my-blueprint
 author: my-username
 version: 0.1.0
-models:
-  primary:
-    provider: anthropic
-    model: claude-sonnet-4-6
 ```
 
 ---
@@ -290,5 +310,5 @@ models:
 
 - Check [Configuration Reference](../reference/CONFIG.md) for all valid fields
 - Read [Example Blueprint](EXAMPLE_BLUEPRINT.md) for a real project layout
-- Check registry at `https://registry.hyle.dev` for examples
+- Check registry at `https://registry.hylé.com` for examples
 - Report issues: [GitHub Issues](https://github.com/kittender/hyle/issues)

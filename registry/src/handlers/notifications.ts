@@ -51,7 +51,7 @@ export async function notifyNewStar(
     html: `
       <h2>${substrate_name} received a star!</h2>
       <p>Your substrate now has ${star_count} stars.</p>
-      <p><a href="https://hyle.dev/substrates/${substrate_author}/${substrate_name}">View substrate</a></p>
+      <p><a href="https://hylé.com/substrates/${substrate_author}/${substrate_name}">View substrate</a></p>
     `,
   });
 }
@@ -79,7 +79,7 @@ export async function notifyNewReview(
       <h2>New review for ${substrate_name}</h2>
       <p><strong>${reviewer}</strong> left a ${rating}-star review:</p>
       <blockquote>${body || "(No comment)"}</blockquote>
-      <p><a href="https://hyle.dev/substrates/${substrate_author}/${substrate_name}">View reviews</a></p>
+      <p><a href="https://hylé.com/substrates/${substrate_author}/${substrate_name}">View reviews</a></p>
     `,
   });
 }
@@ -104,7 +104,7 @@ export async function notifyNewVersion(
     html: `
       <h2>New version of ${substrate_name}</h2>
       <p>Version <strong>${version}</strong> has been published.</p>
-      <p><a href="https://hyle.dev/substrates/${substrate_author}/${substrate_name}">View substrate</a></p>
+      <p><a href="https://hylé.com/substrates/${substrate_author}/${substrate_name}">View substrate</a></p>
     `,
   });
 }

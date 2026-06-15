@@ -97,11 +97,10 @@ All manifests are validated against a strict schema on load:
 
 For Hylé users:
 
-1. **Review Before Pull**: Always inspect `hyle.yaml` in a substrate before pulling it
+1. **Review Before Pull**: Always inspect `hyle.yaml` before pulling it
 2. **Use HTTPS**: Configure registry URLs with `https://` (default)
 3. **Version Pinning**: Pin model versions in `hyle.yaml` for reproducibility
-4. **Audit Logging**: Use `hyle watch --audit` to generate hash-chained audit logs
-5. **Offline Mode**: Use `hyle --offline` when working without network access
+4. **Offline Mode**: Use `hyle --offline` when working without network access
 
 For Hylé maintainers:
 

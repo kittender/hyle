@@ -48,7 +48,7 @@ Quick reference for shipping releases. See [SECURITY_AUDIT.md](SECURITY_AUDIT.md
 2. Tag: `git tag v0.2.0-rc1`
 3. Push: `git push origin v0.2.0-rc1`
 4. CI auto-builds binaries
-5. Deploy to `staging.registry.hyle.dev` (or test env)
+5. Deploy to `staging.registry.hylé.com` (or test env)
 
 **Smoke tests on staging (30 min):**
 ```bash
@@ -59,7 +59,7 @@ hyle pull org/test-substrate
 hyle init && hyle push  # test publish
 
 # Check logs for errors
-curl https://staging.registry.hyle.dev/health
+curl https://staging.registry.hylé.com/health
 ```
 
 ---
@@ -71,7 +71,7 @@ curl https://staging.registry.hyle.dev/health
 1. Merge to `main`
 2. Tag: `git tag v0.2.0`
 3. Push: `git push origin v0.2.0`
-4. Deploy to `registry.hyle.dev` (zero-downtime if possible)
+4. Deploy to `registry.hylé.com` (zero-downtime if possible)
 5. Monitor for 24h (error rate, latency, scans)
 
 **Announce only after 24h stable.**

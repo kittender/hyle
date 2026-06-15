@@ -5,9 +5,6 @@ import { confirm, password } from "@clack/prompts";
 import { dump, load } from "js-yaml";
 
 const KNOWN_EXTENSIONS: Record<string, string[]> = {
-	watch: [],
-	"watch-audit": [],
-	"watch-split": [],
 	index: ["ANTHROPIC_API_KEY"],
 	"identities-structure": ["ANTHROPIC_API_KEY"],
 	"ontology-structure": ["ANTHROPIC_API_KEY"],

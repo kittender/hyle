@@ -4,17 +4,35 @@ import * as semver from "semver";
 
 // ---- Types ----
 
-export interface ModelConfig {
-	provider: string;
-	model: string;
-	model_pin?: string;
-	tags?: string[];
-	fallback?: ModelConfig[];
+export interface Recommendations {
+	universal?: string[];
+	budget?: string[];
+	offline?: string[];
+	advanced?: string[];
+	harness?: string[];
+	[key: string]: string[] | undefined;
 }
 
-export interface Models {
-	primary: ModelConfig;
-	secondary: ModelConfig;
+export interface Blueprint {
+	ontology?: string[];
+	craft?: string[];
+	identities?: string[];
+	ethics?: string[];
+	overrides?: string[];
+}
+
+export type MergeStrategy = "replace" | "append" | "merge-by-name";
+
+export interface MergePolicy {
+	dependencies?: MergeStrategy;
+	recommendations?: MergeStrategy;
+	blueprint?: {
+		ontology?: MergeStrategy;
+		craft?: MergeStrategy;
+		identities?: MergeStrategy;
+		ethics?: MergeStrategy;
+		overrides?: MergeStrategy;
+	};
 }
 
 export type InstallMethod =
@@ -44,17 +62,17 @@ export interface HyleManifest {
 	version: string;
 	tags?: string[];
 	url?: string;
+	license?: string;
 	forks?: string[];
-	extends?: string;
+	extends?: string[];
 
-	models: Models;
+	recommendations?: Recommendations;
 
 	dependencies?: DepEntry[];
 
-	ontology?: string[];
-	craft?: string[];
-	identities?: string[];
-	ethics?: string[];
+	blueprint?: Blueprint;
+
+	merge_policy?: MergePolicy;
 }
 
 // ---- Errors ----
@@ -84,7 +102,6 @@ export class ManifestParseError extends Error {
 // ---- Parsing ----
 
 export const SLUG_RE = /^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$/;
-export const MAX_FALLBACK_DEPTH = 5;
 
 export function parseManifest(yaml: string): HyleManifest {
 	let raw: unknown;
@@ -109,21 +126,23 @@ export function parseManifest(yaml: string): HyleManifest {
 	const version = coerceString(obj.version);
 	if (!version) throw new ManifestParseError("Missing required field: version");
 
-	if (
-		!obj.models ||
-		typeof obj.models !== "object" ||
-		Array.isArray(obj.models)
-	) {
-		throw new ManifestParseError("Missing required field: models");
-	}
-
-	const modelsRaw = obj.models as Record<string, unknown>;
-
-	if (!modelsRaw.primary) {
-		throw new ManifestParseError("Missing required field: models.primary");
-	}
-	if (!modelsRaw.secondary) {
-		throw new ManifestParseError("Missing required field: models.secondary");
+	const blueprint = parseBlueprint(obj.blueprint);
+	const recommendations = parseRecommendations(obj.recommendations);
+	const mergePolicy = parseMergePolicy(obj.merge_policy);
+	const extendsRaw = obj.extends;
+	let extendsArray: string[] | undefined;
+	if (extendsRaw !== undefined) {
+		if (typeof extendsRaw === "string") {
+			extendsArray = [extendsRaw];
+		} else if (Array.isArray(extendsRaw)) {
+			extendsArray = extendsRaw.map((v) => {
+				const s = coerceString(v);
+				if (!s) throw new ManifestParseError("extends entries must be non-empty strings");
+				return s;
+			});
+		} else {
+			throw new ManifestParseError("extends must be a string or array of strings");
+		}
 	}
 
 	return {
@@ -133,54 +152,100 @@ export function parseManifest(yaml: string): HyleManifest {
 		description: coerceString(obj.description),
 		tags: coerceStringArray(obj.tags),
 		url: coerceString(obj.url),
+		license: coerceString(obj.license),
 		forks: coerceStringArray(obj.forks),
-		extends: coerceString(obj.extends),
-		models: {
-			primary: parseModelConfig(modelsRaw.primary, "models.primary"),
-			secondary: parseModelConfig(modelsRaw.secondary, "models.secondary"),
-		},
+		extends: extendsArray,
+		recommendations,
 		dependencies: parseDeps(obj.dependencies),
+		blueprint,
+		merge_policy: mergePolicy,
+	};
+}
+
+function parseBlueprint(raw: unknown): Blueprint | undefined {
+	if (raw === undefined || raw === null) return undefined;
+	if (typeof raw !== "object" || Array.isArray(raw)) {
+		throw new ManifestParseError("blueprint must be an object");
+	}
+	const obj = raw as Record<string, unknown>;
+
+	return {
 		ontology: coerceStringArray(obj.ontology),
 		craft: coerceStringArray(obj.craft),
 		identities: coerceStringArray(obj.identities),
 		ethics: coerceStringArray(obj.ethics),
+		overrides: coerceStringArray(obj.overrides),
 	};
 }
 
-function parseModelConfig(raw: unknown, path: string): ModelConfig {
-	if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
-		throw new ManifestParseError(`${path} must be an object`);
+function parseRecommendations(raw: unknown): Recommendations | undefined {
+	if (raw === undefined || raw === null) return undefined;
+	if (typeof raw !== "object" || Array.isArray(raw)) {
+		throw new ManifestParseError("recommendations must be an object");
 	}
 	const obj = raw as Record<string, unknown>;
 
-	// Require key presence (structural), but allow empty strings — validation catches content issues
-	if (!("provider" in obj))
-		throw new ManifestParseError(`Missing required field: ${path}.provider`);
-	if (!("model" in obj))
-		throw new ManifestParseError(`Missing required field: ${path}.model`);
+	const result: Recommendations = {};
+	for (const [key, value] of Object.entries(obj)) {
+		const arr = coerceStringArray(value);
+		if (arr) {
+			result[key] = arr;
+		}
+	}
+	return Object.keys(result).length > 0 ? result : undefined;
+}
 
-	const provider =
-		obj.provider === null || obj.provider === undefined
-			? ""
-			: String(obj.provider);
-	const model =
-		obj.model === null || obj.model === undefined ? "" : String(obj.model);
+function parseMergePolicy(raw: unknown): MergePolicy | undefined {
+	if (raw === undefined || raw === null) return undefined;
+	if (typeof raw !== "object" || Array.isArray(raw)) {
+		throw new ManifestParseError("merge_policy must be an object");
+	}
+	const obj = raw as Record<string, unknown>;
 
-	const result: ModelConfig = { provider, model };
+	const validateStrategy = (s: unknown): MergeStrategy | undefined => {
+		if (s === "replace" || s === "append" || s === "merge-by-name")
+			return s;
+		return undefined;
+	};
 
-	const pin = coerceString(obj.model_pin);
-	if (pin) result.model_pin = pin;
+	const policy: MergePolicy = {};
 
-	const tags = coerceStringArray(obj.tags);
-	if (tags) result.tags = tags;
-
-	if (Array.isArray(obj.fallback)) {
-		result.fallback = obj.fallback.map((entry, i) =>
-			parseModelConfig(entry, `${path}.fallback[${i}]`),
-		);
+	if (obj.dependencies !== undefined) {
+		const deps = validateStrategy(obj.dependencies);
+		if (!deps)
+			throw new ManifestParseError(
+				'merge_policy.dependencies must be "replace", "append", or "merge-by-name"',
+			);
+		policy.dependencies = deps;
 	}
 
-	return result;
+	if (obj.recommendations !== undefined) {
+		const recs = validateStrategy(obj.recommendations);
+		if (!recs)
+			throw new ManifestParseError(
+				'merge_policy.recommendations must be "replace", "append", or "merge-by-name"',
+			);
+		policy.recommendations = recs;
+	}
+
+	if (obj.blueprint !== undefined) {
+		if (typeof obj.blueprint !== "object" || Array.isArray(obj.blueprint)) {
+			throw new ManifestParseError("merge_policy.blueprint must be an object");
+		}
+		const bp = obj.blueprint as Record<string, unknown>;
+		policy.blueprint = {};
+
+		for (const [key, value] of Object.entries(bp)) {
+			const valid = validateStrategy(value);
+			if (!valid)
+				throw new ManifestParseError(
+					`merge_policy.blueprint.${key} must be "replace", "append", or "merge-by-name"`,
+				);
+			(policy.blueprint as Record<string, MergeStrategy>)[key] = valid;
+		}
+	}
+
+	return Object.keys(policy).length > 0 ? policy : undefined;
 }
 
 function parseInstallMethod(raw: unknown, path: string): InstallMethod {
@@ -345,35 +410,45 @@ export function validateManifest(m: HyleManifest): ValidationResult {
 
 	// extends
 	if (m.extends !== undefined) {
-		const extendsErr = validateExtendsRef(m.extends);
-		if (extendsErr) {
-			errors.push({ field: "extends", message: extendsErr });
-		} else {
-			const [extAuthor, extName] = parseSubstrateRef(m.extends);
-			if (extAuthor === m.author && extName === m.name) {
-				errors.push({
-					field: "extends",
-					message: "Circular extends: substrate cannot extend itself",
-				});
+		const extendsDepth = m.extends.length;
+		if (extendsDepth > 2) {
+			errors.push({
+				field: "extends",
+				message: `Max inheritance depth is 2 (you have ${extendsDepth})`,
+			});
+		}
+		for (let i = 0; i < m.extends.length; i++) {
+			const extRef = m.extends[i];
+			const extendsErr = validateExtendsRef(extRef);
+			if (extendsErr) {
+				errors.push({ field: `extends[${i}]`, message: extendsErr });
+			} else {
+				const [extAuthor, extName] = parseSubstrateRef(extRef);
+				if (extAuthor === m.author && extName === m.name) {
+					errors.push({
+						field: `extends[${i}]`,
+						message: "Circular extends: substrate cannot extend itself",
+					});
+				}
 			}
 		}
 	}
 
-	// models — true = check local fallback warning (only at top level)
-	validateModelConfig(
-		m.models.primary,
-		"models.primary",
-		errors,
-		warnings,
-		true,
-	);
-	validateModelConfig(
-		m.models.secondary,
-		"models.secondary",
-		errors,
-		warnings,
-		true,
-	);
+	// forks
+	if (m.forks !== undefined) {
+		for (let i = 0; i < m.forks.length; i++) {
+			const forkRef = m.forks[i];
+			const forkErr = validateExtendsRef(forkRef);
+			if (forkErr) {
+				errors.push({ field: `forks[${i}]`, message: forkErr });
+			}
+		}
+	}
+
+	// recommendations
+	if (m.recommendations !== undefined) {
+		validateRecommendations(m.recommendations, errors);
+	}
 
 	// dependencies
 	if (m.dependencies) {
@@ -417,22 +492,25 @@ export function validateManifest(m: HyleManifest): ValidationResult {
 		}
 	}
 
-	// path arrays
-	for (const category of [
-		"ontology",
-		"craft",
-		"identities",
-		"ethics",
-	] as const) {
-		const paths = m[category];
-		if (paths) {
-			for (let i = 0; i < paths.length; i++) {
-				if (isUnsafePath(paths[i])) {
-					errors.push({
-						field: `${category}[${i}]`,
-						message:
-							"Must be a relative path (no absolute paths, no ../ traversal)",
-					});
+	// path arrays in blueprint
+	if (m.blueprint) {
+		for (const category of [
+			"ontology",
+			"craft",
+			"identities",
+			"ethics",
+			"overrides",
+		] as const) {
+			const paths = m.blueprint[category];
+			if (paths) {
+				for (let i = 0; i < paths.length; i++) {
+					if (isUnsafePath(paths[i])) {
+						errors.push({
+							field: `blueprint.${category}[${i}]`,
+							message:
+								"Must be a relative path (no absolute paths, no ../ traversal)",
+						});
+					}
 				}
 			}
 		}
@@ -441,64 +519,118 @@ export function validateManifest(m: HyleManifest): ValidationResult {
 	return { errors, warnings };
 }
 
-function validateModelConfig(
-	m: ModelConfig,
-	path: string,
+function validateRecommendations(
+	recs: Recommendations,
 	errors: ValidationError[],
-	warnings: ValidationWarning[],
-	warnLocalFallback = false,
-	depth = 0,
 ): void {
-	if (!m.provider) {
-		errors.push({
-			field: `${path}.provider`,
-			message: "Required, must be non-empty",
-		});
-	}
-	if (!m.model) {
-		errors.push({
-			field: `${path}.model`,
-			message: "Required, must be non-empty",
-		});
-	}
-	if (m.model_pin !== undefined && !m.model_pin) {
-		errors.push({
-			field: `${path}.model_pin`,
-			message: "If present, must be non-empty",
-		});
-	}
+	const modelPattern = /^[a-z0-9-]+\/[a-z0-9-:._@/]+$/i;
 
-	const fallback = m.fallback ?? [];
-
-	if (depth >= MAX_FALLBACK_DEPTH && fallback.length > 0) {
-		errors.push({
-			field: `${path}.fallback`,
-			message: `Fallback chain too deep (max depth ${MAX_FALLBACK_DEPTH})`,
-		});
+	for (const [category, models] of Object.entries(recs)) {
+		if (!models) continue;
+		for (let i = 0; i < models.length; i++) {
+			const model = models[i];
+			if (!modelPattern.test(model)) {
+				errors.push({
+					field: `recommendations.${category}[${i}]`,
+					message: `Must be in format 'provider/model-id' (e.g., 'anthropic/claude-sonnet-4-6', 'ollama/qwen2.5:14b')`,
+				});
+			}
+		}
 	}
+}
 
-	if (warnLocalFallback) {
-		const hasLocalFallback = fallback.some((f) => f.tags?.includes("local"));
-		if (!hasLocalFallback) {
-			warnings.push({
-				field: `${path}.fallback`,
-				message:
-					"No local fallback declared (recommend adding an Ollama entry with tags: [local, free])",
-			});
+
+// ---- Manifest Merging ----
+
+export function mergeManifests(
+	parentManifests: HyleManifest[],
+	childManifest: HyleManifest,
+): HyleManifest {
+	// Merge in order: parent1, parent2, ..., child (child wins on default strategy)
+	const policy = childManifest.merge_policy || {};
+	let merged: HyleManifest = { ...childManifest };
+
+	// Start with all parents in order, then apply child
+	const allManifests = [...parentManifests, childManifest];
+
+	// Initialize collections
+	let allDeps: DepEntry[] = [];
+	let allRecs: Recommendations = {};
+	let allBlueprint: Record<string, string[]> = {
+		ontology: [],
+		craft: [],
+		identities: [],
+		ethics: [],
+		overrides: [],
+	};
+
+	// Collect all values in order
+	for (const manifest of allManifests) {
+		if (manifest.dependencies) allDeps.push(...manifest.dependencies);
+		if (manifest.recommendations) allRecs = { ...allRecs, ...manifest.recommendations };
+		if (manifest.blueprint) {
+			for (const cat of ["ontology", "craft", "identities", "ethics", "overrides"] as const) {
+				if (manifest.blueprint[cat]) {
+					allBlueprint[cat].push(...manifest.blueprint[cat]);
+				}
+			}
 		}
 	}
 
-	for (let i = 0; i < fallback.length; i++) {
-		// Don't recurse warnLocalFallback — fallback entries don't need their own local fallback
-		validateModelConfig(
-			fallback[i],
-			`${path}.fallback[${i}]`,
-			errors,
-			warnings,
-			false,
-			depth + 1,
-		);
+	// Apply merge strategy
+	const depStrategy = policy.dependencies || "replace";
+	if (depStrategy === "append") {
+		merged.dependencies = allDeps;
+	} else if (depStrategy === "merge-by-name") {
+		const depMap = new Map<string, DepEntry>();
+		for (const dep of allDeps) {
+			depMap.set(dep.name, dep);
+		}
+		merged.dependencies = Array.from(depMap.values());
+	} else {
+		// "replace" — child wins
+		merged.dependencies = childManifest.dependencies;
 	}
+
+	const recStrategy = policy.recommendations || "replace";
+	if (recStrategy === "append" || recStrategy === "merge-by-name") {
+		merged.recommendations = allRecs;
+	} else {
+		// "replace" — child wins
+		merged.recommendations = childManifest.recommendations;
+	}
+
+	// Blueprint paths
+	const bpPolicy = policy.blueprint || {};
+	merged.blueprint = merged.blueprint || {};
+	for (const cat of ["ontology", "craft", "identities", "ethics", "overrides"] as const) {
+		const catStrategy = bpPolicy[cat] || "replace";
+		if (catStrategy === "append") {
+			merged.blueprint[cat] = allBlueprint[cat];
+		} else if (catStrategy === "merge-by-name") {
+			merged.blueprint[cat] = Array.from(new Set(allBlueprint[cat]));
+		} else {
+			// "replace" — child wins
+			merged.blueprint[cat] = childManifest.blueprint?.[cat];
+		}
+	}
+
+	return merged;
+}
+
+function mergeRecommendations(
+	parent: Recommendations,
+	child: Recommendations | undefined,
+): Recommendations {
+	const result: Recommendations = { ...parent };
+	if (!child) return result;
+
+	for (const [key, values] of Object.entries(child)) {
+		if (values) {
+			result[key] = values;
+		}
+	}
+	return result;
 }
 
 // ---- Helpers ----

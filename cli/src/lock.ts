@@ -9,13 +9,20 @@ export interface FileChecksum {
 	checksum: string;
 }
 
+export interface ExtendsEntry {
+	author: string;
+	name: string;
+	version: string;
+}
+
 export interface LockEntry {
 	name: string;
 	author: string;
 	version: string;
 	bundle_checksum: string;
 	pulled_at: string;
-	extends_from?: string;
+	extends_from?: ExtendsEntry[];
+	merged_manifest?: HyleManifest;
 	files: FileChecksum[];
 }
 
@@ -66,19 +73,22 @@ export function computeFileChecksums(
 ): FileChecksum[] {
 	const checksums: FileChecksum[] = [];
 
-	// Gather all file paths from manifest
+	// Gather all file paths from manifest blueprint
 	const filePaths = new Set<string>();
-	for (const path of manifest.ontology ?? []) {
-		filePaths.add(path);
-	}
-	for (const path of manifest.craft ?? []) {
-		filePaths.add(path);
-	}
-	for (const path of manifest.identities ?? []) {
-		filePaths.add(path);
-	}
-	for (const path of manifest.ethics ?? []) {
-		filePaths.add(path);
+	const blueprint = manifest.blueprint;
+	if (blueprint) {
+		for (const path of blueprint.ontology ?? []) {
+			filePaths.add(path);
+		}
+		for (const path of blueprint.craft ?? []) {
+			filePaths.add(path);
+		}
+		for (const path of blueprint.identities ?? []) {
+			filePaths.add(path);
+		}
+		for (const path of blueprint.ethics ?? []) {
+			filePaths.add(path);
+		}
 	}
 
 	// Compute checksums

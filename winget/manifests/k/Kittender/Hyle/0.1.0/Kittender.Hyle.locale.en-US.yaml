@@ -6,6 +6,6 @@ PackageName: Hylé
 License: MIT
 ShortDescription: AI context substrate manager
 Description: Package, share, and install versioned snapshots of AI agent workflows. Manages CLAUDE.md, agent identities, MCP configs, and ethics policies.
-PackageUrl: https://hyle.dev
+PackageUrl: https://hylé.com
 ManifestType: defaultLocale
 ManifestVersion: 1.6.0

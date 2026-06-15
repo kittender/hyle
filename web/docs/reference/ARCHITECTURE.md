@@ -41,24 +41,12 @@ graph LR
 
 ---
 
-## Known Design Issues
+---
 
-Full details in [ARCHITECTURE_ISSUES.md](ARCHITECTURE_ISSUES.md) — here's a summary:
+## See Also
 
-| Issue | Status | Details |
-|-------|--------|---------|
-| 1. Registry trust model | ⏳ Partial | Manifest scan covers behavioral keywords; needs blocking + diff preview (Phase 5D) |
-| 2. Client lock-in | ❌ Not started | CLI scans don't find non-Claude clients; Phase 5D task |
-| 3. `hyle watch --split` | ⏳ Proposed | Replace with `--budget` cost tracking (Phase 5D) |
-| 4. GDPR audit trail | ⏳ Proposed | Move to enterprise extension (Phase 5D) |
-| 5. Model-pin email | ✅ Resolved | Implemented as CLI warning on push + `hyle outdated` |
-| 6. `hyle.json` weight | ⏳ Proposed | Switch to user-declared priority in hyle.yaml (Phase 5D) |
-| 7. Private blueprints | ✅ Resolved | Private GitHub repos = private blueprints (by design, no extra work) |
-| 8. No drift detection | ✅ Resolved | hyle.lock + outdated + upgrade + verify (v0.2.0) |
-| 9. No CI integration | ✅ Resolved | `hyle verify` with exit codes (v0.2.0) |
-| 10. No composition | ✅ Resolved | `extends` field implemented (v0.2.0) |
-
-**Security findings:** See [SECURITY_AUDIT.md](SECURITY_AUDIT.md) for threat model, P0-P10 issues, and verification checklist.
+- [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) — Current constraints + known issues (what doesn't work yet)
+- [SECURITY_AUDIT.md](SECURITY_AUDIT.md) — Threat model, P0-P10 findings, verification checklist
 
 ---
 
@@ -77,34 +65,42 @@ Full details in [ARCHITECTURE_ISSUES.md](ARCHITECTURE_ISSUES.md) — here's a su
 
 ## Model Configuration
 
-Substrates declare both `primary` (complex tasks) and `secondary` (lightweight) models, each with independent fallback chains:
+Blueprints declare recommendations: which LLMs author tested.
 
 ```yaml
-models:
-  primary:
-    provider: anthropic
-    model: "claude-sonnet-4-6"
-    model_pin: "claude-sonnet-4-6-20260101"  # optional: pin exact checkpoint
-    fallback:
-      - provider: openai
-        model: "gpt-4o"
-      - provider: ollama
-        model: "qwen2.5:14b"
+recommendations:
+  universal:
+    - anthropic/claude-sonnet-4-6
+    - openai/gpt-4o
+    - ollama/qwen2.5:14b
+  
+  budget:
+    - anthropic/claude-haiku-4-5
+    - openai/gpt-4o-mini
+    - ollama/qwen2.5:7b
+  
+  offline:
+    - ollama/qwen2.5:14b
+  
+  harness:
+    - bedrock/anthropic.claude-3-sonnet
+    - cursor/claude-sonnet-4-6
 ```
 
-Fallback resolution tries each entry in order; skips entries whose provider reports quota exhausted or is unreachable. Entries with `tags: [local, free]` are always tried last.
+Users choose their LLM freely. Recommendations help discover tested setups. Registry filters blueprints by recommendation category (e.g., `--category budget`, `--harness bedrock`).
 
 ---
 
 ---
-
 
 ## See Also
 
-- [README.md](README.md) — Product overview
+- [README.md](../README.md) — Product overview
 - [CONFIG.md](CONFIG.md) — Configuration reference
-- [ROADMAP.md](ROADMAP.md) — Roadmap, phases, shipped features
-- [SECURITY_AUDIT.md](SECURITY_AUDIT.md) — Threat model, findings
-- [DEPLOYMENT.md](DEPLOYMENT.md) — Operations, monitoring
-- [CONTRIBUTING.md](CONTRIBUTING.md) — Dev setup, testing
-- [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) — Pre-ship checklist
+- [ROADMAP.md](../ROADMAP.md) — Roadmap, phases, shipped features
+- [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) — Current constraints
+- [SECURITY_AUDIT.md](../security/SECURITY_AUDIT.md) — Threat model, findings
+- [DEPLOYMENT_QUICK_START.md](../operations/DEPLOYMENT_QUICK_START.md) — 5-minute setup
+- [DEPLOYMENT.md](../operations/DEPLOYMENT.md) — Production operations
+- [CONTRIBUTING.md](../guides/CONTRIBUTING.md) — Dev setup, testing
+- [RELEASE_CHECKLIST.md](../operations/RELEASE_CHECKLIST.md) — Pre-ship checklist

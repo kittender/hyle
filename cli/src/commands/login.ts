@@ -117,7 +117,7 @@ export function getStoredAuth(): AuthConfig | null {
 }
 
 export async function runLogin(options: { registryUrl?: string } = {}): Promise<void> {
-  const registryUrl = options.registryUrl || process.env.HYLE_REGISTRY || "https://registry.hyle.dev";
+  const registryUrl = options.registryUrl || process.env.HYLE_REGISTRY || "https://registry.hylé.com";
 
   console.log("Opening browser for authentication...");
   console.log(`Visit: ${registryUrl}/auth/github?cli=1`);

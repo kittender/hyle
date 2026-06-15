@@ -25,19 +25,13 @@ Complex, high-intelligence tasks that need:
 - "Review this code for security vulnerabilities"
 - "Refactor this class to use dependency injection"
 
-**Model choice**: Use most capable model available
-```yaml
-models:
-  primary:
-    provider: anthropic
-    model: claude-sonnet-4-6    # Most capable
-```
+**Guidance**: Recommend capable models in your `recommendations` block. Users choose which to use.
 
 ---
 
-## Secondary Model
+## Lightweight Tasks
 
-Lightweight, deterministic tasks that don't need complex reasoning:
+Some tasks don't need complex reasoning:
 - Text summarization
 - Code formatting/linting
 - Test case generation from template
@@ -51,13 +45,7 @@ Lightweight, deterministic tasks that don't need complex reasoning:
 - "Format this JSON with 2-space indent"
 - "Is this email spam? (yes/no)"
 
-**Model choice**: Use cheaper, faster model
-```yaml
-models:
-  secondary:
-    provider: anthropic
-    model: claude-haiku-4-5     # Cheaper, faster
-```
+**Guidance**: If you tested with cheaper/faster models for these tasks, list them in recommendations (e.g., budget category).
 
 ---
 
@@ -101,80 +89,40 @@ For summarization or formatting, Haiku answers just as accurately and ~5× faste
 
 ---
 
-## Configuration
+## Model Recommendations (Optional)
 
-### Minimal (No Secondary)
-
-If all your tasks need complex reasoning, use only primary:
-```yaml
-models:
-  primary:
-    provider: anthropic
-    model: claude-sonnet-4-6
-```
-
-Extensions (`hyle watch`, `hyle index`) fall back to primary.
-
----
-
-### Full (Primary + Secondary)
-
-If you want to optimize cost:
-```yaml
-models:
-  primary:
-    provider: anthropic
-    model: claude-sonnet-4-6
-  secondary:
-    provider: anthropic
-    model: claude-haiku-4-5
-```
-
----
-
-## Fallback Chains (Optional)
-
-Add alternative models if primary/secondary unavailable (e.g., API quota hit, network down).
+Share which LLMs and harnesses you tested. Helps users discover working setups. (This is feedback, not enforcement — users can try any model.)
 
 ```yaml
-models:
-  primary:
-    provider: anthropic
-    model: claude-sonnet-4-6
-    fallback:
-      - provider: openai
-        model: gpt-4o              # If Claude unavailable
-      - provider: ollama
-        model: qwen2.5:14b         # If OpenAI unavailable (local)
-  secondary:
-    provider: anthropic
-    model: claude-haiku-4-5
-    fallback:
-      - provider: ollama
-        model: qwen2.5:7b
+recommendations:
+  universal:                    # Tested with capable models
+    - anthropic/claude-sonnet-4-6
+    - openai/gpt-4o
+    - ollama/qwen2.5:14b
+  
+  budget:                       # Tested with small/cheap models
+    - anthropic/claude-haiku-4-5
+    - openai/gpt-4o-mini
+    - ollama/qwen2.5:7b
+  
+  offline:                      # Tested with local models
+    - ollama/qwen2.5:14b
+  
+  harness:                      # Tested on specific harnesses
+    - bedrock/anthropic.claude-3-sonnet
+    - cursor/claude-sonnet-4-6
 ```
 
-Hylé tries each in order. Last entry (local Ollama) is tried last. See [Configuration](CONFIG.md) for full fallback docs.
-
----
-
-## Model Pinning
-
-Optional: pin exact model checkpoint for reproducibility.
-
-```yaml
-models:
-  primary:
-    model: claude-sonnet-4-6              # Always latest
-    model_pin: claude-sonnet-4-6-20260115 # Exact checkpoint
+**Complement with tags:** Also add LLM provider tags (`claude`, `anthropic`, `openai`, `gemini`, `ollama`, etc.) so users can search:
+```bash
+hyle search claude java           # Find blueprints tagged with both claude + java
+hyle search openai security      # OpenAI-friendly blueprints with security focus
+hyle search ollama offline       # Local/offline blueprints using Ollama
 ```
 
-**When to pin**:
-- Compliance/audit requirements (reproducible results)
-- Published research (fixed baseline for comparisons)
-- Otherwise: leave unpinned (get improvements automatically)
+**If no `recommendations` block:** Blueprint has no recommendations yet (users discover via trial).
 
-When you pin, Hylé emails you monthly if a newer checkpoint is available.
+See [Configuration](CONFIG.md) for full recommendations docs.
 
 ---
 
@@ -183,25 +131,20 @@ When you pin, Hylé emails you monthly if a newer checkpoint is available.
 **Enterprise scenario**: 100+ developers, microservices, QA automation.
 
 ```yaml
-models:
-  primary:
-    provider: anthropic
-    model: claude-sonnet-4-6      # Architecture reviews, security audits
-    fallback:
-      - provider: openai
-        model: gpt-4o             # Fallback if Claude quota hit
-      - provider: ollama
-        model: qwen2.5:14b        # Local Ollama for offline work
-  secondary:
-    provider: anthropic
-    model: claude-haiku-4-5       # Test generation, formatting, summaries
-    fallback:
-      - provider: ollama
-        model: qwen2.5:7b
+recommendations:
+  universal:
+    - anthropic/claude-sonnet-4-6  # For architecture reviews, security audits
+    - openai/gpt-4o
+    - ollama/qwen2.5:14b
+  budget:
+    - anthropic/claude-haiku-4-5   # For test generation, formatting, summaries
+    - openai/gpt-4o-mini
+    - ollama/qwen2.5:7b
+  offline:
+    - ollama/qwen2.5:14b
 ```
 
-**Token savings**: ~40% over using primary for all tasks.
-**Developer experience**: Fast responses (Haiku latency for simple tasks), smart decisions (Sonnet for complex work).
+**Guidance for teams**: Sonnet for complex reasoning, Haiku/Ollama for simple tasks. Choose from recommendations matching your budget/setup.
 
 ---
 
@@ -209,8 +152,7 @@ models:
 
 1. **Use secondary for batch work**: Formatting 50 test files → route to Haiku
 2. **Reserve primary for reasoning**: "Does this design follow SOLID?" → Sonnet
-3. **Set up fallbacks**: Prevents quota-related delays during peak hours
-4. **Monitor actual usage**: `hyle watch` (extension) shows token breakdown
+3. **Declare compatibility**: Help users choose appropriate LLMs for their budget/setup
 
 ---
 
@@ -220,28 +162,25 @@ models:
 A: Not necessarily. For *reviewing* security policy (requires judgment), use primary. For *formatting* policy code, use secondary. Route based on task, not domain.
 
 **Q: What if I can't afford Anthropic models?**
-A: Set fallback to OpenAI free-tier or local Ollama:
+A: Declare budget recommendations:
 ```yaml
-models:
-  primary:
-    provider: openai
-    model: gpt-4o-mini
-    fallback:
-      - provider: ollama
-        model: qwen2.5:14b
+recommendations:
+  budget:
+    - openai/gpt-4o-mini
+    - ollama/qwen2.5:14b
 ```
 
-**Q: Can I use different providers for primary and secondary?**
-A: Yes! Mix and match:
+Users can then find it: `hyle search --category budget`
+
+**Q: Can I recommend different providers?**
+A: Yes! Mix and match in recommendations:
 ```yaml
-models:
-  primary:
-    provider: anthropic
-    model: claude-sonnet-4-6
-  secondary:
-    provider: ollama
-    model: qwen2.5:7b          # Offline secondary for privacy
+recommendations:
+  universal:
+    - anthropic/claude-sonnet-4-6  # Your main choice
+    - openai/gpt-4o
+    - ollama/qwen2.5:14b           # Offline option
 ```
 
-**Q: How does Hylé decide which model to use?**
-A: You configure it in `hyle.yaml`. Tools specify which model they need (primary/secondary), Hylé loads that config.
+**Q: How do users choose which model to use?**
+A: Users decide freely (recommendations are just feedback). If they want guidance, check your README or recommendations section.

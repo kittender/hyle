@@ -1,6 +1,6 @@
 import { expect, test, describe } from "bun:test";
 import { dump } from "js-yaml";
-import { parseManifest, validateManifest, validateExtendsRef, parseSubstrateRef, ManifestParseError } from "../src/manifest";
+import { parseManifest, validateManifest, validateExtendsRef, parseSubstrateRef, mergeManifests, ManifestParseError } from "../src/manifest";
 
 // ---- Helpers ----
 
@@ -9,10 +9,6 @@ function minimalYaml(overrides: Record<string, unknown> = {}): string {
     name: "my-substrate",
     author: "alice",
     version: "0.1.0",
-    models: {
-      primary: { provider: "anthropic", model: "claude-sonnet-4-6" },
-      secondary: { provider: "anthropic", model: "claude-haiku-4-5" },
-    },
     ...overrides,
   };
   return dump(base);
@@ -26,24 +22,34 @@ describe("parseManifest — valid", () => {
     expect(m.name).toBe("my-substrate");
     expect(m.author).toBe("alice");
     expect(m.version).toBe("0.1.0");
-    expect(m.models.primary.provider).toBe("anthropic");
-    expect(m.models.secondary.model).toBe("claude-haiku-4-5");
+    expect(m.blueprint).toBeUndefined();
+    expect(m.recommendations).toBeUndefined();
   });
 
-  test("model_pin present is valid", () => {
+  test("recommendations with multiple categories is valid", () => {
     const yaml = minimalYaml({
-      models: {
-        primary: { provider: "anthropic", model: "claude-sonnet-4-6", model_pin: "claude-sonnet-4-6-20260101" },
-        secondary: { provider: "anthropic", model: "claude-haiku-4-5" },
+      recommendations: {
+        universal: ["anthropic/claude-sonnet-4-6", "openai/gpt-4o"],
+        budget: ["anthropic/claude-haiku-4-5", "openai/gpt-4o-mini"],
       },
     });
     const m = parseManifest(yaml);
-    expect(m.models.primary.model_pin).toBe("claude-sonnet-4-6-20260101");
+    expect(m.recommendations?.universal).toContain("anthropic/claude-sonnet-4-6");
+    expect(m.recommendations?.budget).toContain("anthropic/claude-haiku-4-5");
   });
 
-  test("model_pin absent is valid", () => {
-    const m = parseManifest(minimalYaml());
-    expect(m.models.primary.model_pin).toBeUndefined();
+  test("blueprint with all four categories is valid", () => {
+    const yaml = minimalYaml({
+      blueprint: {
+        ontology: ["CLAUDE.md"],
+        craft: ["ARCHITECTURE.md"],
+        identities: ["AGENTS.md"],
+        ethics: ["policies/*.cedar"],
+      },
+    });
+    const m = parseManifest(yaml);
+    expect(m.blueprint?.ontology).toEqual(["CLAUDE.md"]);
+    expect(m.blueprint?.craft).toEqual(["ARCHITECTURE.md"]);
   });
 
   test("dependencies with structured install is valid", () => {
@@ -101,35 +107,31 @@ describe("parseManifest — valid", () => {
     });
   });
 
-  test("fallback chain with Ollama local entry is valid", () => {
+  test("extends as single string (backward compat) is valid", () => {
     const yaml = minimalYaml({
-      models: {
-        primary: {
-          provider: "anthropic",
-          model: "claude-sonnet-4-6",
-          fallback: [{ provider: "ollama", model: "qwen2.5:14b", tags: ["local", "free"] }],
-        },
-        secondary: {
-          provider: "anthropic",
-          model: "claude-haiku-4-5",
-          fallback: [{ provider: "ollama", model: "qwen2.5:7b", tags: ["local", "free"] }],
-        },
+      extends: "alice/base@1.0.0",
+    });
+    const m = parseManifest(yaml);
+    expect(m.extends).toEqual(["alice/base@1.0.0"]);
+  });
+
+  test("extends as array is valid", () => {
+    const yaml = minimalYaml({
+      extends: ["alice/base@1.0.0", "alice/policies@2.0.0"],
+    });
+    const m = parseManifest(yaml);
+    expect(m.extends).toEqual(["alice/base@1.0.0", "alice/policies@2.0.0"]);
+  });
+
+  test("blueprint with overrides array is valid", () => {
+    const yaml = minimalYaml({
+      blueprint: {
+        ontology: ["CLAUDE.md", "docs/*.md"],
+        overrides: ["CLAUDE.md"],
       },
     });
     const m = parseManifest(yaml);
-    expect(m.models.primary.fallback![0].tags).toContain("local");
-  });
-
-  test("all four path arrays with entries", () => {
-    const yaml = minimalYaml({
-      ontology: ["CLAUDE.md", "docs/*.md"],
-      craft: ["SKILLS.md"],
-      identities: [".claude/agents/coder.md"],
-      ethics: ["policies.cedar"],
-    });
-    const m = parseManifest(yaml);
-    expect(m.ontology).toEqual(["CLAUDE.md", "docs/*.md"]);
-    expect(m.craft).toEqual(["SKILLS.md"]);
+    expect(m.blueprint?.overrides).toEqual(["CLAUDE.md"]);
   });
 });
 
@@ -137,23 +139,15 @@ describe("parseManifest — valid", () => {
 
 describe("parseManifest — invalid structure (throws)", () => {
   test("missing name throws", () => {
-    expect(() => parseManifest("author: alice\nversion: 0.1.0\nmodels:\n  primary:\n    provider: x\n    model: y\n  secondary:\n    provider: x\n    model: z")).toThrow(ManifestParseError);
+    expect(() => parseManifest("author: alice\nversion: 0.1.0")).toThrow(ManifestParseError);
   });
 
-  test("missing models throws", () => {
-    expect(() => parseManifest("name: foo\nauthor: alice\nversion: 0.1.0")).toThrow(ManifestParseError);
+  test("missing author throws", () => {
+    expect(() => parseManifest("name: foo\nversion: 0.1.0")).toThrow(ManifestParseError);
   });
 
-  test("missing models.primary throws", () => {
-    expect(() =>
-      parseManifest("name: foo\nauthor: alice\nversion: 0.1.0\nmodels:\n  secondary:\n    provider: x\n    model: y")
-    ).toThrow(ManifestParseError);
-  });
-
-  test("missing models.secondary throws", () => {
-    expect(() =>
-      parseManifest("name: foo\nauthor: alice\nversion: 0.1.0\nmodels:\n  primary:\n    provider: x\n    model: y")
-    ).toThrow(ManifestParseError);
+  test("missing version throws", () => {
+    expect(() => parseManifest("name: foo\nauthor: alice")).toThrow(ManifestParseError);
   });
 
   test("invalid YAML throws", () => {
@@ -311,11 +305,16 @@ describe("validateManifest — errors", () => {
     expect(errors.some((e) => e.field === "version")).toBe(false);
   });
 
-  test("models.primary.provider empty produces error", () => {
-    const yaml = `name: foo\nauthor: alice\nversion: 0.1.0\nmodels:\n  primary:\n    provider: ""\n    model: bar\n  secondary:\n    provider: x\n    model: y`;
-    const m = parseManifest(yaml);
+  test("recommendations with invalid model format produces error", () => {
+    const m = parseManifest(
+      minimalYaml({
+        recommendations: {
+          universal: ["invalid-model-format"],
+        },
+      })
+    );
     const { errors } = validateManifest(m);
-    expect(errors.some((e) => e.field === "models.primary.provider")).toBe(true);
+    expect(errors.some((e) => e.field === "recommendations.universal[0]")).toBe(true);
   });
 
   test("dependencies[0].version invalid range produces error", () => {
@@ -338,81 +337,86 @@ describe("validateManifest — errors", () => {
     expect(errors.some((e) => e.field === "dependencies[0].url")).toBe(true);
   });
 
-  test("ontology entry with absolute path produces error", () => {
-    const m = parseManifest(minimalYaml({ ontology: ["/etc/passwd"] }));
+  test("blueprint.ontology entry with absolute path produces error", () => {
+    const m = parseManifest(minimalYaml({ blueprint: { ontology: ["/etc/passwd"] } }));
     const { errors } = validateManifest(m);
-    expect(errors.some((e) => e.field === "ontology[0]")).toBe(true);
+    expect(errors.some((e) => e.field === "blueprint.ontology[0]")).toBe(true);
   });
 
-  test("ontology entry with ../ traversal produces error", () => {
-    const m = parseManifest(minimalYaml({ ontology: ["../secrets.md"] }));
+  test("blueprint.ontology entry with ../ traversal produces error", () => {
+    const m = parseManifest(minimalYaml({ blueprint: { ontology: ["../secrets.md"] } }));
     const { errors } = validateManifest(m);
-    expect(errors.some((e) => e.field === "ontology[0]")).toBe(true);
+    expect(errors.some((e) => e.field === "blueprint.ontology[0]")).toBe(true);
   });
 
-  test("ontology entry with ~/ path produces error", () => {
-    const m = parseManifest(minimalYaml({ ontology: ["~/private/doc.md"] }));
+  test("blueprint.ontology entry with ~/ path produces error", () => {
+    const m = parseManifest(minimalYaml({ blueprint: { ontology: ["~/private/doc.md"] } }));
     const { errors } = validateManifest(m);
-    expect(errors.some((e) => e.field === "ontology[0]")).toBe(true);
+    expect(errors.some((e) => e.field === "blueprint.ontology[0]")).toBe(true);
   });
 
-  test('ontology entry ".." (no slash) produces error', () => {
-    const m = parseManifest(minimalYaml({ ontology: [".."] }));
+  test('blueprint.ontology entry ".." (no slash) produces error', () => {
+    const m = parseManifest(minimalYaml({ blueprint: { ontology: [".."] } }));
     const { errors } = validateManifest(m);
-    expect(errors.some((e) => e.field === "ontology[0]")).toBe(true);
+    expect(errors.some((e) => e.field === "blueprint.ontology[0]")).toBe(true);
   });
 
-  test('ontology entry "foo/../../etc/passwd" produces error', () => {
-    const m = parseManifest(minimalYaml({ ontology: ["foo/../../etc/passwd"] }));
+  test('blueprint.ontology entry "foo/../../etc/passwd" produces error', () => {
+    const m = parseManifest(minimalYaml({ blueprint: { ontology: ["foo/../../etc/passwd"] } }));
     const { errors } = validateManifest(m);
-    expect(errors.some((e) => e.field === "ontology[0]")).toBe(true);
+    expect(errors.some((e) => e.field === "blueprint.ontology[0]")).toBe(true);
   });
 
-  test("ontology entry with Windows backslash separator produces error", () => {
-    const m = parseManifest(minimalYaml({ ontology: ["foo\\..\\bar"] }));
+  test("blueprint.ontology entry with Windows backslash separator produces error", () => {
+    const m = parseManifest(minimalYaml({ blueprint: { ontology: ["foo\\..\\bar"] } }));
     const { errors } = validateManifest(m);
-    expect(errors.some((e) => e.field === "ontology[0]")).toBe(true);
+    expect(errors.some((e) => e.field === "blueprint.ontology[0]")).toBe(true);
   });
 
-  test("ontology entry with null byte produces error", () => {
-    const m = parseManifest(minimalYaml({ ontology: ["path\x00file"] }));
+  test("blueprint.ontology entry with null byte produces error", () => {
+    const m = parseManifest(minimalYaml({ blueprint: { ontology: ["path\x00file"] } }));
     const { errors } = validateManifest(m);
-    expect(errors.some((e) => e.field === "ontology[0]")).toBe(true);
+    expect(errors.some((e) => e.field === "blueprint.ontology[0]")).toBe(true);
   });
 
-  test('"docs/spec.md" is safe', () => {
-    const m = parseManifest(minimalYaml({ ontology: ["docs/spec.md"] }));
+  test('"docs/spec.md" in blueprint.ontology is safe', () => {
+    const m = parseManifest(minimalYaml({ blueprint: { ontology: ["docs/spec.md"] } }));
     const { errors } = validateManifest(m);
-    expect(errors.some((e) => e.field === "ontology[0]")).toBe(false);
+    expect(errors.some((e) => e.field === "blueprint.ontology[0]")).toBe(false);
   });
 
-  test('"CLAUDE.md" is safe', () => {
-    const m = parseManifest(minimalYaml({ ontology: ["CLAUDE.md"] }));
+  test('"CLAUDE.md" in blueprint.ontology is safe', () => {
+    const m = parseManifest(minimalYaml({ blueprint: { ontology: ["CLAUDE.md"] } }));
     const { errors } = validateManifest(m);
-    expect(errors.some((e) => e.field === "ontology[0]")).toBe(false);
+    expect(errors.some((e) => e.field === "blueprint.ontology[0]")).toBe(false);
   });
 
-  test('".hidden/file.md" is safe', () => {
-    const m = parseManifest(minimalYaml({ ontology: [".hidden/file.md"] }));
+  test('".hidden/file.md" in blueprint.ontology is safe', () => {
+    const m = parseManifest(minimalYaml({ blueprint: { ontology: [".hidden/file.md"] } }));
     const { errors } = validateManifest(m);
-    expect(errors.some((e) => e.field === "ontology[0]")).toBe(false);
+    expect(errors.some((e) => e.field === "blueprint.ontology[0]")).toBe(false);
   });
 });
 
 // ---- Validate: warnings ----
 
 describe("validateManifest — warnings", () => {
-  test("no local fallback on primary produces warning", () => {
+  test("missing description produces warning", () => {
     const m = parseManifest(minimalYaml());
     const { errors, warnings } = validateManifest(m);
     expect(errors).toHaveLength(0);
-    expect(warnings.some((w) => w.field === "models.primary.fallback")).toBe(true);
+    expect(warnings.some((w) => w.field === "description")).toBe(true);
   });
 
-  test("no local fallback on secondary produces warning", () => {
-    const m = parseManifest(minimalYaml());
+  test("valid recommendations with description clears description warning", () => {
+    const m = parseManifest(
+      minimalYaml({
+        description: "My blueprint",
+        recommendations: { universal: ["anthropic/claude-sonnet-4-6"] },
+      })
+    );
     const { warnings } = validateManifest(m);
-    expect(warnings.some((w) => w.field === "models.secondary.fallback")).toBe(true);
+    expect(warnings.some((w) => w.field === "description")).toBe(false);
   });
 
   test("script install method produces warning", () => {
@@ -450,106 +454,6 @@ describe("validateManifest — warnings", () => {
     expect(warnings.some((w) => w.field === "description")).toBe(true);
   });
 
-  test("local fallback on both models clears fallback warnings", () => {
-    const yaml = minimalYaml({
-      description: "A substrate",
-      models: {
-        primary: {
-          provider: "anthropic",
-          model: "claude-sonnet-4-6",
-          fallback: [{ provider: "ollama", model: "qwen2.5:14b", tags: ["local", "free"] }],
-        },
-        secondary: {
-          provider: "anthropic",
-          model: "claude-haiku-4-5",
-          fallback: [{ provider: "ollama", model: "qwen2.5:7b", tags: ["local", "free"] }],
-        },
-      },
-    });
-    const m = parseManifest(yaml);
-    const { errors, warnings } = validateManifest(m);
-    expect(errors).toHaveLength(0);
-    expect(warnings.filter((w) => w.field.includes("fallback"))).toHaveLength(0);
-  });
-
-  test("fallback chain within depth limit is valid", () => {
-    const yaml = minimalYaml({
-      description: "A substrate",
-      models: {
-        primary: {
-          provider: "anthropic",
-          model: "claude-sonnet-4-6",
-          fallback: [
-            {
-              provider: "openai",
-              model: "gpt-4o",
-              fallback: [
-                {
-                  provider: "openai",
-                  model: "gpt-4o-mini",
-                  fallback: [{ provider: "ollama", model: "qwen2.5:14b", tags: ["local"] }],
-                },
-              ],
-            },
-          ],
-        },
-        secondary: { provider: "anthropic", model: "claude-haiku-4-5" },
-      },
-    });
-    const m = parseManifest(yaml);
-    const { errors } = validateManifest(m);
-    expect(errors.filter((e) => e.field.includes("fallback"))).toHaveLength(0);
-  });
-
-  test("fallback chain exceeding depth limit produces error", () => {
-    const yaml = minimalYaml({
-      description: "A substrate",
-      models: {
-        primary: {
-          provider: "anthropic",
-          model: "claude-sonnet-4-6",
-          fallback: [
-            {
-              provider: "openai",
-              model: "gpt-4o",
-              fallback: [
-                {
-                  provider: "openai",
-                  model: "gpt-4o-mini",
-                  fallback: [
-                    {
-                      provider: "openai",
-                      model: "text-davinci-003",
-                      fallback: [
-                        {
-                          provider: "openai",
-                          model: "text-davinci-002",
-                          fallback: [
-                            {
-                              provider: "ollama",
-                              model: "qwen2.5:14b",
-                              tags: ["local"],
-                              fallback: [
-                                { provider: "ollama", model: "llama2", tags: ["local"] },
-                              ],
-                            },
-                          ],
-                        },
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-        secondary: { provider: "anthropic", model: "claude-haiku-4-5" },
-      },
-    });
-    const m = parseManifest(yaml);
-    const { errors } = validateManifest(m);
-    expect(errors.some((e) => e.field.includes("fallback") && e.message.includes("too deep"))).toBe(true);
-  });
 });
 
 // ---- parseSubstrateRef ----
@@ -600,33 +504,215 @@ describe("validateExtendsRef", () => {
 // ---- validateManifest: extends field ----
 
 describe("validateManifest — extends field", () => {
-  test("valid extends author/name passes", () => {
-    const m = parseManifest(minimalYaml({ extends: "alice/base-substrate" }));
+  test("valid extends with single author/name passes", () => {
+    const m = parseManifest(minimalYaml({ extends: ["alice/base-substrate"] }));
     const { errors } = validateManifest(m);
-    expect(errors.filter((e) => e.field === "extends")).toHaveLength(0);
+    expect(errors.filter((e) => e.field.includes("extends"))).toHaveLength(0);
   });
 
-  test("valid extends author/name@version passes", () => {
-    const m = parseManifest(minimalYaml({ extends: "alice/base-substrate@1.2.3" }));
+  test("valid extends with author/name@version passes", () => {
+    const m = parseManifest(minimalYaml({ extends: ["alice/base-substrate@1.2.3"] }));
     const { errors } = validateManifest(m);
-    expect(errors.filter((e) => e.field === "extends")).toHaveLength(0);
+    expect(errors.filter((e) => e.field.includes("extends"))).toHaveLength(0);
+  });
+
+  test("valid extends with multiple parents passes", () => {
+    const m = parseManifest(minimalYaml({ extends: ["alice/base@1.0.0", "alice/policies@2.0.0"] }));
+    const { errors } = validateManifest(m);
+    expect(errors.filter((e) => e.field.includes("extends"))).toHaveLength(0);
   });
 
   test("invalid extends format → error", () => {
-    const m = parseManifest(minimalYaml({ extends: "not-valid" }));
+    const m = parseManifest(minimalYaml({ extends: ["not-valid"] }));
     const { errors } = validateManifest(m);
-    expect(errors.some((e) => e.field === "extends")).toBe(true);
+    expect(errors.some((e) => e.field === "extends[0]")).toBe(true);
   });
 
   test("circular extends (self) → error", () => {
-    const m = parseManifest(minimalYaml({ extends: "alice/my-substrate" }));
+    const m = parseManifest(minimalYaml({ extends: ["alice/my-substrate"] }));
     const { errors } = validateManifest(m);
-    expect(errors.some((e) => e.field === "extends" && e.message.includes("Circular"))).toBe(true);
+    expect(errors.some((e) => e.field === "extends[0]" && e.message.includes("Circular"))).toBe(true);
+  });
+
+  test("extends depth exceeding 2 → error", () => {
+    const m = parseManifest(minimalYaml({ extends: ["alice/a@1.0.0", "alice/b@2.0.0", "alice/c@3.0.0"] }));
+    const { errors } = validateManifest(m);
+    expect(errors.some((e) => e.field === "extends" && e.message.includes("Max inheritance depth"))).toBe(true);
   });
 
   test("extends with invalid version → error", () => {
-    const m = parseManifest(minimalYaml({ extends: "alice/base-substrate@bad" }));
+    const m = parseManifest(minimalYaml({ extends: ["alice/base-substrate@bad"] }));
     const { errors } = validateManifest(m);
-    expect(errors.some((e) => e.field === "extends")).toBe(true);
+    expect(errors.some((e) => e.field.includes("extends"))).toBe(true);
+  });
+});
+
+// ---- mergeManifests ----
+
+describe("mergeManifests", () => {
+  test("no parents returns child unchanged", () => {
+    const child = parseManifest(minimalYaml({ name: "child" }));
+    const result = mergeManifests([], child);
+    expect(result.name).toBe("child");
+  });
+
+  test("dependencies default replace strategy (child wins)", () => {
+    const parent = parseManifest(
+      minimalYaml({
+        name: "parent",
+        dependencies: [{ name: "node", version: ">=18.0.0", url: "https://nodejs.org" }],
+      })
+    );
+    const child = parseManifest(
+      minimalYaml({
+        name: "child",
+        dependencies: [{ name: "bun", version: ">=1.0.0", url: "https://bun.sh" }],
+      })
+    );
+    const result = mergeManifests([parent], child);
+    expect(result.dependencies).toHaveLength(1);
+    expect(result.dependencies![0].name).toBe("bun");
+  });
+
+  test("dependencies append strategy concatenates", () => {
+    const parent = parseManifest(
+      minimalYaml({
+        name: "parent",
+        dependencies: [{ name: "node", version: ">=18.0.0", url: "https://nodejs.org" }],
+      })
+    );
+    const child = parseManifest(
+      minimalYaml({
+        name: "child",
+        dependencies: [{ name: "bun", version: ">=1.0.0", url: "https://bun.sh" }],
+        merge_policy: { dependencies: "append" },
+      })
+    );
+    const result = mergeManifests([parent], child);
+    expect(result.dependencies).toHaveLength(2);
+    expect(result.dependencies![0].name).toBe("node");
+    expect(result.dependencies![1].name).toBe("bun");
+  });
+
+  test("dependencies merge-by-name deduplicates by name", () => {
+    const parent = parseManifest(
+      minimalYaml({
+        name: "parent",
+        dependencies: [
+          { name: "node", version: ">=18.0.0", url: "https://nodejs.org" },
+          { name: "bun", version: ">=0.5.0", url: "https://bun.sh" },
+        ],
+      })
+    );
+    const child = parseManifest(
+      minimalYaml({
+        name: "child",
+        dependencies: [{ name: "bun", version: ">=1.0.0", url: "https://bun.sh" }],
+        merge_policy: { dependencies: "merge-by-name" },
+      })
+    );
+    const result = mergeManifests([parent], child);
+    expect(result.dependencies).toHaveLength(2);
+    const bunDep = result.dependencies!.find((d) => d.name === "bun");
+    expect(bunDep!.version).toBe(">=1.0.0");
+  });
+
+  test("recommendations child overwrites parent by default", () => {
+    const parent = parseManifest(
+      minimalYaml({
+        name: "parent",
+        recommendations: {
+          universal: ["anthropic/claude-sonnet-4-6"],
+        },
+      })
+    );
+    const child = parseManifest(
+      minimalYaml({
+        name: "child",
+        recommendations: {
+          budget: ["anthropic/claude-haiku-4-5"],
+        },
+      })
+    );
+    const result = mergeManifests([parent], child);
+    expect(result.recommendations?.universal).toBeUndefined();
+    expect(result.recommendations?.budget).toEqual(["anthropic/claude-haiku-4-5"]);
+  });
+
+  test("blueprint paths append strategy concatenates", () => {
+    const parent = parseManifest(
+      minimalYaml({
+        name: "parent",
+        blueprint: { ontology: ["parent-docs.md"] },
+      })
+    );
+    const child = parseManifest(
+      minimalYaml({
+        name: "child",
+        blueprint: { ontology: ["child-docs.md"] },
+        merge_policy: { blueprint: { ontology: "append" } },
+      })
+    );
+    const result = mergeManifests([parent], child);
+    expect(result.blueprint?.ontology).toEqual(["parent-docs.md", "child-docs.md"]);
+  });
+
+  test("blueprint paths merge-by-name deduplicates", () => {
+    const parent = parseManifest(
+      minimalYaml({
+        name: "parent",
+        blueprint: { ontology: ["docs.md", "api.md"] },
+      })
+    );
+    const child = parseManifest(
+      minimalYaml({
+        name: "child",
+        blueprint: { ontology: ["docs.md"] },
+        merge_policy: { blueprint: { ontology: "merge-by-name" } },
+      })
+    );
+    const result = mergeManifests([parent], child);
+    expect(result.blueprint?.ontology?.sort()).toEqual(["api.md", "docs.md"].sort());
+    expect(result.blueprint?.ontology).toHaveLength(2);
+  });
+
+  test("multiple parents compose in order", () => {
+    const parent1 = parseManifest(
+      minimalYaml({
+        name: "parent1",
+        dependencies: [{ name: "node", version: ">=18.0.0", url: "https://nodejs.org" }],
+      })
+    );
+    const parent2 = parseManifest(
+      minimalYaml({
+        name: "parent2",
+        dependencies: [{ name: "bun", version: ">=1.0.0", url: "https://bun.sh" }],
+      })
+    );
+    const child = parseManifest(
+      minimalYaml({
+        name: "child",
+        merge_policy: { dependencies: "append" },
+      })
+    );
+    const result = mergeManifests([parent1, parent2], child);
+    expect(result.dependencies).toHaveLength(2);
+    expect(result.dependencies![0].name).toBe("node");
+    expect(result.dependencies![1].name).toBe("bun");
+  });
+
+  test("parse merge_policy from YAML", () => {
+    const yaml = minimalYaml({
+      merge_policy: {
+        dependencies: "append",
+        recommendations: "merge-by-name",
+        blueprint: { ontology: "append", craft: "replace" },
+      },
+    });
+    const m = parseManifest(yaml);
+    expect(m.merge_policy?.dependencies).toBe("append");
+    expect(m.merge_policy?.recommendations).toBe("merge-by-name");
+    expect(m.merge_policy?.blueprint?.ontology).toBe("append");
+    expect(m.merge_policy?.blueprint?.craft).toBe("replace");
   });
 });

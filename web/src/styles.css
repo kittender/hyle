@@ -1,6 +1,9 @@
 /* ── Google Fonts ── */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Pinyon+Script&display=swap');
 
+/* ── Highlight.js Theme ── */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/atom-one-dark.min.css');
+
 /* ── ITCSS Layer Cascade ── */
 @layer settings, generic, elements, objects, components, utilities;
 
@@ -1221,6 +1224,24 @@
     border: 1px solid var(--border);
     border-radius: 3px;
     padding: 1px 5px;
+    color: var(--text);
+  }
+
+  .docs-content pre {
+    background: #1a1a1a;
+    border-radius: var(--radius);
+    padding: 16px;
+    margin: 16px 0 20px;
+    overflow-x: auto;
+  }
+
+  .docs-content pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #e8e8e8;
   }
 
   .docs-content ul {
@@ -1243,9 +1264,16 @@
   .docs-code {
     background: #1a1a1a;
     border-radius: var(--radius);
-    padding: 16px 20px;
-    margin: 12px 0 20px;
+    padding: 0;
+    margin: 16px 0 20px;
     overflow-x: auto;
+  }
+
+  .docs-code pre {
+    margin: 0;
+    padding: 16px;
+    background: none;
+    border: none;
   }
 
   .docs-code code {
@@ -1254,7 +1282,6 @@
     padding: 0;
     font-size: 13px;
     line-height: 1.6;
-    color: #ccc;
   }
 
   .docs-table {

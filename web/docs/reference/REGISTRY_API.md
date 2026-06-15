@@ -1,10 +1,10 @@
 # Registry API Documentation
 
-Complete reference for the Hylé Registry backend API (AWS Lambda + S3 + PostgreSQL).
+Complete reference for the Hylé Registry backend API. See [DEPLOYMENT.md](../operations/DEPLOYMENT.md) for hosting options (Tier 1-3).
 
 ## Base URL
 
-- **Production**: `https://api.hyle.dev`
+- **Production**: `https://api.hylé.com`
 - **Development**: `http://localhost:3001/api` (mock server)
 
 ## Authentication
@@ -16,7 +16,7 @@ Authorization: Bearer <access-token>
 ```
 
 Access tokens are obtained by:
-1. **Public Registry** (`https://api.hyle.dev`): Use `hyle login` (GitHub OAuth)
+1. **Public Registry** (`https://api.hylé.com`): Use `hyle login` (GitHub OAuth)
 2. **Self-Hosted Registry**: Use `hyle login --registry <custom-url>` (supports any OIDC provider)
 
 Tokens are short-lived (expiry varies by provider). Use refresh tokens to obtain new access tokens automatically (CLI handles this transparently).
@@ -53,10 +53,10 @@ All registries expose a standard OpenID Connect discovery endpoint. CLI uses thi
 
 ```json
 {
-  "issuer": "https://api.hyle.dev",
+  "issuer": "https://api.hylé.com",
   "authorization_endpoint": "https://github.com/login/oauth/authorize",
   "token_endpoint": "https://github.com/login/oauth/access_token",
-  "jwks_uri": "https://api.hyle.dev/.well-known/jwks.json",
+  "jwks_uri": "https://api.hylé.com/.well-known/jwks.json",
   "scopes_supported": ["read:user", "user:email"],
   "response_types_supported": ["code"],
   "grant_types_supported": ["authorization_code", "refresh_token"]
@@ -67,7 +67,7 @@ All registries expose a standard OpenID Connect discovery endpoint. CLI uses thi
 
 ```bash
 # Public registry discovery
-curl https://api.hyle.dev/.well-known/openid-configuration | jq .
+curl https://api.hylé.com/.well-known/openid-configuration | jq .
 
 # Self-hosted registry discovery
 curl https://company-registry.internal/.well-known/openid-configuration | jq .
@@ -92,7 +92,7 @@ This endpoint is **unauthenticated** (no Authorization header needed). CLI auto-
 
 ```bash
 curl -H "Authorization: Bearer $HYLE_ACCESS_TOKEN" \
-  "https://api.hyle.dev/search?q=auth&limit=10"
+  "https://api.hylé.com/search?q=auth&limit=10"
 ```
 
 **Response** (200 OK):
@@ -125,7 +125,7 @@ curl -H "Authorization: Bearer $HYLE_ACCESS_TOKEN" \
 
 ```bash
 curl -H "Authorization: Bearer $HYLE_ACCESS_TOKEN" \
-  "https://api.hyle.dev/substrates/kittender/auth-middleware/1.2.0"
+  "https://api.hylé.com/substrates/kittender/auth-middleware/1.2.0"
 ```
 
 **Response** (200 OK):
@@ -141,14 +141,14 @@ curl -H "Authorization: Bearer $HYLE_ACCESS_TOKEN" \
   "models": {
     "primary": {
       "provider": "anthropic",
-      "model": "claude-sonnet-4-6",
-      "fallback": [
-        {
-          "provider": "openai",
-          "model": "gpt-4o"
-        }
-      ]
+      "model": "claude-sonnet-4-6"
     }
+  },
+  "compatibility": {
+    "universal": [
+      "anthropic/claude-sonnet-4-6",
+      "openai/gpt-4o"
+    ]
   },
   "dependencies": [
     {
@@ -199,7 +199,7 @@ Downloads the complete substrate as a `.tar.gz` file.
 
 ```bash
 curl -H "Authorization: Bearer $HYLE_ACCESS_TOKEN" \
-  "https://api.hyle.dev/substrates/kittender/auth-middleware/1.2.0/bundle" \
+  "https://api.hylé.com/substrates/kittender/auth-middleware/1.2.0/bundle" \
   -o substrate.tar.gz
 
 # Verify checksum
@@ -238,7 +238,7 @@ curl -X POST \
   -F "bundle=@substrate.tar.gz" \
   -F "version=1.2.0" \
   -F "stable=true" \
-  "https://api.hyle.dev/substrates/kittender/auth-middleware"
+  "https://api.hylé.com/substrates/kittender/auth-middleware"
 ```
 
 **Response** (201 Created):
@@ -271,7 +271,7 @@ Returns dependency resolution hints (available versions, latest stable, etc.).
 
 ```bash
 curl -H "Authorization: Bearer $HYLE_ACCESS_TOKEN" \
-  "https://api.hyle.dev/substrates/kittender/auth-middleware/1.2.0/deps"
+  "https://api.hylé.com/substrates/kittender/auth-middleware/1.2.0/deps"
 ```
 
 **Response** (200 OK):
@@ -304,7 +304,7 @@ List all published versions of a substrate.
 
 ```bash
 curl -H "Authorization: Bearer $HYLE_ACCESS_TOKEN" \
-  "https://api.hyle.dev/substrates/kittender/auth-middleware/versions?stable_only=true"
+  "https://api.hylé.com/substrates/kittender/auth-middleware/versions?stable_only=true"
 ```
 
 **Response** (200 OK):
@@ -385,7 +385,7 @@ All artifacts are published with SHA-256 checksums:
 sha256sum manifest.tar.gz
 
 # Verify bundle matches published checksum
-curl -s "https://api.hyle.dev/substrates/author/name/1.0.0" | \
+curl -s "https://api.hylé.com/substrates/author/name/1.0.0" | \
   jq '.bundle_sha256' | \
   sha256sum -c -
 ```
@@ -395,7 +395,7 @@ curl -s "https://api.hyle.dev/substrates/author/name/1.0.0" | \
 - **All endpoints** require HTTPS (automatic upgrade from HTTP)
 - **Localhost** (`127.0.0.1`, `[::1]`) allowed only with `HYLE_ALLOW_INSECURE=1`
 - **API keys** never logged or cached in plaintext
-- **CORS** restricted to `https://*.hyle.dev` and configured registries
+- **CORS** restricted to `https://*.hylé.com` and configured registries
 
 ### Stars & Community Features
 
@@ -675,7 +675,7 @@ tar czf substrate.tar.gz \
   schema/
 
 # Login to get access token (if not already logged in)
-hyle login --registry https://api.hyle.dev
+hyle login --registry https://api.hylé.com
 
 # Get access token from stored auth
 TOKEN=$(jq -r '.access_token' ~/.hyle/auth.json)
@@ -687,7 +687,7 @@ curl -X POST \
   -F "bundle=@substrate.tar.gz" \
   -F "version=1.2.0" \
   -F "stable=true" \
-  "https://api.hyle.dev/substrates/myauthor/mysubstrate"
+  "https://api.hylé.com/substrates/myauthor/mysubstrate"
 ```
 
 ### Search and Pull
@@ -715,15 +715,15 @@ TOKEN=$(jq -r '.access_token' ~/.hyle/auth.json)
 
 # Search for substrates
 curl -H "Authorization: Bearer $TOKEN" \
-  "https://api.hyle.dev/search?q=auth&tag=oidc"
+  "https://api.hylé.com/search?q=auth&tag=oidc"
 
 # Get metadata
 curl -H "Authorization: Bearer $TOKEN" \
-  "https://api.hyle.dev/substrates/author/name/1.0.0"
+  "https://api.hylé.com/substrates/author/name/1.0.0"
 
 # Download bundle
 curl -H "Authorization: Bearer $TOKEN" \
-  "https://api.hyle.dev/substrates/author/name/1.0.0/bundle" \
+  "https://api.hylé.com/substrates/author/name/1.0.0/bundle" \
   -o substrate.tar.gz
 ```
 
