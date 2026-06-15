@@ -23,6 +23,7 @@ The manifest file defining a substrate. **Required fields** marked with `*`.
 | `name` | string | * | Substrate identifier, 1–64 chars, lowercase alphanumeric + hyphens |
 | `author` | string | * | Author name, 1–64 chars, lowercase alphanumeric + hyphens |
 | `version` | string | * | Semantic version: `x.y.z` or `x.y.z-snapshot` |
+| `url` | string | * on publish | GitHub repository URL (e.g., `https://github.com/owner/repo`). Auto-detected from `git remote` on publish; optional if remote is configured |
 | `description` | string | | Single-line (or multi-line with `\|`) summary |
 | `homepage` | string | | Project homepage URL |
 | `license` | string | | SPDX license identifier (e.g., `MIT`, `CC-BY-4.0`) |
@@ -73,7 +74,7 @@ models:
 
 **Tags** (optional):
 - `saas` — Software-as-a-service (cloud API)
-- `paid` — Requires paid subscription or API key
+- `paid` — Requires paid subscription (user-declared; not enforced by Hylé)
 - `free-tier` — Free quota available (limited)
 - `local` — Local execution (Ollama, etc.)
 - `offline` — Works without network
@@ -197,15 +198,28 @@ Project-specific configuration that overrides global settings. Located at projec
 | Field | Type | Description |
 |-------|------|-------------|
 | `remote_url` | string | Registry API endpoint (default: `https://api.hyle.dev`) |
+| `oidc_provider` | string | Custom OIDC provider issuer URL (optional; auto-detected from registry for self-hosted) |
+| `oidc_auto_discover` | boolean | Auto-discover OIDC provider from registry (default: true) |
+| `github_client_id` | string | GitHub OAuth app client ID (for `hyle login` device flow). Can also be set via env var `GITHUB_CLIENT_ID` |
 | `models` | object | Override model configuration (merges with `hyle.yaml`) |
 | `dependencies` | object | Override dependency settings |
 | `offline` | boolean | Disable network access (default: false) |
 
 ### Example
 
+**Public Registry (GitHub OAuth):**
+
 ```yaml
-# Local registry (for development)
-remote_url: "http://localhost:3001/api"
+# Use Hylé public registry (default)
+remote_url: "https://api.hyle.dev"
+```
+
+**Self-Hosted Registry (Custom OIDC):**
+
+```yaml
+# Corporate registry with custom OIDC provider
+remote_url: "https://registry.company.internal"
+oidc_provider: "https://idp.company.internal"  # Keycloak, Auth0, Okta, etc.
 
 # Override models (more cost-conscious)
 models:
@@ -216,7 +230,14 @@ models:
     provider: ollama
     model: qwen2.5:7b
 
-# Offline mode (no external registry lookups)
+# Optional: auto-discover OIDC from registry (default: true)
+oidc_auto_discover: true
+```
+
+**Offline Mode:**
+
+```yaml
+# No network access (cached data only)
 offline: true
 
 # Custom dependencies behavior
@@ -263,6 +284,40 @@ When `offline: true`:
 - CI/CD without network access
 - Testing (hermetic environments)
 - Airplane mode development
+
+### OAuth2 + OIDC Token Storage
+
+When you run `hyle login`, OAuth2 tokens are stored locally:
+
+**Location:** `~/.hyle/auth.json`  
+**Format:**
+```json
+{
+  "access_token": "<short-lived JWT token>",
+  "refresh_token": "<long-lived refresh token>",
+  "expires_at": 1718550000,
+  "username": "your-username",
+  "email": "user@example.com",
+  "oidc_issuer": "https://github.com",
+  "provider": "github"
+}
+```
+
+**Security:** Tokens are stored in plain text (not encrypted). Treat refresh tokens like passwords:
+- Never commit to git (add `~/.hyle/auth.json` to `.gitignore`)
+- Use file permissions to restrict access: `chmod 600 ~/.hyle/auth.json`
+- Rotate regularly: run `hyle logout && hyle login`
+- Delete if you share your machine with others
+
+**Token Lifecycle:**
+- **Access tokens:** Short-lived (1 hour typical), used for API requests
+- **Refresh tokens:** Long-lived (days/months), stored locally for transparent renewal
+- **Automatic refresh:** CLI checks expiry before each request; auto-refreshes if needed
+- **Manual refresh:** Run `hyle logout && hyle login` to re-authenticate
+
+**OIDC Provider Support:**
+- Public registry: GitHub OAuth (hardcoded)
+- Self-hosted: Any OIDC-compliant provider (GitHub Enterprise, GitLab, Keycloak, Auth0, Okta, custom)
 
 ---
 
@@ -346,8 +401,7 @@ hyle push --dry-run --list-files
 Hylé resolves configuration in this order (highest priority first):
 
 1. **Environment variables** — `HYLE_*`
-   - `HYLE_ALLOW_INSECURE=1` — Allow HTTP registry
-   - `HYLE_API_KEY=sk_live_...` — Registry authentication
+   - `HYLE_ALLOW_INSECURE=1` — Allow HTTP registry (dev only)
    - `HYLE_OFFLINE=1` — Force offline mode
 
 2. **Command-line flags**
@@ -404,8 +458,8 @@ HYLE_OFFLINE=1 hyle push
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `HYLE_REGISTRY_URL` | `https://api.hyle.dev` | Custom registry endpoint |
-| `HYLE_API_KEY` | — | Registry authentication token |
-| `HYLE_ALLOW_INSECURE` | `0` | Allow HTTP (non-HTTPS) registries |
+| `GITHUB_CLIENT_ID` | — | GitHub OAuth app client ID (for `hyle login` device flow) |
+| `HYLE_ALLOW_INSECURE` | `0` | Allow HTTP (non-HTTPS) registries (dev only) |
 
 ### Behavior
 
@@ -418,12 +472,12 @@ HYLE_OFFLINE=1 hyle push
 ### Example
 
 ```bash
-# Use custom registry with authentication
+# Use custom registry (GitHub OAuth)
 export HYLE_REGISTRY_URL="https://private.registry.example.com"
-export HYLE_API_KEY="sk_live_secret123"
 
+hyle login --registry $HYLE_REGISTRY_URL
 hyle push
-# → Publishes to private registry with auth
+# → Publishes to private registry with OAuth authentication
 
 # Offline development
 export HYLE_OFFLINE=1

@@ -7,7 +7,6 @@ import { LoginComponent } from './pages/login/login';
 import { RegisterComponent } from './pages/register/register';
 import { ForgotPasswordComponent } from './pages/forgot-password/forgot-password';
 import { ProfileComponent } from './pages/profile/profile';
-import { EnterpriseComponent } from './pages/enterprise/enterprise';
 import { AuthCallbackComponent } from './pages/auth-callback/auth-callback.component';
 import { authGuard } from './guards/auth.guard';
 
@@ -22,6 +21,5 @@ export const routes: Routes = [
   { path: 'auth/callback', component: AuthCallbackComponent },
   { path: 'profile/public', component: ProfileComponent },
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
-  { path: 'enterprise', component: EnterpriseComponent },
   { path: '**', redirectTo: '' },
 ];

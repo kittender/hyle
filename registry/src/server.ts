@@ -7,7 +7,12 @@ const PORT = parseInt(process.env.PORT || "3000");
 const DB_PATH = process.env.DB_PATH || "./hyle-registry.db";
 const BUNDLES_PATH = process.env.BUNDLES_PATH || "./bundles";
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-key-change-in-production";
+
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error("ERROR: JWT_SECRET environment variable is required. Generate with: openssl rand -hex 32");
+  process.exit(1);
+}
 
 const db = new SQLiteDatabase(DB_PATH);
 const storage = new LocalStorage(BUNDLES_PATH);
@@ -16,7 +21,11 @@ const auth = createAuthFromEnv();
 db.init();
 await storage.init();
 
-const corsOrigin = process.env.HYLE_WEB_ORIGIN || "*";
+const corsOrigin = process.env.HYLE_WEB_ORIGIN;
+if (!corsOrigin) {
+  console.error("ERROR: HYLE_WEB_ORIGIN environment variable is required (e.g., https://app.hyle.dev)");
+  process.exit(1);
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": corsOrigin,

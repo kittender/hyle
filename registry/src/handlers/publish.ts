@@ -25,20 +25,18 @@ export async function handlePublish(
   const token = authHeader.slice(7);
   let manifestAuthorUsername: string | null = null;
 
-  // Try JWT verification first (for OAuth users)
-  if (jwtSecret) {
-    const jwtPayload = await verifyJwt(token, jwtSecret);
-    if (jwtPayload) {
-      manifestAuthorUsername = jwtPayload.username;
-    }
-  }
-
-  // Fall back to API key verification
-  if (!manifestAuthorUsername && !auth.verifyToken(token)) {
-    return new Response(JSON.stringify({ error: "Invalid API token or JWT" }), {
+  // Verify token using auth system (JWT or OIDC)
+  const authPayload = await auth.verifyToken(token);
+  if (!authPayload) {
+    return new Response(JSON.stringify({ error: "Invalid authentication token" }), {
       status: 403,
       headers: { "Content-Type": "application/json" },
     });
+  }
+
+  // Extract username from JWT payload
+  if ("username" in authPayload) {
+    manifestAuthorUsername = authPayload.username;
   }
 
   let manifest: HyleManifest;
@@ -125,6 +123,17 @@ export async function handlePublish(
     );
   }
 
+  // Manifest scan (critical) — BLOCKING
+  const manifestScan = scanManifest(manifest, bundleData.length);
+  if (manifestScan.scan_status === "flagged") {
+    const topFinding = manifestScan.findings.find((f) => f.severity === "critical");
+    const detail = topFinding?.detail ?? "Security scan flagged";
+    return new Response(JSON.stringify({ error: `Substrate flagged: ${detail}` }), {
+      status: 403,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   const checksum = createHash("sha256").update(bundleData).digest("hex");
   const bundleKey = `${manifest.author}/${manifest.name}/${manifest.version}.tar.gz`;
   const manifestJson = JSON.stringify(manifest);
@@ -157,30 +166,38 @@ export async function handlePublish(
     isStable && !isSpam
   );
 
-  // Run security scan asynchronously
+  // Store manifest scan results
+  const scanResult = {
+    scan_status: manifestScan.scan_status,
+    findings: manifestScan.findings,
+    scanned_at: new Date().toISOString(),
+  };
+  db.insertScan(record.id, scanResult);
+
+  // Bundle scan (heavy I/O) — can be async
   queueMicrotask(() => {
-    const manifestScan = scanManifest(manifest, bundleData.length);
     const bundleScanFindings = scanBundleFiles(bundleData);
-    const allFindings = [...manifestScan.findings, ...bundleScanFindings];
+    if (bundleScanFindings.length > 0) {
+      const allFindings = [...manifestScan.findings, ...bundleScanFindings];
+      let scan_status: "clean" | "flagged" | "warning" = "clean";
+      if (allFindings.some((f) => f.severity === "critical")) {
+        scan_status = "flagged";
+      } else if (allFindings.some((f) => f.severity === "warning")) {
+        scan_status = "warning";
+      }
 
-    let scan_status: "clean" | "flagged" | "warning" = "clean";
-    if (allFindings.some((f) => f.severity === "critical")) {
-      scan_status = "flagged";
-    } else if (allFindings.some((f) => f.severity === "warning")) {
-      scan_status = "warning";
-    }
+      const updatedScanResult = {
+        scan_status,
+        findings: allFindings,
+        scanned_at: new Date().toISOString(),
+      };
 
-    const scanResult = {
-      scan_status,
-      findings: allFindings,
-      scanned_at: new Date().toISOString(),
-    };
-
-    db.insertScan(record.id, scanResult);
-    if (scanResult.scan_status === "flagged") {
-      const topFinding = scanResult.findings.find((f) => f.severity === "critical");
-      const reason = topFinding?.detail ?? "Security scan flagged";
-      db.flagSubstrate(record.id, reason);
+      db.insertScan(record.id, updatedScanResult);
+      if (updatedScanResult.scan_status === "flagged") {
+        const topFinding = updatedScanResult.findings.find((f) => f.severity === "critical");
+        const reason = topFinding?.detail ?? "Security scan flagged";
+        db.flagSubstrate(record.id, reason);
+      }
     }
   });
 

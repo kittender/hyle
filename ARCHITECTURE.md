@@ -84,18 +84,13 @@ This document captures architectural principles, known design issues, and propos
 
 ---
 
-### 7. No private / org registry — enterprise use case absent
+### 7. Private blueprints — Enterprise/Private Use ✅ RESOLVED
 
-**Problem:** Only public registry or custom GitHub URL. Companies with internal AI conventions, proprietary configs, or compliance requirements cannot use tool.
+**Previous problem:** Only public registry or custom GitHub URL. Companies with internal AI conventions, proprietary configs, or compliance requirements cannot use tool.
 
-**Proposed fixes:**
-- Private registry support in `.hyle`:
-  ```yaml
-  remote_url: https://substrates.internal.corp.com
-  remote_token: ${HYLE_TOKEN}           # env var, never hardcoded
-  ```
-- Self-hostable registry server: reference implementation (single binary or Docker). Same API as public registry
-- Org namespace on public registry: `hyle pull @acme/java-springboot` with access control. Private-to-org substrates visible only to members
+**Resolution (by design):** Blueprints are published to the GitHub repos developers already own and control. Private GitHub repos = private blueprints. No separate registry auth needed. If a developer can read the GitHub repo, they can pull the blueprint.
+
+**For companies:** Host the Hylé registry on your own infrastructure (see [DEPLOYMENT.md](docs/deployment/DEPLOYMENT.md)) and use private GitHub repos. Blueprints registered against private repos are invisible to the public Hylé registry.
 
 ---
 
@@ -149,7 +144,9 @@ This document captures architectural principles, known design issues, and propos
 3. **Four domains are orthogonal**: ontology (knowledge), craft (technical), identities (personas), ethics (constraints). A file belongs to exactly one domain
 4. **Inheritance depth ≤ 2**: prevents opaque dependency chains
 5. **Security is defense-in-depth**: scans + author tiers + pull warnings + user review (no single gate)
-6. **Registry is durable, public**: publish history always visible, including flagged versions with reasons
+6. **GitHub is the file store**: Blueprints live on publishers' GitHub repos. Hylé registry stores only manifests + per-file checksums. On pull, files are fetched directly from GitHub (raw.githubusercontent.com)
+7. **Publisher must own a GitHub repo**: A public GitHub repo is required to publish. The repo link is auto-detected from `git remote` (no extra setup after first push)
+8. **Registry publish history is public**: publish history always visible, including flagged versions with reasons
 
 ---
 
@@ -180,13 +177,13 @@ Fallback resolution tries each entry in order; skips entries whose provider repo
 
 | Issue | Status | Details |
 |-------|--------|---------|
-| 1. Registry trust model | ⏳ Partial | Pattern scans done; behavioral keywords pending (Phase 5D) |
+| 1. Registry trust model | ⏳ Partial | Manifest scan covers behavioral keywords; file-content scanning not needed (files never leave GitHub) |
 | 2. Client lock-in | ❌ Not started | CLI scans don't find non-Claude clients; Phase 5D task |
 | 3. `hyle watch --split` | ⏳ Proposed | Replace with `--budget` cost tracking (Phase 5D) |
 | 4. GDPR audit trail | ⏳ Proposed | Move to enterprise extension (Phase 5D) |
 | 5. Model-pin email | ✅ Resolved | Implemented as CLI warning on push + `hyle outdated` |
 | 6. `hyle.json` weight | ⏳ Proposed | Switch to user-declared priority in hyle.yaml (Phase 5D) |
-| 7. No private registry | ❌ Not started | Phase 5B: self-hosted + org namespace |
+| 7. Private blueprints | ✅ Resolved | Private GitHub repos = private blueprints (by design, no extra work) |
 | 8. No drift detection | ✅ Resolved | hyle.lock + outdated + upgrade + verify (v0.2.0) |
 | 9. No CI integration | ✅ Resolved | `hyle verify` with exit codes (v0.2.0) |
 | 10. No composition | ✅ Resolved | `extends` field implemented (v0.2.0) |

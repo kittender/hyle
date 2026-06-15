@@ -42,15 +42,15 @@ You can fork another blueprint any time, and push the fork to the registry.
 hyle fork username/starter@1.0.12 my-boilerplate  # Fork any blueprint and make it your own
 ```
 
-A blueprint is a `hyle.yaml` manifest + all the files it references. On pull: Hylé shows a full diff before touching anything, verifies the checksum, auto-detects your OS and installs declared dependencies. No surprises.
+A blueprint is a `hyle.yaml` manifest stored in the Hylé registry, which links to a GitHub repository and declares which files to include (organized into four domains: ontology, craft, identities, ethics). When you pull a blueprint, Hylé downloads only the declared files from the publisher's GitHub repo using per-file SHA-256 checksums. No surprises, no bloated repositories.
 
-Core CLI is **programmatic only — no LLM required**, no network call to an AI on every command. Fast and scriptable.
+Core CLI is **programmatic only — no LLM required**, no network call to an AI on every command. Fast and scriptable. Blueprints live on your GitHub repo; Hylé only manages the manifest and file list.
 
 ---
 
-## Deployment
+## For Operators
 
-For AWS deployment instructions (S3 + CloudFront CDN, registry backend setup, multi-platform CLI distribution), see [docs/deployment/DEPLOYMENT.md](docs/deployment/DEPLOYMENT.md).
+To deploy the Hylé registry backend on your own infrastructure (Bun server + SQLite; no file storage needed), see [docs/deployment/DEPLOYMENT.md](docs/deployment/DEPLOYMENT.md).
 
 ---
 
@@ -90,14 +90,16 @@ hyle pull dnd-masterai-with-sounds     # And a blueprint isn't only for business
 ```
 
 On pull, Hylé will:
-1. Show a **diff** of every file that would change — new files, modified lines, deletions — before touching your project
-2. Require confirmation (or pass `--dry-run` to exit after diff without applying)
-3. Verify the bundle's SHA-256 checksum against the registry manifest — rejects mismatches with an explicit error
-4. Extract files; prompt `Overwrite? y/N` per conflict
-5. Check which declared dependencies are installed (PATH lookup + semver check)
-6. Detect your OS and resolve the correct install command per dependency — no manual adaptation needed. Install on your confirmation.
-7. Guide you through anything requiring manual steps, with links
-8. Warn upfront about any paid services or SaaS models declared in the blueprint
+1. Fetch the blueprint metadata from the registry (which points to the publisher's GitHub repository)
+2. Download only the **declared files** from GitHub (not the entire codebase)
+3. Show a **diff** of every file that would change — new files, modified lines, deletions — before touching your project
+4. Verify each file's SHA-256 checksum against the registry manifest — rejects mismatches with an explicit error
+5. Require confirmation (or pass `--dry-run` to exit after diff without applying)
+6. Write files to disk; prompt `Overwrite? y/N` per conflict
+7. Check which declared dependencies are installed (PATH lookup + semver check)
+8. Detect your OS and resolve the correct install command per dependency — no manual adaptation needed. Install on your confirmation.
+9. Guide you through anything requiring manual steps, with links
+10. Warn upfront about any paid services or SaaS models declared in the blueprint
 
 #### What more could it be ?
 
@@ -149,6 +151,8 @@ hyle craft path/to/relevant-files
 
 Either way, you'll have the final word through the manifest.
 
+**First publish tip:** If your project folder has no files declared, `hyle push` will auto-suggest them and ask for confirmation — no need to run these scan commands manually.
+
 Don't forget to add a `.hyleignore` file to explicitly exclude files you never want to share, 
 like API keys, secrets, and private configs:
 
@@ -171,7 +175,7 @@ description: Powers up any Spring Boot project with state-of-the-art practices
 tags: [java, spring, boot, claude, cedar, tdd]
 forks:                                  # Hylé registry link of source blueprint with version if forked from one
 author: jean-pierre-kowalski
-url: https://github.com/JeanPierreKowalski
+url: https://github.com/jean-pierre-kowalski/claude-java-springboot  # GitHub repo URL (auto-detected if git remote is configured)
 
 models:
   primary:                              # Complex, high-intelligence tasks
@@ -272,6 +276,14 @@ When Hylé resolves a new install command (steps 2–4), it saves it to local ca
 
 #### 4. Publish to the registry
 
+**Requirement:** Your project must have a public GitHub repository. Hylé auto-detects it from `git remote get-url origin` on publish. If no remote is configured, you'll be prompted to create one and push your code first.
+
+On publish, Hylé will:
+1. Auto-detect your GitHub repository URL (or use `url` from `hyle.yaml` if already set)
+2. Verify all declared blueprint files are committed and pushed to GitHub
+3. Create a git tag `v{version}` and push it to the remote
+4. Register the blueprint with the Hylé registry: manifest + per-file SHA-256 checksums (no file upload needed)
+
 The default registry is **[registry.hylé.com](https://registry.hylé.com)**. 
 You can point to your own remote in `.hyle` (must be a public GitHub URL) but it will be marked as "unverified".
 
@@ -285,9 +297,8 @@ Three publish tiers — no version numbers to remember or type:
 
 Lower positions reset to zero on each bump (`push` resets patch, `release` resets minor+patch). All three accept an explicit version override as an optional arg: `hyle push 1.5.0`.
 
-On any publish, Hylé:
-- Bundles all files referenced in `hyle.yaml` (minus `.hyleignore`) with a SHA-256 checksum manifest
-- Runs an **automatic security scan** (async). If red flags are found — `curl | bash` patterns, hardcoded credential shapes, skip-confirmation flags, suspicious network calls — the version is marked `[flagged]`: not pullable, content not shown, only flag tags visible. **Push history is always public.**
+On any publish, Hylé also:
+- Runs an **automatic security scan** (async) on the manifest. If red flags are found — hardcoded credentials, suspicious network calls in instruction files — the version is marked `[flagged]`: not pullable, content not shown, only flag tags visible. **Push history is always public.**
 - Emails you if a newer checkpoint is available for any pinned `model_pin` in your manifest (monthly, one-click update link)
 
 ---
@@ -299,8 +310,8 @@ On any publish, Hylé:
 | Command | Description |
 |---|---|
 | `hyle init` | Interactive setup, generates `hyle.yaml` |
-| `hyle pull <name>` | Pull blueprint: show diff, verify checksum, check+install deps |
-| `hyle pull <name>@<version>` | Pull specific version (checksum-pinned) |
+| `hyle pull <name>` | Pull blueprint: fetch from GitHub, show diff, verify file checksums, check+install deps |
+| `hyle pull <name>@<version>` | Pull specific version (by git tag and file checksums) |
 | `hyle pull <name> --dry-run` | Preview diff without applying |
 | `hyle snapshot` | Patch bump, unstable — for WIP sharing, no SLA |
 | `hyle push` | Minor bump, listed as stable |

@@ -12,7 +12,7 @@ import { handleAuthor } from "./handlers/author";
 import { handleDiff } from "./handlers/diff";
 import { handleChecksums } from "./handlers/checksums";
 import { handleSecurityReport } from "./handlers/security";
-import { handleGithubOAuth, handleGithubCallback, handleGetMe, handleUpdateMe, handleGetNotificationPrefs, handleUpdateNotificationPrefs } from "./handlers/auth";
+import { handleGithubOAuth, handleGithubCallback, handleGetMe, handleUpdateMe, handleGetNotificationPrefs, handleUpdateNotificationPrefs, handleOidcDiscovery } from "./handlers/auth";
 import { handleToggleStar, handleGetStars } from "./handlers/stars";
 import { handleSubmitReview, handleGetReviews } from "./handlers/reviews";
 
@@ -39,6 +39,10 @@ export async function route(
   const url = new URL(req.url);
   const pathname = url.pathname;
 
+  if (pathname === "/.well-known/openid-configuration" && req.method === "GET") {
+    return handleOidcDiscovery(req);
+  }
+
   if (pathname === "/health") {
     return new Response(JSON.stringify({ status: "ok" }), {
       status: 200,
@@ -50,7 +54,7 @@ export async function route(
     return await handleGithubOAuth(req, db);
   }
 
-  if (pathname === "/auth/github/callback" && req.method === "GET") {
+  if (pathname === "/auth/github/callback" && (req.method === "GET" || req.method === "POST")) {
     return await handleGithubCallback(req, db);
   }
 

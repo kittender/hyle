@@ -48,8 +48,11 @@ Hylé strictly validates all file paths to prevent directory traversal attacks:
 - Script installations require explicit `sha256` hash in the manifest (supply-chain safety)
 - No shell string interpolation is performed on dependency names or URLs
 
-### Registry Interaction
+### Registry Interaction & File Integrity
 
+- **Blueprint files live on GitHub**: Registry stores only manifests and per-file SHA-256 checksums; actual files are downloaded directly from publishers' GitHub repos via `raw.githubusercontent.com`
+- **Per-file checksums**: Each declared file has an individually verified SHA-256 hash. Mismatches are rejected with an explicit error
+- **Git tags as version refs**: Blueprint versions are tied to git tags (e.g., `v1.0.0`) on the publisher's repo; checksums are computed at that specific tag
 - All registry connections use HTTPS by default
 - Registry uniqueness checks are **advisory only** (server-side validation is authoritative)
 - HTTP registries require explicit `HYLE_ALLOW_INSECURE=1` environment variable
@@ -63,7 +66,7 @@ Hylé strictly validates all file paths to prevent directory traversal attacks:
 - Users can disable email notifications in account settings (`email_on_stars`, `email_on_reviews`, etc.)
 - Email addresses are never sold or shared with third parties
 
-### Manifest Validation
+### Manifest Validation & Security Scans
 
 All manifests are validated against a strict schema on load:
 - Required fields: `name`, `author`, `version`, `models`
@@ -71,17 +74,24 @@ All manifests are validated against a strict schema on load:
 - Versions: Semantic versioning (x.y.z or x.y.z-snapshot)
 - Semver ranges: For dependencies, versions must be valid semver ranges
 
+**Registry security scan** (runs async on publish):
+- Scans manifest JSON only; file contents never reach the registry
+- Detects behavioral red flags in instruction files (CLAUDE.md, AGENTS.md): hardcoded credentials, suspicious network calls, skip-confirmation flags
+- Flags suspicious file paths: traversal patterns, absolute paths
+- No false negatives from missing files (registry never sees actual file content)
+
 ## Known Limitations
 
 1. **Supply Chain Verification**: While dependencies include sha256 hashes for script installation, verification happens at install time only. Scripts are not sandboxed.
 
 2. **Manifest Execution**: Hylé does not execute code in manifests. All operations are data-driven and non-malicious by design.
 
-3. **Authentication**: Two methods:
+3. **Authentication**: OAuth2 + OIDC (no API keys):
    - GitHub OAuth (web UI): Tokens stored securely by browser (OAuth redirects)
-   - CLI Auth: `hyle login` uses OAuth device flow; tokens stored in `~/.hyle/auth.json` (user-readable, not encrypted)
-   - API Keys: Legacy method; passed via environment variables (never commit)
-   - Never share auth tokens; treat them like passwords
+   - CLI Auth: `hyle login` uses OAuth2 device flow; short-lived access tokens + offline refresh tokens stored in `~/.hyle/auth.json` (user-readable, not encrypted)
+   - Self-hosted Registries: Support any OIDC provider (GitHub Enterprise, GitLab, Keycloak, Auth0, Okta, custom)
+   - Refresh tokens stored locally; treat like passwords
+   - Automatic token refresh before expiry
 
 ## Security Best Practices
 
@@ -104,7 +114,7 @@ For Hylé maintainers:
 
 - **Hylé CLI**: No network access without explicit user action or `--offline` flag
 - **Registry**: HTTPS-only by default; HTTP requires explicit opt-in
-- **Credentials**: Never logged, never cached in plaintext
+- **Refresh Tokens**: Stored in plain text locally; use file permissions (`chmod 600 ~/.hyle/auth.json`) to restrict access
 
 ## Questions?
 

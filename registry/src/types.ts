@@ -20,6 +20,40 @@ export interface JwtPayload {
   exp: number;
 }
 
+export interface OidcPayload {
+  sub: string;
+  iss: string;
+  aud?: string;
+  iat: number;
+  exp: number;
+  email?: string;
+  username?: string;
+  name?: string;
+}
+
+export interface OidcProvider {
+  issuer: string;
+  authorization_endpoint: string;
+  token_endpoint: string;
+  jwks_uri: string;
+  scopes_supported?: string[];
+  response_types_supported?: string[];
+  grant_types_supported?: string[];
+}
+
+export interface JwksKey {
+  kty: string;
+  use?: string;
+  kid?: string;
+  n?: string;
+  e?: string;
+  alg?: string;
+}
+
+export interface Jwks {
+  keys: JwksKey[];
+}
+
 export interface RegistryRecord {
   id: number;
   author: string;

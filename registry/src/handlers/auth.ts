@@ -1,6 +1,6 @@
 import type { IDatabase } from "../db";
 import { signJwt, verifyJwt, createJwtPayload } from "../jwt";
-import type { User } from "../types";
+import type { User, OidcProvider } from "../types";
 
 interface GitHubUser {
   id: number;
@@ -33,8 +33,19 @@ export async function handleGithubOAuth(request: Request, db: IDatabase): Promis
 
 export async function handleGithubCallback(request: Request, db: IDatabase): Promise<Response> {
   const url = new URL(request.url);
-  const code = url.searchParams.get("code");
-  const state = url.searchParams.get("state");
+  let code = url.searchParams.get("code");
+  let state = url.searchParams.get("state");
+
+  // Handle POST with JSON body (secure method)
+  if (request.method === "POST") {
+    try {
+      const body = await request.json() as { code?: string; state?: string };
+      code = body.code || code;
+      state = body.state || state;
+    } catch {
+      // If body is not JSON, fall back to query params
+    }
+  }
 
   if (!code) {
     return new Response("Missing authorization code", { status: 400 });
@@ -81,6 +92,14 @@ export async function handleGithubCallback(request: Request, db: IDatabase): Pro
     const token = await signJwt(jwtPayload, jwtSecret);
 
     if (state === "cli") {
+      // For CLI: return JSON response (POST) or plain text (GET legacy)
+      if (request.method === "POST") {
+        return new Response(JSON.stringify({ token }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
       const redirectUri = url.searchParams.get("redirect_uri");
       if (!redirectUri) {
         return new Response(`token=${token}`, { status: 200 });
@@ -216,4 +235,23 @@ export function extractToken(request: Request): string | null {
     return null;
   }
   return authHeader.slice(7);
+}
+
+export function handleOidcDiscovery(request: Request): Response {
+  const url = new URL(request.url);
+  const issuer = `${url.protocol}//${url.host}`;
+  const config: OidcProvider = {
+    issuer,
+    authorization_endpoint: `${issuer}/auth/github`,
+    token_endpoint: `${issuer}/auth/github/callback`,
+    jwks_uri: `${issuer}/.well-known/jwks.json`,
+    scopes_supported: ["read:user", "user:email"],
+    response_types_supported: ["code"],
+    grant_types_supported: ["authorization_code", "refresh_token"],
+  };
+
+  return new Response(JSON.stringify(config), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
 }

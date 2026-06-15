@@ -3,9 +3,15 @@ import { join } from "path";
 import { homedir } from "os";
 
 interface AuthConfig {
-  token?: string;
+  access_token?: string;
+  refresh_token?: string;
+  expires_at?: number;
   username?: string;
   email?: string;
+  oidc_issuer?: string;
+  provider?: string;
+  // Backward compat
+  token?: string;
 }
 
 async function pollForToken(deviceCode: string, registryUrl: string): Promise<string | null> {
@@ -14,14 +20,15 @@ async function pollForToken(deviceCode: string, registryUrl: string): Promise<st
 
   for (let i = 0; i < maxAttempts; i++) {
     try {
-      const response = await fetch(`${registryUrl}/auth/github/callback?code=${deviceCode}`, {
-        method: "GET",
+      const response = await fetch(`${registryUrl}/auth/github/callback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: deviceCode }),
       });
 
       if (response.ok) {
-        const text = await response.text();
-        const match = text.match(/token=([^\s&]+)/);
-        if (match) return match[1];
+        const data = await response.json() as { token?: string };
+        if (data.token) return data.token;
       }
     } catch (error) {
       // Continue polling
@@ -63,12 +70,24 @@ function getConfigPath(): string {
   return join(hyleDir, "auth.json");
 }
 
-function saveToken(token: string, username?: string, email?: string): void {
+function saveToken(
+  accessToken: string,
+  options?: { refreshToken?: string; expiresIn?: number; username?: string; email?: string; issuer?: string; provider?: string }
+): void {
   const configPath = getConfigPath();
-  const config: AuthConfig = { token, username, email };
+  const expiresAt = options?.expiresIn ? Date.now() + options.expiresIn * 1000 : undefined;
+  const config: AuthConfig = {
+    access_token: accessToken,
+    refresh_token: options?.refreshToken,
+    expires_at: expiresAt,
+    username: options?.username,
+    email: options?.email,
+    oidc_issuer: options?.issuer,
+    provider: options?.provider,
+  };
   writeFileSync(configPath, JSON.stringify(config, null, 2));
   console.log("✓ Authenticated successfully");
-  if (username) console.log(`  Username: ${username}`);
+  if (options?.username) console.log(`  Username: ${options.username}`);
 }
 
 export function getStoredToken(): string | null {
@@ -76,9 +95,22 @@ export function getStoredToken(): string | null {
     const configPath = getConfigPath();
     if (existsSync(configPath)) {
       const config = JSON.parse(readFileSync(configPath, "utf-8")) as AuthConfig;
-      return config.token || null;
+      // Backward compat: check for old 'token' field
+      return config.access_token || config.token || null;
     }
   } catch (error) {
+    // Return null if config doesn't exist or is invalid
+  }
+  return null;
+}
+
+export function getStoredAuth(): AuthConfig | null {
+  try {
+    const configPath = getConfigPath();
+    if (existsSync(configPath)) {
+      return JSON.parse(readFileSync(configPath, "utf-8")) as AuthConfig;
+    }
+  } catch {
     // Return null if config doesn't exist or is invalid
   }
   return null;
@@ -118,12 +150,12 @@ export async function runLogin(options: { registryUrl?: string } = {}): Promise<
 
       if (userResponse.ok) {
         const user = (await userResponse.json()) as { username?: string; email?: string };
-        saveToken(token, user.username, user.email);
+        saveToken(token, { username: user.username, email: user.email, provider: "github", issuer: "https://github.com" });
       } else {
-        saveToken(token);
+        saveToken(token, { provider: "github", issuer: "https://github.com" });
       }
     } catch {
-      saveToken(token);
+      saveToken(token, { provider: "github", issuer: "https://github.com" });
     }
   } catch (error) {
     console.error("✗ Login failed:", error instanceof Error ? error.message : String(error));
@@ -136,6 +168,8 @@ export function logout(): void {
     const configPath = getConfigPath();
     if (existsSync(configPath)) {
       const config = JSON.parse(readFileSync(configPath, "utf-8")) as AuthConfig;
+      config.access_token = undefined;
+      config.refresh_token = undefined;
       config.token = undefined;
       writeFileSync(configPath, JSON.stringify(config, null, 2));
     }

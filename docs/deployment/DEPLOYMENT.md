@@ -1,7 +1,7 @@
-# Hylé — AWS Deployment & Global CLI Distribution Guide
+# Hylé — Self-Hosted Registry & CLI Distribution Guide
 
-> **Who this is for:** You have an AWS free-tier account and have never deployed anything to AWS.
-> This guide walks you from zero to a live website + globally installable CLI.
+> **Who this is for:** You want to run your own Hylé registry backend (for private blueprints, enterprise deployment, or custom hosting).
+> This guide covers: deploying the registry server (Bun + SQLite), hosting the web UI, and distributing CLI binaries.
 
 ---
 
@@ -42,33 +42,34 @@
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                        USER'S BROWSER                           │
-│                 https://hyle.dev (or *.cloudfront.net)          │
+│                     https://app.hyle.dev                        │
 └────────────────────────────┬────────────────────────────────────┘
-                             │ HTTPS
+                             │ HTTPS (static files)
                     ┌────────▼────────┐
-                    │   CloudFront    │  CDN — caches & serves globally
-                    │   (AWS CDN)     │  Free SSL certificate via ACM
-                    └────────┬────────┘
-                             │
-                    ┌────────▼────────┐
-                    │   S3 Bucket     │  Stores built Angular files
-                    │  (static files) │  (HTML, JS, CSS, assets)
+                    │   CDN/StaticHost│  Serves built Angular files
+                    │   (CloudFlare)  │  (HTML, JS, CSS, assets)
                     └─────────────────┘
 
 ┌──────────────────────────────────────────────────────────────────┐
-│                    SUBSTRATE REGISTRY (required)                  │
+│                    SUBSTRATE REGISTRY API                        │
+│                   https://registry.hyle.dev                      │
 │                                                                  │
-│   hyle push/pull  →  API Gateway (api.hyle.dev)                  │
+│   hyle push/pull  →  Bun Server (any VPS/container host)         │
 │                            │                                     │
-│                     Lambda (auth + routing)                       │
-│                      ├──► S3 (substrate files)                   │
-│                      └──► DynamoDB (metadata + versions)         │
+│                    ┌────────┴─────────┐                          │
+│                    ▼                  ▼                          │
+│              SQLite DB         GitHub (file storage)            │
+│            (metadata, stars)    (blueprint files, tags)          │
+│                                                                  │
+│   ✓ No file upload needed (files stay on GitHub)               │
+│   ✓ Simple single-machine deployment                            │
+│   ✓ Easy backup (just SQLite db)                                │
 └──────────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────────┐
 │                       CLI DISTRIBUTION                           │
 │                                                                  │
-│   GitHub Release ──► S3 Bucket (binaries)                        │
+│   GitHub Release ──► GitHub Releases (binaries)                  │
 │         │                                                        │
 │         ├──► Homebrew tap (macOS/Linux)                          │
 │         ├──► Chocolatey package (Windows)                        │
@@ -82,71 +83,72 @@
 ```
 
 **Why this stack?**
-- S3 + CloudFront is the industry standard for static sites — effectively free at small scale.
-- No servers to manage, no OS patches, auto-scaling built-in.
-- Binary-first CLI means no runtime (Node, Python, etc.) needed on user machines.
+- **Bun server** — Fast, single-process, minimal dependencies; ideal for VPS/container deployment.
+- **SQLite** — Zero-admin database; stored as a single file; easy backup and migration.
+- **GitHub** — Blueprints live on publishers' repos; registry only stores metadata + checksums; no file storage overhead.
+- **Binary-first CLI** — No runtime (Node, Python, etc.) needed on user machines.
 
 ---
 
-## 2. Cost Tiers at a Glance
+## 2. Cost & Infrastructure Options
 
-> All prices in USD/month. Free Tier benefits apply for the first 12 months after account creation.
+**Hylé registry backend** uses Bun + SQLite — minimal dependencies, easy to deploy anywhere.
 
-| Tier | Monthly cost | S3 | CloudFront | Route 53 | Backend API | Best for |
-|------|-------------|-----|-----------|----------|-------------|----------|
-| **Free** | ~$0 | ✅ 5 GB storage, 20K PUT, 20K GET | ✅ 1 TB transfer, 10M requests | ❌ no custom domain | ✅ Lambda + API GW free tier (1M req/mo) + DynamoDB 25 GB free | Testing, personal use |
-| **Starter** | ~$1–3 | ✅ same + ~$0.02/GB extra | ✅ same | ✅ $0.50/hosted zone + ~$12/yr domain | ✅ same free tier (sufficient under ~50 users) | Early launch, small traffic |
-| **Growth** | ~$10–30 | ✅ ~$0.023/GB/month | ~$0.008–0.02/GB | ✅ included | ✅ Lambda + API GW ~$3.50/1M req + DynamoDB on-demand | Active product, public users |
-| **Scale** | ~$50–150 | ✅ | ✅ + WAF $5/mo | ✅ | ✅ Lambda + DynamoDB provisioned or RDS Serverless v2 | Thousands of daily users |
-| **Enterprise** | $150+ | Multi-region replication | Custom price point | ✅ Advanced routing | ECS Fargate or EKS + RDS Multi-AZ | Commercial product |
+| Option | Monthly cost | Best for |
+|--------|-----------|----------|
+| **Development** | $0 | Local machine or laptop testing |
+| **Small scale (VPS)** | $5–15 | Testing, private blueprints, small teams |
+| **Production (VPS/Container)** | $10–50 | Public registry, <1000 users, auto-backups |
+| **High availability** | $50+ | PostgreSQL (for HA), multi-node, auto-scaling |
 
-> **The registry (Part C) is required at every tier.** GitHub is not used as a registry backend — only for source control and CI/CD.
+**What you pay for:**
+- **Domain name:** ~$10–15/year (optional; localhost works for dev)
+- **Hosting:** See options above (VPS, container, or cloud VMs)
+- **Web CDN:** Optional; static site (web UI + CLI binaries) can go on Vercel, Netlify, or GitHub Pages (free tier often sufficient)
+- **Database:** Included (SQLite); zero additional cost
 
-**What you actually pay after free tier ends:**
-- S3 storage: $0.023/GB/month (substrate files are tiny — fractions of a cent at small scale)
-- CloudFront: $0.0085–$0.02/GB egress (~$0.85 per 100 GB)
-- Route 53: $0.50/month per hosted zone + domain registration cost
-- Lambda (registry API): first 1 million requests/month free forever (not just 12 months)
-- DynamoDB: 25 GB storage + 25 WCU/RCU free forever
+**Zero cost for:**
+- Blueprint file storage (GitHub repos)
+- CLI binary distribution (GitHub Releases)
+- Registry API hosting on modest VPS
 
-**Recommendation for launch:** Use the **Starter** tier. Total cost stays under $3/month for a real custom domain, HTTPS, global CDN, and a fully functional registry backend.
+**Recommendation:** For most use cases, a simple $5–10/mo VPS with Bun + SQLite is all you need. Add PostgreSQL later if you need HA.
 
 ---
 
 ## 3. Prerequisites
 
-### Accounts you need
+### Infrastructure & Accounts
 
-| What | Where | Cost |
-|------|-------|------|
-| AWS account | [aws.amazon.com](https://aws.amazon.com) | Free (credit card required for identity verification) |
-| GitHub account | [github.com](https://github.com) | Free |
-| Domain name | Route 53, Namecheap, or Cloudflare | ~$10–15/year |
+| What | Where | Cost | Note |
+|------|-------|------|------|
+| Linux host (VPS) | DigitalOcean, Linode, AWS EC2, GCP, etc. | $5–50/mo | For registry server |
+| Domain name | Namecheap, Cloudflare, GoDaddy | ~$10–15/yr | Optional (use IP for dev) |
+| GitHub account | [github.com](https://github.com) | Free | Already needed for CI/CD |
 
-### Tools to install on your machine
+### Tools to install on your machine (for development)
 
 ```bash
-# 1. AWS CLI — talks to AWS from your terminal
-# macOS
-brew install awscli
-
-# Ubuntu / Debian
-curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o aws.zip
-unzip aws.zip && sudo ./aws/install
-
-# Windows (PowerShell as Administrator)
-winget install Amazon.AWSCLI
-
-# Verify
-aws --version   # should print: aws-cli/2.x.x ...
-
-# 2. Bun — to build the CLI
+# 1. Bun — to build the CLI and web UI
 curl -fsSL https://bun.sh/install | bash
 
-# (Bun covers both CLI and Angular builds — no separate Node/npm installation needed)
+# 2. Verify
+bun --version   # should print: bun X.Y.Z
 ```
 
-### Configure AWS CLI with your credentials
+### On your Linux host (VPS)
+
+Install Bun on the server where you'll run the registry:
+
+```bash
+# SSH into your VPS
+ssh user@your-vps-ip
+
+# Install Bun
+curl -fsSL https://bun.sh/install | bash
+
+# Verify
+bun --version
 
 1. Log in to [console.aws.amazon.com](https://console.aws.amazon.com)
 2. Click your name (top right) → **Security credentials**
@@ -515,50 +517,81 @@ curl -fsSL https://hyle-releases.s3.amazonaws.com/install.sh | bash
 
 ---
 
-## Part C — Substrate Registry Backend (required)
+## Part C — Deploy the Registry Backend (Bun + SQLite)
 
-The registry is the core of Hylé — it stores, versions, and serves substrates. GitHub is not used as a registry; deploy this on AWS from day one.
+The registry backend is a simple Bun HTTP server + SQLite database. Deploy it on any VPS, container host, or cloud VM.
 
-Use **API Gateway + Lambda + S3 + DynamoDB**:
-
+**Architecture:**
 ```
-hyle push  →  POST /substrates  →  API Gateway  →  Lambda  →  S3 (files) + DynamoDB (metadata)
-hyle pull  →  GET  /substrates/:name  →  API Gateway  →  Lambda  →  S3
+hyle push/pull  →  HTTP/HTTPS  →  Bun Server (port 3000)  →  SQLite DB
+                                       ↓
+                                  GitHub (file storage)
 ```
 
-**Estimated cost (1,000 users, moderate usage):**
-- Lambda: ~$0 (under 1M free requests/month forever)
-- API Gateway: ~$3.50/million requests
-- DynamoDB: ~$0 (25 GB free forever)
-- S3 storage: ~$0.023/GB
+**No file upload:** Blueprints stay on GitHub; registry stores only manifests + checksums.
 
-**Skeleton Lambda (Node/TypeScript, deploy via AWS SAM or CDK):**
+### C1. On your local machine (build phase)
 
-```typescript
-// lambda/registry/index.ts
-import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
-import { DynamoDBClient, PutItemCommand, GetItemCommand } from "@aws-sdk/client-dynamodb";
+```bash
+# Clone the Hylé repo
+git clone https://github.com/kittender/hyle.git
+cd hyle
 
-const s3 = new S3Client({ region: process.env.AWS_REGION });
-const dynamo = new DynamoDBClient({ region: process.env.AWS_REGION });
+# Build the registry server
+cd registry && bun install && bun build --target bun > /tmp/registry.zip
 
-export const handler = async (event: any) => {
-  const method = event.httpMethod;
-  const path = event.path;
-
-  if (method === "PUT" && path.startsWith("/substrates/")) {
-    // hyle push — store substrate files in S3, metadata in DynamoDB
-    // ... implementation
-  }
-
-  if (method === "GET" && path.startsWith("/substrates/")) {
-    // hyle pull — fetch from S3
-    // ... implementation
-  }
-
-  return { statusCode: 404, body: "Not found" };
-};
+# Copy to VPS
+scp /tmp/registry.zip user@your-vps-ip:~/hyle-registry.zip
 ```
+
+### C2. On your VPS
+
+```bash
+# SSH into the VPS
+ssh user@your-vps-ip
+
+# Extract
+unzip ~/hyle-registry.zip -d ~/hyle
+
+# Set required environment variables
+cat > ~/.env.hyle <<EOF
+PORT=3000
+DB_PATH=/data/hyle-registry.db
+BASE_URL=https://registry.hyle.dev
+JWT_SECRET=$(openssl rand -hex 32)
+HYLE_WEB_ORIGIN=https://app.hyle.dev
+GITHUB_CLIENT_ID=your_github_app_id
+GITHUB_CLIENT_SECRET=your_github_app_secret
+FRONTEND_URL=https://app.hyle.dev
+RESEND_API_KEY=your_resend_key
+HYLE_RATE_LIMIT=10
+EOF
+
+# Start the server (using a process manager like systemd)
+sudo systemctl start hyle-registry
+# or: nohup bun registry/index.ts > ~/hyle.log 2>&1 &
+```
+
+### C3. Set up reverse proxy (HTTPS)
+
+Use Nginx or Caddy to proxy port 3000 → HTTPS:
+
+```bash
+# Install Caddy (easiest for auto-HTTPS)
+sudo apt install -y caddy
+
+# Configure
+sudo tee /etc/caddy/Caddyfile <<EOF
+registry.hyle.dev {
+  reverse_proxy localhost:3000
+}
+EOF
+
+# Start
+sudo systemctl restart caddy
+```
+
+**Database:** SQLite stored at `/data/hyle-registry.db` (see `DB_PATH` above). Backup this file daily.
 
 ---
 

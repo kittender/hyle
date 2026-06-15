@@ -9,16 +9,71 @@ Complete reference for the Hylé Registry backend API (AWS Lambda + S3 + Postgre
 
 ## Authentication
 
-API keys are passed via the `Authorization` header:
+All endpoints require OAuth2 + OIDC authentication. Tokens are passed via the `Authorization` header:
 
 ```
-Authorization: Bearer <api-key>
+Authorization: Bearer <access-token>
 ```
 
-API keys are obtained by:
-1. Registering on the Hylé website
-2. Generating a key in your account settings
-3. Never commit keys to version control (use environment variables)
+Access tokens are obtained by:
+1. **Public Registry** (`https://api.hyle.dev`): Use `hyle login` (GitHub OAuth)
+2. **Self-Hosted Registry**: Use `hyle login --registry <custom-url>` (supports any OIDC provider)
+
+Tokens are short-lived (expiry varies by provider). Use refresh tokens to obtain new access tokens automatically (CLI handles this transparently).
+
+### Public Registry (GitHub SSO Only)
+
+```bash
+# Interactive login (GitHub device flow)
+hyle login
+
+# Token stored in ~/.hyle/auth.json
+cat ~/.hyle/auth.json
+```
+
+### Self-Hosted Registry (Any OIDC Provider)
+
+```bash
+# Registry must expose OpenID Connect discovery
+hyle login --registry https://company-registry.internal
+
+# CLI auto-detects OIDC provider from registry's /.well-known/openid-configuration
+# Supports GitHub Enterprise, GitLab, Keycloak, Auth0, Okta, or custom OIDC
+```
+
+## OpenID Connect Discovery
+
+All registries expose a standard OpenID Connect discovery endpoint. CLI uses this to auto-detect OIDC provider configuration.
+
+### Discovery Endpoint
+
+**Endpoint**: `GET /.well-known/openid-configuration`
+
+**Response** (200 OK):
+
+```json
+{
+  "issuer": "https://api.hyle.dev",
+  "authorization_endpoint": "https://github.com/login/oauth/authorize",
+  "token_endpoint": "https://github.com/login/oauth/access_token",
+  "jwks_uri": "https://api.hyle.dev/.well-known/jwks.json",
+  "scopes_supported": ["read:user", "user:email"],
+  "response_types_supported": ["code"],
+  "grant_types_supported": ["authorization_code", "refresh_token"]
+}
+```
+
+**Usage**:
+
+```bash
+# Public registry discovery
+curl https://api.hyle.dev/.well-known/openid-configuration | jq .
+
+# Self-hosted registry discovery
+curl https://company-registry.internal/.well-known/openid-configuration | jq .
+```
+
+This endpoint is **unauthenticated** (no Authorization header needed). CLI auto-detects the OIDC provider from this endpoint and directs the user to the correct login flow.
 
 ## Core Endpoints
 
@@ -36,7 +91,7 @@ API keys are obtained by:
 **Example**:
 
 ```bash
-curl -H "Authorization: Bearer $HYLE_API_KEY" \
+curl -H "Authorization: Bearer $HYLE_ACCESS_TOKEN" \
   "https://api.hyle.dev/search?q=auth&limit=10"
 ```
 
@@ -69,7 +124,7 @@ curl -H "Authorization: Bearer $HYLE_API_KEY" \
 **Example**:
 
 ```bash
-curl -H "Authorization: Bearer $HYLE_API_KEY" \
+curl -H "Authorization: Bearer $HYLE_ACCESS_TOKEN" \
   "https://api.hyle.dev/substrates/kittender/auth-middleware/1.2.0"
 ```
 
@@ -143,7 +198,7 @@ Downloads the complete substrate as a `.tar.gz` file.
 **Example**:
 
 ```bash
-curl -H "Authorization: Bearer $HYLE_API_KEY" \
+curl -H "Authorization: Bearer $HYLE_ACCESS_TOKEN" \
   "https://api.hyle.dev/substrates/kittender/auth-middleware/1.2.0/bundle" \
   -o substrate.tar.gz
 
@@ -161,7 +216,7 @@ sha256sum -c <<< "xyz789... substrate.tar.gz"
 **Endpoint**: `POST /substrates/:author/:name`
 
 **Headers**:
-- `Authorization: Bearer <api-key>`
+- `Authorization: Bearer <access-token>` (OAuth2/OIDC access token)
 - `Content-Type: multipart/form-data`
 
 **Body Parameters**:
@@ -173,8 +228,12 @@ sha256sum -c <<< "xyz789... substrate.tar.gz"
 **Example**:
 
 ```bash
+# Get access token
+hyle login
+TOKEN=$(jq -r '.access_token' ~/.hyle/auth.json)
+
 curl -X POST \
-  -H "Authorization: Bearer $HYLE_API_KEY" \
+  -H "Authorization: Bearer $TOKEN" \
   -F "manifest=@hyle.yaml" \
   -F "bundle=@substrate.tar.gz" \
   -F "version=1.2.0" \
@@ -211,7 +270,7 @@ Returns dependency resolution hints (available versions, latest stable, etc.).
 **Example**:
 
 ```bash
-curl -H "Authorization: Bearer $HYLE_API_KEY" \
+curl -H "Authorization: Bearer $HYLE_ACCESS_TOKEN" \
   "https://api.hyle.dev/substrates/kittender/auth-middleware/1.2.0/deps"
 ```
 
@@ -244,7 +303,7 @@ List all published versions of a substrate.
 **Example**:
 
 ```bash
-curl -H "Authorization: Bearer $HYLE_API_KEY" \
+curl -H "Authorization: Bearer $HYLE_ACCESS_TOKEN" \
   "https://api.hyle.dev/substrates/kittender/auth-middleware/versions?stable_only=true"
 ```
 
@@ -592,6 +651,18 @@ curl -s "https://api.hyle.dev/substrates/author/name/1.0.0" | \
 
 ### Publish a Substrate
 
+Using the CLI (recommended):
+
+```bash
+# Login (GitHub OAuth device flow)
+hyle login
+
+# Push substrate (CLI handles auth automatically)
+hyle push --version 1.2.0
+```
+
+Using the API directly:
+
 ```bash
 #!/bin/bash
 
@@ -603,12 +674,15 @@ tar czf substrate.tar.gz \
   src/ \
   schema/
 
-# Get API key (set environment variable)
-export HYLE_API_KEY="sk_live_..."
+# Login to get access token (if not already logged in)
+hyle login --registry https://api.hyle.dev
 
-# Publish
+# Get access token from stored auth
+TOKEN=$(jq -r '.access_token' ~/.hyle/auth.json)
+
+# Publish via API
 curl -X POST \
-  -H "Authorization: Bearer $HYLE_API_KEY" \
+  -H "Authorization: Bearer $TOKEN" \
   -F "manifest=@manifest.yaml" \
   -F "bundle=@substrate.tar.gz" \
   -F "version=1.2.0" \
@@ -618,19 +692,37 @@ curl -X POST \
 
 ### Search and Pull
 
+Using the CLI (recommended):
+
+```bash
+# Search for substrates
+hyle search auth --tag oidc
+
+# Pull substrate (CLI handles auth automatically)
+hyle pull author/name@1.0.0
+```
+
+Using the API directly:
+
 ```bash
 #!/bin/bash
 
+# Login to get access token
+hyle login
+
+# Get access token from stored auth
+TOKEN=$(jq -r '.access_token' ~/.hyle/auth.json)
+
 # Search for substrates
-curl -H "Authorization: Bearer $HYLE_API_KEY" \
+curl -H "Authorization: Bearer $TOKEN" \
   "https://api.hyle.dev/search?q=auth&tag=oidc"
 
 # Get metadata
-curl -H "Authorization: Bearer $HYLE_API_KEY" \
+curl -H "Authorization: Bearer $TOKEN" \
   "https://api.hyle.dev/substrates/author/name/1.0.0"
 
 # Download bundle
-curl -H "Authorization: Bearer $HYLE_API_KEY" \
+curl -H "Authorization: Bearer $TOKEN" \
   "https://api.hyle.dev/substrates/author/name/1.0.0/bundle" \
   -o substrate.tar.gz
 ```

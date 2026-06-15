@@ -7,7 +7,6 @@
     <div class="nav-links" [class.open]="menuOpen()">
       <button class="nav-link" [class.active]="isActive('/search') || currentPath === '/'" (click)="goTo('/search')">Browse</button>
       <button class="nav-link" [class.active]="isActive('/docs')" (click)="goTo('/docs')">Docs</button>
-      <button class="nav-link" [class.active]="isActive('/enterprise')" (click)="goTo('/enterprise')">Enterprise</button>
     </div>
 
     <button class="nav-hamburger" (click)="toggleMenu()" [class.open]="menuOpen()">
