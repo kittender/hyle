@@ -4,9 +4,28 @@ Quick reference for `hyle.yaml`, `.hyle`, and `.hyleignore`.
 
 ---
 
-## hyle.yaml — Substrate Manifest
+## hyle.yaml — Blueprint Manifest
 
 Required fields: `name`, `author`, `version`, `models`. On publish, requires `url` (auto-detected from git remote).
+
+### Minimal Config (Beginners)
+
+```yaml
+name: my-blueprint
+author: my-username
+version: 0.1.0
+description: My first blueprint
+license: MIT
+
+models:
+  primary:
+    provider: anthropic
+    model: claude-sonnet-4-6
+```
+
+(No fallbacks or secondary model needed for simple blueprints.)
+
+### Full Field Reference
 
 | Field | Type | Description |
 |-------|------|---|
@@ -23,7 +42,7 @@ Required fields: `name`, `author`, `version`, `models`. On publish, requires `ur
 | `blueprint.craft` | array | Technical structure (SKILLS.md, ARCHITECTURE.md, package.json) |
 | `blueprint.identities` | array | Agent definitions (.claude/agents/*.md) |
 | `blueprint.ethics` | array | Policies (.cedar files, eval configs) |
-| `extends` | array | Parent substrates to inherit from (v0.3+) |
+| `extends` | array | Parent blueprints to inherit from (v0.3+) |
 
 ### Model Configuration
 
@@ -87,7 +106,7 @@ Global defaults at `~/.hyle`; local overrides at `<project>/.hyle`. Local takes 
 remote_url: https://registry.hylé.com
 currency: EUR                        # Cost estimates (EUR or USD)
 default_llm: fallback                # Model key from hyle.yaml for extensions
-auto_inject: true                    # Inject file refs into agent files on pull
+auto_inject: true                    # Add blueprint reference comment to CLAUDE.md on hyle init
 contribute_deps: true                # Share resolved dep commands with registry
 
 split_threshold: "80%"               # hyle watch --split threshold (% or tokens)

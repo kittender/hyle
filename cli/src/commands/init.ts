@@ -195,10 +195,10 @@ export function injectHyleReference(
 	if (!existsSync(claudeMdPath)) return;
 
 	const content = readFileSync(claudeMdPath, "utf8");
-	const marker = "<!-- hyle-substrate: ";
+	const marker = "<!-- hyle-blueprint: ";
 	if (content.includes(marker)) return; // Already injected
 
-	const reference = `<!-- hyle-substrate: ${author}/${name}@${version} — see hyle.yaml for models, .hyle for config -->`;
+	const reference = `<!-- hyle-blueprint: ${author}/${name}@${version} — see hyle.yaml for models, .hyle for config -->`;
 	const updated = `${reference}\n${content}`;
 	writeFileSync(claudeMdPath, updated);
 }

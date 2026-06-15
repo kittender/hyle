@@ -13,6 +13,26 @@ hyle init
 
 Generates `hyle.yaml` at project root. The `name + author` combination must be unique on the registry — Hylé checks this during init.
 
+**Example output:**
+```yaml
+name: my-cool-ai-project
+author: jane-doe
+version: 0.1.0
+description: My AI project with Claude
+license: MIT
+
+models:
+  primary:
+    provider: anthropic
+    model: claude-sonnet-4-6
+
+blueprint:
+  ontology: []
+  craft: []
+  identities: []
+  ethics: []
+```
+
 ---
 
 ## 2. Scan and organize files
@@ -118,13 +138,17 @@ blueprint:
 
 ### Declaring dependencies
 
-The `url` field is the authoritative source. Hylé maintains a shared database of install commands per OS — do NOT write install commands yourself unless auto-detection fails.
+**What:** External tools your blueprint requires to work (Cedar, Node, Java, databases, CLI tools, etc.).
+
+**Why:** When users `hyle pull` your blueprint, Hylé auto-detects missing tools, checks versions, and warns if they're missing. If deps can't be found, blueprint still installs (doesn't fail), but user gets a warning. Ideally, include an `install.sh` script in your blueprint that handles all dependency setup for your project.
+
+**How:** Add `dependencies` block to `hyle.yaml`. Hylé uses `url` to find official install commands per OS. Don't write install commands yourself — Hylé maintains a shared database keyed by source URL. If your `install.sh` only works on one OS, Hylé warns about OS-specific compatibility.
 
 | Field | Required | Purpose |
 |---|---|---|
-| `name` | yes | Identifier for PATH lookup and version check |
+| `name` | yes | Tool identifier for PATH lookup and version check |
 | `version` | yes | Semver constraint (`>=3.0`, `^2.1`, `latest`) |
-| `url` | yes | Official source URL; Hylé resolves install commands from here |
+| `url` | yes | Official source URL (GitHub repo, npm, Maven Central, etc.); Hylé resolves install commands from here |
 | `install.macos` | no | Override for macOS if auto-detect fails |
 | `install.linux` | no | Override for Linux |
 | `install.windows` | no | Override for Windows |
@@ -147,7 +171,7 @@ The `url` field is the authoritative source. Hylé maintains a shared database o
 On publish, Hylé will:
 1. Auto-detect your GitHub repo URL
 2. Verify all declared files are committed and pushed
-3. Create git tag `v{version}` and push to remote
+3. Create git tag `hyle-v{version}` and push to remote
 4. Register blueprint with registry: manifest + per-file SHA-256 checksums (no file upload)
 
 Default registry: [registry.hylé.com](https://registry.hylé.com)

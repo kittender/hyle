@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { createReadStream, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { createGzip } from "node:zlib";
+import { execSync } from "node:child_process";
 import { cancel, confirm, intro, outro } from "@clack/prompts";
 import { dump } from "js-yaml";
 import * as semver from "semver";
@@ -97,6 +98,9 @@ export async function runPublish(
 		);
 
 		writeFileSync(manifestPath, dump(updatedManifest, { lineWidth: 80 }));
+
+		// Create and push git tag for substrate release
+		await createAndPushGitTag(newVersion, cwd);
 
 		outro(
 			`✓ Published ${manifest.author}/${manifest.name}@${newVersion}\n  Registry: ${registryUrl}`,
@@ -213,4 +217,41 @@ async function createBundle(
 	}
 
 	return buffer;
+}
+
+async function createAndPushGitTag(version: string, cwd: string): Promise<void> {
+	try {
+		// Use hyle-v prefix to distinguish substrate releases from code releases
+		const tagName = `hyle-v${version}`;
+
+		// Check if git is available
+		execSync("git --version", { cwd, stdio: "ignore" });
+
+		// Create annotated tag with version info
+		execSync(`git tag -a ${tagName} -m "Hylé substrate release: v${version}"`, {
+			cwd,
+			stdio: "ignore",
+		});
+
+		// Check if there's a remote to push to
+		try {
+			execSync("git remote get-url origin", { cwd, stdio: "ignore" });
+			execSync("git push origin --tags", { cwd, stdio: "ignore" });
+			if (process.stdin.isTTY !== false) {
+				console.log(`✓ Created and pushed git tag: ${tagName}`);
+			}
+		} catch {
+			// No remote configured, skip push but don't fail
+			if (process.stdin.isTTY !== false) {
+				console.log(
+					`✓ Created git tag: ${tagName} (no remote to push to)`,
+				);
+			}
+		}
+	} catch (e) {
+		// Git operations are a nice-to-have feature; don't block publish if they fail
+		if (process.stdin.isTTY !== false) {
+			console.warn(`⚠ Could not create git tag: ${(e as Error).message}`);
+		}
+	}
 }
