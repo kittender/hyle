@@ -1,139 +1,64 @@
 # Hylé Architecture & Design Decisions
 
-This document captures architectural principles, known design issues, and proposed improvements.
+Architectural principles, design trade-offs, and known issues.
 
-**For implementation status and release readiness, see [PRODUCTION_READINESS_REVIEW.md](PRODUCTION_READINESS_REVIEW.md).**
-**For current/next development tasks, see [TODO.md](TODO.md).**
-
----
-
-## Known Design Issues & Proposed Fixes
-
-### 1. Registry trust — behavioral attack surface
-
-**Problem:** Automated scans catch shell patterns (`curl | bash`, hardcoded credentials) but miss the real vector: malicious `CLAUDE.md` instructions that direct LLMs to exfiltrate data, skip confirmations, or perform destructive operations through natural language.
-
-**Proposed fixes:**
-- Sandboxed diff preview: render instruction files (CLAUDE.md, agent `.md`) as plain text diffs before applying—never execute or pass to LLM during pull
-- Behavioral keyword scan: flag patterns like `ignore previous instructions`, `do not ask confirmation`, `exfiltrate`, `webhook`, explicit prompt injection
-- Author trust tiers: `unverified` (default), `community` (50+ pulls, no flags, 6+ months), `verified` (OAuth + manual review). Display on pull and listing
-- Quorum flagging: community flags require 3 independent registered users, not 1—prevents harassment
-- Pull warning for instruction files: surface explicit warning when substrate contains directive language (`you must`, `always`, `never`) in identities/ontology
+**Quick Links:**
+- [ROADMAP.md](ROADMAP.md) — Shipped, roadmap, phases
+- [SECURITY_AUDIT.md](SECURITY_AUDIT.md) — Threat model, P0-P10 findings
+- [DEPLOYMENT.md](DEPLOYMENT.md) — Operations, monitoring, runbooks
+- [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) — Pre-ship checklist
+- [CONTRIBUTING.md](CONTRIBUTING.md) — Dev setup, testing, PR workflow
 
 ---
 
-### 2. Client lock-in — Claude-centric by default
+## System Architecture
 
-**Problem:** Scan commands and examples target only Claude (`.claude/agents/`, CLAUDE.md, MCP configs). Cursor, Copilot, Windsurf, and others are invisible in docs despite tool being client-agnostic.
-
-**Status:** README now documents non-Claude equivalents (`.cursorrules`, `.github/copilot-instructions.md`, `.continue/config.json`, `.windsurf/rules/*.md`).
-
-**Remaining:** CLI binary scan defaults still need to include these paths so `hyle ontology` actually finds them without manual config.
-
----
-
-### 3. `hyle watch --split` — context-split assistance
-
-**Problem:** Duplicates what Claude Code's compaction and provider apps already handle.
-
-**Proposed fix:**
-- Scope narrowly as a clipboard-ready prompt only (no OSC 8 hyperlinks, no terminal UI integration)
-- Keep token monitoring for cost tracking—replace split feature with:
-  - `hyle watch --budget <amount>`: alert when session cost crosses threshold
-  - `hyle watch --export`: write session cost summary to file on exit (for team reporting/CI logs)
-
----
-
-### 4. GDPR audit trail — wrong audience, wrong layer
-
-**Problem:** Hash-chained per-MCP-call logs for Article 30 compliance only matter to enterprises with formal GDPR obligations. Those enterprises use dedicated DLP and audit tooling, not a developer CLI.
-
-**Proposed fixes:**
-- Demote to enterprise extension: move `hyle watch --audit` out of core watcher into separate `hyle install audit` extension (not installed by default)
-- Drop hash-chaining complexity unless ecosystem requires it: structured JSONL log (session ID, model, tool name, tokens) satisfies most audit needs without tamper-evident overhead
+```mermaid
+graph LR
+    CLI["CLI<br/>Bun+TypeScript<br/>commands/"]
+    Config["Config<br/>.hyle<br/>hyle.yaml"]
+    RegistryAPI["Registry API<br/>Bun HTTP<br/>handlers/"]
+    GitHubRaw["GitHub<br/>raw.githubusercontent.com<br/>blueprint files"]
+    WebUI["Web UI<br/>Angular<br/>search/detail"]
+    GitHub["GitHub OAuth"]
+    Resend["Resend<br/>email service"]
+    
+    CLI -->|read/write| Config
+    CLI -->|publish,pull,<br/>search| RegistryAPI
+    RegistryAPI -->|fetch files| GitHubRaw
+    RegistryAPI -->|verify author| GitHub
+    RegistryAPI -->|send notifications| Resend
+    WebUI -->|search,fetch| RegistryAPI
+    WebUI -->|auth| GitHub
+    
+    style CLI fill:#42b983
+    style RegistryAPI fill:#42b983
+    style WebUI fill:#35495e
+    style GitHub fill:#000
+    style Resend fill:#ffc40e
+    style GitHubRaw fill:#000
+```
 
 ---
 
-### 5. Monthly model-pin email — wrong channel
+## Known Design Issues
 
-**Problem:** Email notification for stale `model_pin` is passive, infrequent, requires backend pipeline. Developers want to discover this in terminal, not inbox.
+Full details in [ARCHITECTURE_ISSUES.md](ARCHITECTURE_ISSUES.md) — here's a summary:
 
-**Proposed fixes:**
-- Add `hyle outdated` command: checks all pinned `model_pin` values in `hyle.yaml` against provider-maintained checkpoint registry
-- Print warning on `hyle push` and `hyle release` if any `model_pin` is stale
-- Keep email as opt-in (preference in registry account settings), not default
+| Issue | Status | Details |
+|-------|--------|---------|
+| 1. Registry trust model | ⏳ Partial | Manifest scan covers behavioral keywords; needs blocking + diff preview (Phase 5D) |
+| 2. Client lock-in | ❌ Not started | CLI scans don't find non-Claude clients; Phase 5D task |
+| 3. `hyle watch --split` | ⏳ Proposed | Replace with `--budget` cost tracking (Phase 5D) |
+| 4. GDPR audit trail | ⏳ Proposed | Move to enterprise extension (Phase 5D) |
+| 5. Model-pin email | ✅ Resolved | Implemented as CLI warning on push + `hyle outdated` |
+| 6. `hyle.json` weight | ⏳ Proposed | Switch to user-declared priority in hyle.yaml (Phase 5D) |
+| 7. Private blueprints | ✅ Resolved | Private GitHub repos = private blueprints (by design, no extra work) |
+| 8. No drift detection | ✅ Resolved | hyle.lock + outdated + upgrade + verify (v0.2.0) |
+| 9. No CI integration | ✅ Resolved | `hyle verify` with exit codes (v0.2.0) |
+| 10. No composition | ✅ Resolved | `extends` field implemented (v0.2.0) |
 
----
-
-### 6. `hyle.json` weight scores — LLM-generated noise
-
-**Problem:** Relevance score (0–1) generated by lightweight model will be inconsistent across runs, unreliable for large projects, teaches users to ignore it.
-
-**Proposed fix:**
-- Remove `weight` field from `hyle.json` schema
-- Replace with user-declared priority in `hyle.yaml`:
-  ```yaml
-  substrate:
-    ontology:
-      - path: CLAUDE.md
-        priority: high      # high | normal | low
-      - path: docs/old-design.md
-        priority: low
-  ```
-  `hyle.json` reflects declared priority (no LLM inference). Users can trust it.
-
----
-
-### 7. Private blueprints — Enterprise/Private Use ✅ RESOLVED
-
-**Previous problem:** Only public registry or custom GitHub URL. Companies with internal AI conventions, proprietary configs, or compliance requirements cannot use tool.
-
-**Resolution (by design):** Blueprints are published to the GitHub repos developers already own and control. Private GitHub repos = private blueprints. No separate registry auth needed. If a developer can read the GitHub repo, they can pull the blueprint.
-
-**For companies:** Host the Hylé registry on your own infrastructure (see [DEPLOYMENT.md](docs/deployment/DEPLOYMENT.md)) and use private GitHub repos. Blueprints registered against private repos are invisible to the public Hylé registry.
-
----
-
-### 8. No drift detection — substrates go stale silently
-
-**Problem:** After `hyle pull`, no mechanism to detect upstream new versions. Developers pull substrate and work for months on stale config.
-
-**Proposed fixes:**
-- `hyle.lock` file: generated on pull, records pulled substrate name, version, checksum. Committed to version control (like `package-lock.json`)
-- `hyle outdated` (extends fix #5): checks `hyle.lock` against registry for newer stable versions
-- `hyle upgrade [name]`: pull newer version, show diff, confirm before applying (mirrors `npm update` ergonomics)
-
----
-
-### 9. No CI / lockfile integration — tool is human-only
-
-**Problem:** No way to verify substrate integrity in CI, no lockfile format, no programmatic interface. Teams cannot enforce that repo substrate matches registry version.
-
-**Proposed fixes:**
-- `hyle verify` command: reads `hyle.lock`, checks each entry's files against stored checksum. Exits non-zero on mismatch (suitable for CI)
-- `hyle verify --registry`: also checks that local `hyle.lock` version matches current stable version on registry (warns, not fails, on outdated)
-- Exit codes documented and stable: `0` = pass, `1` = checksum mismatch, `2` = registry unreachable, `3` = outdated
-
----
-
-### 10. No substrate composition — copy-paste culture guaranteed
-
-**Problem:** Every substrate is flat. No inheritance/extension mechanism. Teams that want base corporate substrate + project-specific layer must duplicate manually.
-
-**Proposed fixes:**
-- `extends` field in `hyle.yaml`: declares parent substrate. On pull, fetch parent first, apply child on top. Conflicts resolved with `override: true` per file
-  ```yaml
-  name: acme-java-springboot
-  extends: claude-java-springboot@1.0.11    # parent substrate + pinned version
-  
-  substrate:
-    ontology:
-      - path: CLAUDE.md
-        override: true      # replaces parent's CLAUDE.md
-      - internal-conventions.md   # added on top
-  ```
-- `hyle pull` shows merged diff: when pulling substrate with `extends`, diff shows effective result (parent + child merged)
-- Limit inheritance depth to 2: parent → child only. Deeper inheritance creates opaque dependency graphs
+**Security findings:** See [SECURITY_AUDIT.md](SECURITY_AUDIT.md) for threat model, P0-P10 issues, and verification checklist.
 
 ---
 
@@ -173,30 +98,13 @@ Fallback resolution tries each entry in order; skips entries whose provider repo
 
 ---
 
-## Implementation Status
-
-| Issue | Status | Details |
-|-------|--------|---------|
-| 1. Registry trust model | ⏳ Partial | Manifest scan covers behavioral keywords; file-content scanning not needed (files never leave GitHub) |
-| 2. Client lock-in | ❌ Not started | CLI scans don't find non-Claude clients; Phase 5D task |
-| 3. `hyle watch --split` | ⏳ Proposed | Replace with `--budget` cost tracking (Phase 5D) |
-| 4. GDPR audit trail | ⏳ Proposed | Move to enterprise extension (Phase 5D) |
-| 5. Model-pin email | ✅ Resolved | Implemented as CLI warning on push + `hyle outdated` |
-| 6. `hyle.json` weight | ⏳ Proposed | Switch to user-declared priority in hyle.yaml (Phase 5D) |
-| 7. Private blueprints | ✅ Resolved | Private GitHub repos = private blueprints (by design, no extra work) |
-| 8. No drift detection | ✅ Resolved | hyle.lock + outdated + upgrade + verify (v0.2.0) |
-| 9. No CI integration | ✅ Resolved | `hyle verify` with exit codes (v0.2.0) |
-| 10. No composition | ✅ Resolved | `extends` field implemented (v0.2.0) |
-
-For details, see [PRODUCTION_READINESS_REVIEW.md](PRODUCTION_READINESS_REVIEW.md) (implementation status) and [TODO.md](TODO.md) (roadmap).
-
----
 
 ## See Also
 
-- README.md — product overview
-- CONFIG_REFERENCE.md — hyle.yaml schema reference
-- CONTRIBUTING.md — development setup
-- LOCAL_TESTING.md — testing workflow
-- PRODUCTION_READINESS_REVIEW.md — release readiness audit
-- TODO.md — roadmap and next phases
+- [README.md](README.md) — Product overview
+- [CONFIG.md](CONFIG.md) — Configuration reference
+- [ROADMAP.md](ROADMAP.md) — Roadmap, phases, shipped features
+- [SECURITY_AUDIT.md](SECURITY_AUDIT.md) — Threat model, findings
+- [DEPLOYMENT.md](DEPLOYMENT.md) — Operations, monitoring
+- [CONTRIBUTING.md](CONTRIBUTING.md) — Dev setup, testing
+- [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) — Pre-ship checklist
