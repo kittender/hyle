@@ -67,160 +67,84 @@ graph LR
 
 ### P0: Auth Interceptor Logic Error 🚨
 
-**File:** web/src/app/interceptors/auth.interceptor.ts:12  
+**File:** [web/src/app/interceptors/auth.interceptor.ts:12](../../src/app/interceptors/auth.interceptor.ts)  
 **Severity:** CRITICAL (credential leak)
 
-**Bug:**
+**Bug** — missing parens around the `&&` means it parses as `(token && includes('localhost:3000')) || includes('/api')`, not the intended `token && (... || ...)`:
 ```typescript
 if (token && req.url.includes('localhost:3000') || req.url.includes('/api'))
 ```
 
-**Parsed as:**
-```typescript
-(token && req.url.includes('localhost:3000')) || req.url.includes('/api')
-```
+**Consequence:** Bearer token sent to ANY request with `/api` in the URL, including third-party domains (e.g. `https://attacker-api.evil.com/api/profile`).
 
-**Consequence:** Bearer token sent to ANY request with `/api` in URL, even third-party domains.
+**Fix:** Wrap the OR in parens: `token && (includes('localhost:3000') || includes('/api'))`.
 
-**Attack:** Attacker's site makes request to `https://attacker-api.evil.com/api/profile` → bearer token leaked.
-
-**Fix:**
-```typescript
-if (token && (req.url.includes('localhost:3000') || req.url.includes('/api')))
-```
-
-**Effort:** 15 min  
-**Test:** Postman request to non-localhost domain; verify no Authorization header
+**Effort:** 15 min · **Test:** Postman request to non-localhost domain; verify no Authorization header
 
 ---
 
 ### P1: Hardcoded API URL 🚨
 
-**File:** web/src/app/app.config.ts:16  
+**File:** [web/src/app/app.config.ts:16](../../src/app/app.config.ts)  
 **Severity:** CRITICAL (deployment blocker)
 
 **Issue:** API base URL hardcoded to `http://localhost:3000`. Fails in staging/prod.
 
-**Fix:** Use `environment.ts` pattern:
-```typescript
-// environment.ts
-export const environment = {
-  apiBaseUrl: window.location.origin.replace(/:\d+/, ':3000')
-};
+**Fix:** Move to an `environment.ts` pattern — derive `apiBaseUrl` from `window.location.origin`, inject via the `API_BASE_URL` token instead of a literal.
 
-// app.config.ts
-{ provide: API_BASE_URL, useValue: environment.apiBaseUrl }
-```
-
-**Effort:** 30 min  
-**Test:** Deploy to staging; verify search works
+**Effort:** 30 min · **Test:** Deploy to staging; verify search works
 
 ---
 
 ### P2: CORS Wildcard Default 🚨
 
-**File:** registry/src/server.ts:19  
+**File:** [registry/src/server.ts:19](../../../registry/src/server.ts)  
 **Severity:** CRITICAL (CSRF)
 
-**Issue:** `corsOrigin` defaults to `"*"` if `HYLE_WEB_ORIGIN` not set. Allows any origin to POST.
+**Issue:** `corsOrigin` defaults to `"*"` if `HYLE_WEB_ORIGIN` isn't set, allowing any origin to POST (cross-site request forgery as the victim user).
 
-**Attack:** Cross-site request forgery — attacker's site makes `POST` to registry as victim user.
+**Fix:** Fail-fast — exit at boot if `HYLE_WEB_ORIGIN` is unset, instead of defaulting to `*`.
 
-**Fix:** Fail-fast:
-```typescript
-const corsOrigin = process.env.HYLE_WEB_ORIGIN;
-if (!corsOrigin) {
-  console.error("ERROR: HYLE_WEB_ORIGIN must be set (e.g., https://registry.hylé.com)");
-  process.exit(1);
-}
-```
-
-**Effort:** 15 min  
-**Test:** Verify server won't start without env var
+**Effort:** 15 min · **Test:** Verify server won't start without the env var
 
 ---
 
 ### P3: JWT Secret Default 🚨
 
-**File:** registry/src/server.ts:10  
+**File:** [registry/src/server.ts:10](../../../registry/src/server.ts)  
 **Severity:** CRITICAL (auth bypass)
 
-**Issue:** `JWT_SECRET` defaults to `"dev-secret-key-change-in-production"` if not set in env.
+**Issue:** `JWT_SECRET` defaults to `"dev-secret-key-change-in-production"` if not set — every token becomes forgeable. Equivalent to no auth.
 
-**Consequence:** If `JWT_SECRET` not set, all tokens are forgeable. Same as no auth.
+**Fix:** Fail-fast — exit at boot if `JWT_SECRET` is unset, instead of defaulting to a known dev string.
 
-**Fix:** Fail-fast:
-```typescript
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  console.error("ERROR: JWT_SECRET environment variable is required");
-  process.exit(1);
-}
-```
-
-**Effort:** 10 min  
-**Test:** Verify server won't start without env var
+**Effort:** 10 min · **Test:** Verify server won't start without the env var
 
 ---
 
 ### P4: Async Security Scan 🚨
 
-**File:** registry/src/handlers/publish.ts:161  
+**File:** [registry/src/handlers/publish.ts:161](../../../registry/src/handlers/publish.ts)  
 **Severity:** CRITICAL (defeats threat model)
 
-**Issue:** Security scan runs asynchronously via `queueMicrotask()`. Dangerous blueprint published immediately, marked "pending", flagged later.
+**Issue:** Security scan runs asynchronously via `queueMicrotask()`. A dangerous blueprint is published immediately, marked "pending," and only flagged later — see threat model timeline above.
 
-**Attack:** See threat model timeline above.
+**Fix:** Make the manifest scan (behavioral-keyword check) blocking — reject with `403` before DB insert if flagged. The heavier bundle-content scan can stay async since it doesn't gate the critical path.
 
-**Fix:** Block manifest scan (critical findings), async-only on bundle content:
-```typescript
-// Manifest scan (BLOCKING) — catches behavioral keywords
-const manifestScan = scanManifest(manifest, bundleData.length);
-if (manifestScan.scan_status === "flagged") {
-  return new Response(
-    JSON.stringify({ error: `Blueprint flagged: ${manifestScan.findings[0].detail}` }),
-    { status: 403, headers: { "Content-Type": "application/json" } }
-  );
-}
-
-// Insert into DB only after manifest passes
-
-// Bundle scan (heavy I/O) — async OK
-queueMicrotask(() => {
-  const bundleScan = scanBundleFiles(bundleData);
-  updateScanResults(blueprintName, bundleScan);
-});
-```
-
-**Effort:** 60 min  
-**Test:** Publish blueprint with `ignore previous instructions` in manifest → verify rejected before insert
+**Effort:** 60 min · **Test:** Publish a blueprint with `ignore previous instructions` in the manifest → verify it's rejected before insert
 
 ---
 
 ### P6: OAuth via URL Parameters 🚨
 
-**File:** cli/src/commands/login.ts:17  
+**File:** [cli/src/commands/login.ts:17](../../../cli/src/commands/login.ts)  
 **Severity:** CRITICAL (token exposure)
 
-**Issue:** Token passed as URL parameter: `GET /auth/github/callback?code=${deviceCode}`.
+**Issue:** Token passed as a URL parameter: `GET /auth/github/callback?code=${deviceCode}`. Exposed in browser history, HTTP/proxy logs, and `ps aux` (process command line).
 
-**Exposed in:**
-- Browser history (if user opens URL manually)
-- HTTP logs (if proxy/CDN doesn't enforce HTTPS)
-- Process command line (`ps aux` shows curl command)
+**Fix:** Exchange the code via a POST body (`{ device_code }`) instead of a GET query param.
 
-**Fix:** Use POST with response body:
-```typescript
-const response = await fetch(`${registryUrl}/auth/github/callback`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ device_code: deviceCode })
-});
-// Response: { token: "..." }
-```
-
-**Effort:** 60 min  
-**Test:** OAuth flow end-to-end; verify token not in URL
+**Effort:** 60 min · **Test:** OAuth flow end-to-end; verify token not in URL
 
 ---
 
@@ -230,37 +154,23 @@ Acceptable as 0.2 TODOs. Ship with these documented; fix in 0.3+.
 
 ### P5: Plain-Text Token Storage
 
-**File:** cli/src/commands/login.ts:69
+**File:** [cli/src/commands/login.ts:69](../../../cli/src/commands/login.ts)
 
-**Issue:** Token saved to `~/.hyle/auth.json` in plain text. Any process/malware with file access steals token.
+**Issue:** Token saved to `~/.hyle/auth.json` in plain text. Any process/malware with file access steals it.
 
 **Options:**
-1. Use OS keychain (Recommended, 1 day effort):
-   ```typescript
-   import * as keytar from 'keytar';
-   await keytar.setPassword('hyle', username || 'default', token);
-   ```
-
-2. Document token rotation SLA (30 min):
-   - Warn users in docs: *"Tokens are equivalent to passwords. Rotate monthly."*
-   - Add `hyle logout` to invalidate tokens
-
-**Recommended:** Option 1 for 0.3.
+1. **Recommended (1 day effort):** OS keychain via `keytar.setPassword('hyle', username, token)`.
+2. **Cheaper (30 min):** Document a rotation SLA — warn that tokens are equivalent to passwords, rotate monthly — and add `hyle logout` to invalidate.
 
 ---
 
 ### P7: HTTPS Enforcement Soft Check
 
-**File:** cli/src/commands/pull.ts:37
+**File:** [cli/src/commands/pull.ts:37](../../../cli/src/commands/pull.ts)
 
-**Issue:** Registry URL not validated to be HTTPS. User can misconfigure or MITM can downgrade.
+**Issue:** Registry URL isn't validated as HTTPS — user misconfiguration or MITM downgrade goes unnoticed.
 
-**Fix (soft):**
-```typescript
-if (!registryUrl.startsWith("https://") && registryUrl !== "http://localhost:3000") {
-  console.warn("WARNING: Registry URL should use HTTPS. Connection may be vulnerable to MITM.");
-}
-```
+**Fix (soft):** Warn (don't block) if the URL isn't `https://` and isn't `localhost:3000`.
 
 **Defer to:** v0.3 or docs warning
 
@@ -268,19 +178,11 @@ if (!registryUrl.startsWith("https://") && registryUrl !== "http://localhost:300
 
 ### P8: Missing CSP Headers
 
-**File:** registry/src/server.ts
+**File:** [registry/src/server.ts](../../../registry/src/server.ts)
 
-**Issue:** No Content-Security-Policy header. Angular templates can be XSS'd if escaping fails.
+**Issue:** No Content-Security-Policy header — Angular templates are XSS-able if escaping ever fails.
 
-**Fix:**
-```typescript
-const securityHeaders = {
-  "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https:; font-src 'self'",
-  "X-Content-Type-Options": "nosniff",
-  "X-Frame-Options": "DENY",
-  "X-XSS-Protection": "1; mode=block",
-};
-```
+**Fix:** Add standard security headers — `Content-Security-Policy: default-src 'self'`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `X-XSS-Protection`.
 
 **Defer to:** v0.3
 
@@ -288,7 +190,7 @@ const securityHeaders = {
 
 ### P9: No Rate Limiting on Reads
 
-**Issue:** Rate limiting only applies to POST (publishes). GET requests unlimited. DDoS risk.
+**Issue:** Rate limiting only applies to POST (publishes). GET requests are unlimited — DDoS risk.
 
 **Fix:** IP-based rate limiting (100 req/min per IP) for search/fetch.
 
@@ -298,21 +200,9 @@ const securityHeaders = {
 
 ### P10: Manifest Not Validated Against Schema
 
-**Issue:** Manifest accepted after JSON.parse with only required-field checks. No semver validation, no length limits, no cycle detection in `extends` field.
+**Issue:** Manifest accepted after `JSON.parse` with only required-field checks — no semver validation, length limits, or cycle detection in `extends`.
 
-**Fix:** Use Zod or similar for full schema validation.
-
-```typescript
-import { z } from 'zod';
-
-const ManifestSchema = z.object({
-  name: z.string().min(1).max(255),
-  author: z.string().min(1).max(255),
-  version: z.string().regex(/^\d+\.\d+\.\d+(-[a-z0-9]+)?$/), // semver
-});
-
-manifest = ManifestSchema.parse(JSON.parse(manifestText));
-```
+**Fix:** Validate with a schema library (Zod) — enforce name/author length limits, semver format on `version`, and reject malformed `extends` chains.
 
 **Defer to:** v0.3
 

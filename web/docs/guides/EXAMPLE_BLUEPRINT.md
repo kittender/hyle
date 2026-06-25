@@ -496,8 +496,8 @@ hyle push my-org/product-service
 
 **Assumptions:**
 - 1000 API calls/day
-- 800 calls use Recommender (secondary, Haiku: cheap)
-- 200 calls use Support Bot (primary, Sonnet: expensive)
+- 800 calls use Recommender (basic, Haiku: cheap)
+- 200 calls use Support Bot (advanced, Sonnet: expensive)
 
 **Daily cost:**
 ```
@@ -519,7 +519,7 @@ Same queries via Ollama (free): $0/day
 2. **Agents as separate service** — Decouples from main app, scales independently
 3. **CEDAR policies** — Centralize access control (easier to audit + maintain)
 4. **Dependencies declared** — Users know what to install upfront
-5. **Cost tagging** — Secondary model for cheap tasks, primary for complex ones
+5. **Cost tagging** — Basic model for cheap tasks, advanced for complex ones
 
 ---
 
@@ -527,7 +527,7 @@ Same queries via Ollama (free): $0/day
 
 - [PUBLISHING_QUICKSTART.md](PUBLISHING_QUICKSTART.md) — Step-by-step guide
 - [CONFIG.md](../reference/CONFIG.md) — All config options
-- [FAILURE_MODES.md](FAILURE_MODES.md) — What can go wrong
+- [TROUBLESHOOTING.md](TROUBLESHOOTING.md) — What can go wrong
 ```
 
 ---

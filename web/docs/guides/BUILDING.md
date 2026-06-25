@@ -219,7 +219,7 @@ blueprint:
 
 ---
 
-## Step 6: Declare Models
+## Step 6: Add Model Recommendations
 
 ### No recommendations yet
 
@@ -557,4 +557,4 @@ hyle push
 
 - [CONFIG.md](../reference/CONFIG.md) — All config options + patterns
 - [PUBLISHING.md](PUBLISHING.md) — Publishing strategy & best practices
-- [FAILURE_MODES.md](FAILURE_MODES.md) — Edge cases when things go wrong
+- [TROUBLESHOOTING.md](TROUBLESHOOTING.md) — Edge cases when things go wrong

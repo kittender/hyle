@@ -70,8 +70,6 @@ Hylé will:
 
 **Questions about features?** → [Publish Guide](PUBLISHING.md)
 
-**Troubleshooting issues?** → [Troubleshooting](TROUBLESHOOTING.md)
+**Troubleshooting & edge cases?** → [Troubleshooting](TROUBLESHOOTING.md)
 
 **See a real example?** → [Example Blueprint](EXAMPLE_BLUEPRINT.md)
-
-**Edge cases & gotchas?** → [Failure Modes](FAILURE_MODES.md)

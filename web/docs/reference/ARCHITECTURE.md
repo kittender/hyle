@@ -3,7 +3,7 @@
 Architectural principles, design trade-offs, and known issues.
 
 **Quick Links:**
-- [ROADMAP.md](ROADMAP.md) — Shipped, roadmap, phases
+- [ROADMAP.md](ROADMAP.md) — Roadmap, phases (unreleased)
 - [SECURITY_AUDIT.md](SECURITY_AUDIT.md) — Threat model, P0-P10 findings
 - [DEPLOYMENT.md](DEPLOYMENT.md) — Operations, monitoring, runbooks
 - [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) — Pre-ship checklist
@@ -63,7 +63,7 @@ graph LR
 
 ---
 
-## Model Configuration
+## Tested Models (Recommendations)
 
 Blueprints declare recommendations: which LLMs author tested.
 
@@ -97,7 +97,7 @@ Users choose their LLM freely. Recommendations help discover tested setups. `hyl
 
 - [README.md](../README.md) — Product overview
 - [CONFIG.md](CONFIG.md) — Configuration reference
-- [ROADMAP.md](../ROADMAP.md) — Roadmap, phases, shipped features
+- [ROADMAP.md](../ROADMAP.md) — Roadmap, phases, implemented features
 - [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) — Current constraints
 - [SECURITY_AUDIT.md](../security/SECURITY_AUDIT.md) — Threat model, findings
 - [DEPLOYMENT_QUICK_START.md](../operations/DEPLOYMENT_QUICK_START.md) — 5-minute setup

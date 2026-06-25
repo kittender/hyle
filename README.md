@@ -112,7 +112,7 @@ Hylé is **free, open-source software**. Run the registry on your own infra (on-
 
 ## How Blueprints Work
 
-100% flexible. Author publishes CLAUDE.md, agents, policies, or any AI workflow. Registry indexes them for search. Each blueprint declares `models` (document which LLM tooling it's built for) and `dependencies` (node, npm, python, etc.). On `pull`, Hylé verifies dependencies exist before applying.
+100% flexible. Author publishes CLAUDE.md, agents, policies, or any AI workflow. Registry indexes them for search. Each blueprint declares `recommendations` (which LLMs author tested, not enforced) and `dependencies` (node, npm, python, etc.). On `pull`, Hylé verifies dependencies exist before applying.
 
 ---
 
@@ -127,15 +127,14 @@ Detailed guides and reference:
 - [Building blueprints](web/docs/guides/BUILDING.md) — step-by-step: from project to published blueprint
 - [Publishing guide](web/docs/guides/PUBLISHING.md) — versioning strategy, costs, security best practices
 - [Example blueprint](web/docs/guides/EXAMPLE_BLUEPRINT.md) — real-world Java Spring Boot + Angular walkthrough
-- [Failure modes](web/docs/guides/FAILURE_MODES.md) — edge cases & recovery scenarios
-- [Troubleshooting](web/docs/guides/TROUBLESHOOTING.md) — common errors & fixes
+- [Troubleshooting](web/docs/guides/TROUBLESHOOTING.md) — common errors, edge cases & recovery scenarios
 - [Quick start (dev)](web/docs/guides/DEV_QUICK_START.md) — local setup
 - [Contributing](web/docs/guides/CONTRIBUTING.md) — how to help
 
 **Reference:**
 - [CLI Commands](web/docs/reference/CLI_COMMANDS.md) — all `hyle` commands (search, pull, push, scan, verify, etc.)
 - [Configuration](web/docs/reference/CONFIG.md) — `hyle.yaml`, `.hyle`, `.hyleignore` — patterns & full reference
-- [Models](web/docs/reference/MODELS.md) — primary vs secondary, cost optimization
+- [Models](web/docs/reference/MODELS.md) — tested models (recommendations), advanced vs basic, cost optimization
 - [Tags](web/docs/reference/TAGS.md) — comprehensive list of suggested tags for discovery (LLM providers, frameworks, capabilities)
 - [Architecture](web/docs/reference/ARCHITECTURE.md) — system design & constraints
 - [Known limitations](web/docs/reference/KNOWN_LIMITATIONS.md) — what doesn't work yet & why

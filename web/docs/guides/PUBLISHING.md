@@ -314,12 +314,12 @@ Blueprint publishers should consider **cost implications** of their model choice
 ### Cost Tiers
 
 **High cost ($$):**
-- Claude Sonnet (primary) — $3 / 1M input, $15 / 1M output
+- Claude Sonnet — $3 / 1M input, $15 / 1M output
 - GPT-4o — $5 / 1M input, $15 / 1M output
 - Claude Opus (if used)
 
 **Medium cost ($):**
-- Claude Haiku (secondary) — $0.80 / 1M input, $4 / 1M output
+- Claude Haiku — $0.80 / 1M input, $4 / 1M output
 - GPT-4o mini
 - Most cloud LLMs
 
@@ -414,7 +414,7 @@ Users estimate costs before adopting. If you tested with budget/offline models, 
 
 ```
 Estimated costs (1000 calls/day):
-- Claude Sonnet primary: ~$2.88/day / ~$86/month
+- Claude Sonnet: ~$2.88/day / ~$86/month
 - Or: Claude Haiku: ~$0.44/day / ~$13/month
 - Or: Ollama (local): $0/day
 ```

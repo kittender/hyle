@@ -1,6 +1,7 @@
 # Hylé Roadmap
 
-**Current version:** v0.2.0 (ready for beta release)  
+**Status:** Unpublished / WIP — no public release yet.
+**Current version (internal):** v0.2.0 (target for beta release)  
 **Last updated:** 2026-05-21  
 **Team:** Hylé (Kittender)
 
@@ -10,9 +11,9 @@
 
 ```mermaid
 timeline
-    title Hylé Release Timeline (v0.2 → v1.0)
+    title Hylé Development Timeline (v0.2 → v1.0, unreleased)
     
-    section Released
+    section Built (Unreleased)
     v0.2.0 - Core CLI + Registry + Web : done, v02, 2026-05-20, 30d
     Blueprint composition (extends) : done, bc, 2026-05-20, 30d
     
@@ -28,11 +29,11 @@ timeline
 
 ---
 
-## v0.2.0 — Released ✅
+## v0.2.0 — Built, Unreleased
 
-**Status:** Ready for beta (3-hour security fixes needed before ship).
+**Status:** Not yet shipped. Ready for beta pending 3-hour security fixes before first public release.
 
-**Shipped:**
+**Implemented:**
 - ✅ CLI: init, pull, push, verify, outdated, upgrade (secure after P0-P6 fixes)
 - ✅ Blueprint composition: `extends` field (depth ≤2), merge + `hyle.lock` chain tracking
 - ✅ Registry: publish, search, fetch, diffs, security scans
@@ -120,7 +121,7 @@ timeline
 
 ---
 
-## Blueprint Inheritance/Composition (`extends`) — ✅ Shipped in v0.2.0
+## Blueprint Inheritance/Composition (`extends`) — ✅ Implemented (pending v0.2.0 release)
 
 **Goal:** Enable base corporate blueprint + project-specific layers (eliminates copy-paste, enforces consistency).
 

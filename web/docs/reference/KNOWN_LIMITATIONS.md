@@ -37,7 +37,7 @@ These are **not bugs**; they're deliberate trade-offs baked into v0.2.0:
 
 **Workaround:** Use 2-level hierarchy: corporate base + project-specific child.
 
-**Status:** Shipped in v0.2.0 (see [ROADMAP.md](../ROADMAP.md)) — permanent design choice, not slated to change.
+**Status:** Implemented in v0.2.0, unreleased (see [ROADMAP.md](../ROADMAP.md)) — permanent design choice, not slated to change.
 
 ---
 

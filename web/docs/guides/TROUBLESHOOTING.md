@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Common Hylé CLI issues and how to fix them.
+Common Hylé CLI issues, edge cases, and how to fix them.
 
 ---
 
@@ -87,24 +87,32 @@ git diff HEAD MERGE_HEAD      # Review what changed
 
 ---
 
-### "Dependency cedar (>=3.0) not found"
+### "Dependency cedar (>=3.0) not found" / "installed but version doesn't match"
 
-**Cause**: Blueprint requires Cedar policy engine, but it's not installed or version too old.
+**Cause**: Blueprint requires a tool (e.g. Cedar) that's missing, too old, not in `PATH`, or installed under a different binary name (`cedar-cli` instead of `cedar`).
 
-**Fix** (choose one):
+**Debug**:
 ```bash
-# See the install command Hylé suggests for your OS
-hyle deps check
-
-# Manual install
-brew install cedar          # macOS
-apt-get install cedar       # Linux (if available)
-
-# Check version
-cedar --version             # Must be >=3.0
+cedar --version            # What you have, e.g. 2.9.0 — needed: >=3.0
+which cedar                # Is it on PATH? Should return /usr/local/bin/cedar or similar
+hyle verify --debug        # Shows the exact lookup command Hylé runs
 ```
 
-If not available in package manager, Hylé suggests manual install from [cedar GitHub](https://github.com/cedar-policy/cedar).
+**Fix**:
+```bash
+hyle deps check             # Prints the suggested install command per tool/OS
+
+brew upgrade cedar          # macOS
+apt-get install --only-upgrade cedar  # Linux
+cargo install --force cedar # From source
+
+ln -s /usr/local/bin/cedar-cli /usr/local/bin/cedar  # If binary name differs
+
+cedar --version             # Confirm it now satisfies the constraint
+hyle verify                 # Should pass
+```
+
+**Note**: `hyle pull` never blocks on missing dependencies — it extracts the blueprint regardless and prints a warning listing what's missing. Install at your own pace; re-check anytime with `hyle deps check`.
 
 ---
 
@@ -117,6 +125,61 @@ If not available in package manager, Hylé suggests manual install from [cedar G
 hyle snapshot my-org/forked-name
 # Publishes under your author name
 ```
+
+---
+
+### "I pulled a blueprint but my agents broke"
+
+**Cause**: One of —
+1. **CLAUDE.md was overwritten** — blueprint replaced your local CLAUDE.md with different context.
+2. **Models differ** — blueprint wants `claude-sonnet-4-6`, you only have `claude-haiku-4-5` available.
+3. **Inheritance chain broken** — parent blueprint (`extends:`) was unpublished or deleted (see below).
+4. **Missing dependencies** — blueprint requires Cedar/Node/Java but you didn't install them.
+
+**Detect**:
+```bash
+git diff HEAD origin/main  # What changed?
+cat hyle.lock               # Shows parent + checksums
+hyle verify                 # Lists missing tools + versions
+```
+
+**Recover** (pick one):
+```bash
+# Option 1: re-pull a previous version explicitly
+# hyle.lock only tracks the current version — there's no rollback command.
+hyle pull org/blueprint@<previous-version> --force
+git diff HEAD               # Inspect what reverted
+
+# Option 2: inspect before applying, next time
+hyle pull org/blueprint --dry-run   # Unified diff, don't apply yet
+
+# Option 3: keep both configs
+cp CLAUDE.md CLAUDE.md.backup
+hyle pull org/blueprint
+diff CLAUDE.md.backup CLAUDE.md     # Pick the parts you want from each
+```
+
+**Prevention**: always `hyle pull --dry-run` before applying to production; test each compatible model category before publishing; document agent assumptions in CLAUDE.md so conflicts are obvious.
+
+---
+
+### "Parent blueprint is unpublished — my child blueprint is broken"
+
+**Cause**: Pulled a child blueprint (`extends: parent@1.0.0`). Parent was since deleted, flagged unsafe, or is temporarily unreachable.
+
+**Check**:
+```bash
+cat hyle.lock                       # Shows parent + child checksums
+hyle pull parent-name@1.0.0 --dry-run  # Verify parent still exists
+hyle outdated parent-name           # Is it flagged? Unpublished?
+```
+
+**Fix**:
+- **Network blip**: `hyle verify --refresh` and retry.
+- **Parent deleted/unpublished**: pin `extends:` in `hyle.yaml` to the last-known-good version, or drop `extends:` and inline the parent's files locally, then re-publish standalone.
+- **Parent flagged unsafe**: check the flag reason on the parent's registry detail page; if acceptable, pin to its last clean version, otherwise inline locally.
+
+**Prevention**: before depending on an external parent, check the author's track record (published >6 months, >50 pulls); document the dependency in CLAUDE.md ("Extends XCorp base config — do not delete"); keep a documented fallback setup.
 
 ---
 
@@ -173,65 +236,50 @@ hyle push
 
 ### "[flagged] — contains hardcoded credentials"
 
-**Cause**: Security scan detected API keys, passwords, or suspicious code in manifest/files.
-
-**Examples**:
-- CLAUDE.md with "ANTHROPIC_API_KEY=sk-xxx"
-- .env file not excluded in .hyleignore
+**Cause**: Security scan detected API keys, passwords, or suspicious code in manifest/files. Examples:
+- CLAUDE.md with `ANTHROPIC_API_KEY=sk-xxx`
+- `.env` file not excluded in `.hyleignore`
 - Password in example code
 
 **Fix**:
-1. Remove secrets from files
-2. Add to `.hyleignore`:
-   ```
-   .env
-   *.key
-   secrets/
-   ```
-3. Recommit: `git add ... && git commit && git push`
-4. Re-publish: `hyle push` (increments version)
+```bash
+# 1. Remove secrets from files
+# 2. Add to .hyleignore:
+echo ".env
+*.key
+secrets/" >> .hyleignore
 
-The flagged version remains visible (with reason), but new version is clean.
+# 3. Recommit and re-publish (version auto-increments)
+git add . && git commit -m "fix: remove secrets" && git push
+hyle push
+```
+
+The flagged version stays visible on the registry (with reason shown), but the new version is clean.
 
 ---
 
-### "Dependency installed but version doesn't match"
+### "I can't find the blueprint I just pushed"
 
-**Cause**: Tool installed, but version constraint isn't satisfied (e.g., you have 2.x, blueprint needs >=3.0).
+**Cause**: One of —
+1. **Registry indexing lag** — ~30s delay before search index updates.
+2. **Blueprint flagged** — security scan failed; see `[flagged]` above.
+3. **Wrong registry** — pushed to local registry, searching public registry (or vice versa).
+4. **Name/author mismatch** — published under a different name than searched.
 
-**Fix**:
+**Check**:
 ```bash
-# Check what you have
-cedar --version        # You: 2.9.0
-# Needed: >=3.0
+echo $HYLE_REGISTRY_URL     # Should match where you pushed
+grep remote_url .hyle
 
-# Upgrade (macOS)
-brew upgrade cedar
-
-# Or from source
-cargo install cedar --force
-
-# Verify
-cedar --version        # Now: 3.0.0
-hyle pull org/blueprint  # Should succeed
+hyle outdated --all         # Lists all versions + flagged status
+sleep 30 && hyle search my-blueprint   # Retry after indexing lag
+hyle search --fresh my-blueprint       # Force refresh, if supported
 ```
 
----
-
-### "Blueprint file is too large to download"
-
-**Cause**: Blueprint contains large files (>100MB PDFs, datasets, models) that exceed network or disk quota.
-
-**Workaround:**
-
-`hyle pull` has no per-file filter — it always extracts everything declared in the manifest. For large files, fetch directly from GitHub instead:
+**Wrong registry?**
 ```bash
-git clone https://github.com/author/repo
-cd repo
-# Check out specific git tag: git checkout hyle-v1.0.0
+hyle push --registry https://registry.hylé.com
 ```
-
-**Note:** Hylé stores manifests in registry, not file bundles. Large files must be pulled directly from GitHub (raw.githubusercontent.com), which respects GitHub's rate limits.
 
 ---
 
@@ -246,6 +294,54 @@ cd repo
   split_threshold: "10000"    # ✓ Token count
   split_threshold: "80"       # ✗ Missing %
 ```
+
+---
+
+## Versioning
+
+### "snapshot vs push vs release — which do I use?"
+
+- **`hyle snapshot`** (patch bump: 0.1.0 → 0.1.1) — WIP, not production-ready. Shares with team, not listed in stable registry. No SLA — may be overwritten. Use for early feedback or testing a new feature.
+- **`hyle push`** (minor bump: 0.1.0 → 0.2.0) — tested, stable, backward compatible. Listed in public registry. Use for new features or incremental improvements.
+- **`hyle release`** (major bump: 0.1.0 → 1.0.0) — breaking changes or significant milestone, incompatible with previous versions. Use for major restructures or a 1.0 launch.
+
+If unsure: `grep version hyle.yaml` to see current version, then — docs-only change → `push`; experimental → `snapshot`; removed/renamed agent → `release`. Or just use `push` unless you have a strong reason not to.
+
+---
+
+### "I published but realized I made a mistake"
+
+**Bad options**: deleting the version (breaks reproducibility for anyone who pulled it); force-pushing to Git (doesn't unpublish from registry).
+
+**Good options**:
+1. **Minor issues (typos, docs)**: fix locally, commit, push to GitHub, then `hyle push` (auto-increments). Users upgrade with `hyle upgrade org/blueprint`.
+2. **Security issues (secrets, credentials)**: follow [SECURITY.md](../security/SECURITY.md) to contact registry operators — they'll flag the version as `[security-issue]`; publish a patched version.
+3. **Breaking bugs**: assess how many pulls happened. <10 → publish a fix + update docs. >100 → consider a major release with a migration guide, and notify users if the system tracks pulls.
+
+**Prevention**: `hyle push --dry-run` and `hyle verify` before publishing; test compatible models + dependencies; have a teammate review before publish.
+
+---
+
+## Model Selection & Recommendations
+
+### "Chose incompatible model — blueprint fails with this LLM"
+
+**Symptom**: Blueprint works with Claude Sonnet but fails with Haiku or Ollama — degraded output, reasoning breaks.
+
+**Cause**: One of —
+1. Model picked from the wrong recommendation category (`budget` instead of `advanced`).
+2. Small model (Haiku/Ollama) can't handle the prompt — context window overflow.
+3. Blueprint only listed under `universal` but actually needs a capable model — author didn't test properly.
+4. Harness-specific blueprint on the wrong platform (Bedrock blueprint on local Ollama).
+
+**Prevention**: Hylé's CLI doesn't select or run a model — `recommendations` in `hyle.yaml` are metadata only. Read them before pulling, then configure your own agent/harness accordingly:
+```bash
+curl -s https://registry.hylé.com/blueprints/org/blueprint/latest | jq .recommendations
+# Or after pulling:
+cat hyle.yaml   # recommendations block lists tested categories
+```
+
+If it still fails, switch to a model listed under `universal` or `advanced` in your own agent/harness config and re-test — Hylé has no role in that switch. Note the cost/latency/accuracy trade-off if you downgrade to a cheaper model, and document it in the blueprint description.
 
 ---
 
@@ -304,9 +400,41 @@ version: 0.1.0
 
 ---
 
+## Diagnosing an unknown issue
+
+1. **Check your config**:
+   ```bash
+   echo $HYLE_REGISTRY_URL
+   cat .hyle | grep remote_url
+   cat ~/.hyle/auth.json   # Should show an access_token (re-run `hyle login` if missing)
+   cat hyle.yaml | head -20
+   ```
+2. **Isolate the problem**:
+   ```bash
+   hyle search test              # Is the registry reachable at all?
+   hyle pull other-blueprint     # Is it this blueprint specifically?
+   hyle pull org/blueprint@0.9.0 # Is it this version?
+   ```
+3. **Check logs** (self-hosted): `docker compose logs registry`
+
+---
+
+## Report a Bug
+
+If you've narrowed it down and need help, file an issue at [kittender/hyle/issues](https://github.com/kittender/hyle/issues) with:
+- CLI version: `hyle --version`
+- Command run, e.g. `hyle pull org/blueprint`
+- Full error output
+- `hyle.yaml` + `.hyle` (redact secrets)
+- OS + architecture: `uname -a`
+- `git --version`, `node --version` (if relevant)
+
+---
+
 ## Still Stuck?
 
 - Check [Configuration Reference](../reference/CONFIG.md) for all valid fields
 - Read [Example Blueprint](EXAMPLE_BLUEPRINT.md) for a real project layout
 - Check registry at `https://registry.hylé.com` for examples
-- Report issues: [GitHub Issues](https://github.com/kittender/hyle/issues)
+- [Security policy](../security/SECURITY.md) — for security incidents specifically
+- [Known limitations](../reference/KNOWN_LIMITATIONS.md) — what doesn't work yet

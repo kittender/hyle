@@ -118,7 +118,7 @@ graph TB
 
 ## Model Compatibility: Choosing Your LLM
 
-Blueprint declares compatible LLMs. Users choose which to use.
+Blueprint declares recommended LLMs (tested, not enforced). Users choose which to use.
 
 ```mermaid
 graph LR
