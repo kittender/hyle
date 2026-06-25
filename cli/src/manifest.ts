@@ -423,11 +423,11 @@ export function validateManifest(m: HyleManifest): ValidationResult {
 			if (extendsErr) {
 				errors.push({ field: `extends[${i}]`, message: extendsErr });
 			} else {
-				const [extAuthor, extName] = parseSubstrateRef(extRef);
+				const [extAuthor, extName] = parseBlueprintRef(extRef);
 				if (extAuthor === m.author && extName === m.name) {
 					errors.push({
 						field: `extends[${i}]`,
-						message: "Circular extends: substrate cannot extend itself",
+						message: "Circular extends: blueprint cannot extend itself",
 					});
 				}
 			}
@@ -647,7 +647,7 @@ function coerceStringArray(v: unknown): string[] | undefined {
 }
 
 // Parses "author/name" or "author/name@version" → [author, name, version?]
-export function parseSubstrateRef(
+export function parseBlueprintRef(
 	ref: string,
 ): [string, string, string | undefined] {
 	let version: string | undefined;
@@ -669,7 +669,7 @@ export function parseSubstrateRef(
 
 // Returns an error string if the ref is invalid, undefined if valid
 export function validateExtendsRef(ref: string): string | undefined {
-	const [author, name, version] = parseSubstrateRef(ref);
+	const [author, name, version] = parseBlueprintRef(ref);
 
 	if (!author || !name) {
 		return "Must be in format 'author/name' or 'author/name@version'";

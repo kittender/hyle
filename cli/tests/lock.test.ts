@@ -25,7 +25,7 @@ describe("lock", () => {
 		try {
 			const entries: LockEntry[] = [
 				{
-					name: "test-substrate",
+					name: "test-blueprint",
 					author: "test-author",
 					version: "1.0.0",
 					bundle_checksum: "abc123",
@@ -39,7 +39,7 @@ describe("lock", () => {
 			const content = readFileSync(join(dir, "hyle.lock"), "utf-8");
 			const parsed = yaml.load(content);
 			expect(Array.isArray(parsed)).toBe(true);
-			expect((parsed as LockEntry[])[0].name).toBe("test-substrate");
+			expect((parsed as LockEntry[])[0].name).toBe("test-blueprint");
 		} finally {
 			rmSync(dir, { recursive: true });
 		}
@@ -49,7 +49,7 @@ describe("lock", () => {
 		const dir = makeTmpDir();
 		try {
 			const entry: LockEntry = {
-				name: "new-substrate",
+				name: "new-blueprint",
 				author: "new-author",
 				version: "1.0.0",
 				bundle_checksum: "checksum1",
@@ -61,7 +61,7 @@ describe("lock", () => {
 
 			const entries = readLock(dir);
 			expect(entries.length).toBe(1);
-			expect(entries[0].name).toBe("new-substrate");
+			expect(entries[0].name).toBe("new-blueprint");
 		} finally {
 			rmSync(dir, { recursive: true });
 		}
@@ -71,7 +71,7 @@ describe("lock", () => {
 		const dir = makeTmpDir();
 		try {
 			const entry1: LockEntry = {
-				name: "substrate",
+				name: "blueprint",
 				author: "author",
 				version: "1.0.0",
 				bundle_checksum: "checksum1",
@@ -80,7 +80,7 @@ describe("lock", () => {
 			};
 
 			const entry2: LockEntry = {
-				name: "substrate",
+				name: "blueprint",
 				author: "author",
 				version: "2.0.0",
 				bundle_checksum: "checksum2",
@@ -103,7 +103,7 @@ describe("lock", () => {
 		const dir = makeTmpDir();
 		try {
 			const entry1: LockEntry = {
-				name: "substrate1",
+				name: "blueprint1",
 				author: "author1",
 				version: "1.0.0",
 				bundle_checksum: "checksum1",
@@ -112,7 +112,7 @@ describe("lock", () => {
 			};
 
 			const entry2: LockEntry = {
-				name: "substrate2",
+				name: "blueprint2",
 				author: "author2",
 				version: "1.0.0",
 				bundle_checksum: "checksum2",
@@ -125,8 +125,8 @@ describe("lock", () => {
 
 			const entries = readLock(dir);
 			expect(entries.length).toBe(2);
-			expect(entries.some((e) => e.name === "substrate1")).toBe(true);
-			expect(entries.some((e) => e.name === "substrate2")).toBe(true);
+			expect(entries.some((e) => e.name === "blueprint1")).toBe(true);
+			expect(entries.some((e) => e.name === "blueprint2")).toBe(true);
 		} finally {
 			rmSync(dir, { recursive: true });
 		}
@@ -136,19 +136,19 @@ describe("lock", () => {
 		const dir = makeTmpDir();
 		try {
 			const entry: LockEntry = {
-				name: "child-substrate",
+				name: "child-blueprint",
 				author: "acme",
 				version: "1.0.0",
 				bundle_checksum: "checksum1",
 				pulled_at: "2026-05-20T10:00:00Z",
-				extends_from: "alice/parent-substrate@2.0.0",
+				extends_from: "alice/parent-blueprint@2.0.0",
 				files: [],
 			};
 
 			upsertLockEntry(dir, entry);
 
 			const entries = readLock(dir);
-			expect(entries[0].extends_from).toBe("alice/parent-substrate@2.0.0");
+			expect(entries[0].extends_from).toBe("alice/parent-blueprint@2.0.0");
 		} finally {
 			rmSync(dir, { recursive: true });
 		}
@@ -158,7 +158,7 @@ describe("lock", () => {
 		const dir = makeTmpDir();
 		try {
 			const entry: LockEntry = {
-				name: "substrate",
+				name: "blueprint",
 				author: "author",
 				version: "1.0.0",
 				bundle_checksum: "checksum1",

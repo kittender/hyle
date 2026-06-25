@@ -9,7 +9,7 @@ const hyléPath = join(testDir, "hyle.yaml");
 const testManifest = `
 name: bench-test
 author: bench
-description: Benchmark test substrate
+description: Benchmark test blueprint
 version: 0.1.0
 models:
   primary:

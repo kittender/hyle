@@ -36,8 +36,9 @@ hyle search java spring tdd          # Search by tech + features
 hyle search claude anthropic          # Search by LLM provider
 hyle search python ollama             # Multi-provider search
 hyle search react typescript claude   # Mix all tags
-hyle search --category budget         # Filter by recommendation category
-hyle search --harness bedrock         # Filter by harness (bedrock, cursor, etc.)
+hyle search --tag budget              # Filter by tag (e.g. recommendation category)
+hyle search --tag bedrock             # Filter by tag (e.g. harness)
+hyle search --author jane-doe         # Filter by author
 hyle search --limit 50                # Show top 50 (default: 20)
 ```
 
@@ -350,10 +351,9 @@ In project root or global `~/.hyle`. Not published.
 
 ```yaml
 remote_url: https://registry.hylé.com      # Registry URL
-remote_token: ${HYLE_TOKEN}                 # Auth token (from env)
-auto_inject: true                           # Auto-comment CLAUDE.md on init
-contribute_deps: true                       # Share dep resolution
 ```
+
+Auth is handled separately by `hyle login` (stores an OAuth token in `~/.hyle/auth.json`), not via this file.
 
 See [CONFIG.md](CONFIG.md) for full reference.
 
@@ -385,11 +385,8 @@ See [CONFIG.md](CONFIG.md) for full reference.
 
 | Variable | Purpose | Example |
 |---|---|---|
-| `HYLE_HOME` | Config directory | `export HYLE_HOME=/opt/hyle` |
 | `HYLE_REGISTRY_URL` | Override registry URL | `export HYLE_REGISTRY_URL=http://localhost:3000` |
-| `HYLE_TOKEN` | Auth token (for publish/private) | `export HYLE_TOKEN=ghp_abc123...` |
-| `HYLE_OFFLINE` | Force offline mode | `export HYLE_OFFLINE=1` |
-| `HYLE_DEBUG` | Enable debug logging | `export HYLE_DEBUG=1` |
+| `HYLE_ALLOW_INSECURE` | Allow non-HTTPS / localhost `remote_url` (dev only) | `export HYLE_ALLOW_INSECURE=1` |
 
 ---
 

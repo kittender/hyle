@@ -14,7 +14,7 @@ Quick reference for shipping releases. See [SECURITY_AUDIT.md](SECURITY_AUDIT.md
 | **P1: Hardcoded API URL** | web/src/app/app.config.ts:16 | Localhost hardcoded; fails in production | Use `environment.ts` pattern with `window.location.origin.replace(/:\d+/, ':3000')` | — |
 | **P2: CORS wildcard default** | registry/src/server.ts:19 | Allows any origin to POST; CSRF risk | Fail-fast if `HYLE_WEB_ORIGIN` not set; console.error + exit(1) | — |
 | **P3: JWT secret default** | registry/src/server.ts:10 | Uses hardcoded "dev-secret-key"; tokens forgeable | Fail-fast if `JWT_SECRET` not in env; console.error + exit(1) | — |
-| **P4: Async security scan** | registry/src/handlers/publish.ts:161 | Malicious substrates published before scan complete | Block manifest scan (sync). Async only on bundle content. | — |
+| **P4: Async security scan** | registry/src/handlers/publish.ts:161 | Malicious blueprints published before scan complete | Block manifest scan (sync). Async only on bundle content. | — |
 | **P6: OAuth via URL params** | cli/src/commands/login.ts:17 | Token in query string; exposed in logs/history | Change callback to POST with body; return token in response | — |
 
 **Implementation order** (dependencies matter):
@@ -55,7 +55,7 @@ Quick reference for shipping releases. See [SECURITY_AUDIT.md](SECURITY_AUDIT.md
 # Set env vars (see DEPLOYMENT.md)
 hyle login
 hyle search test
-hyle pull org/test-substrate
+hyle pull org/test-blueprint
 hyle init && hyle push  # test publish
 
 # Check logs for errors
@@ -89,7 +89,6 @@ curl https://staging.registry.hylé.com/health
 | P10: Manifest schema validation (Zod) | 1 day | NO |
 | Windows/Linux native binaries | 2 days | NO — Homebrew sufficient for beta |
 | Private registry support | 3 days | NO — Post-v0.2 |
-| Substrate composition (extends) | 3 days | NO — Phase 5C |
 
 ---
 
@@ -103,7 +102,7 @@ curl https://staging.registry.hylé.com/health
 | Security incidents | 0 |
 | False positive scans | <5% |
 | User signups | 100+ |
-| Substrates published | 50+ |
+| Blueprints published | 50+ |
 
 ---
 
@@ -112,7 +111,7 @@ curl https://staging.registry.hylé.com/health
 If production breaks:
 1. Page oncall
 2. Identify severity (P0-P3 = immediate rollback)
-3. Follow runbook (malicious substrate / auth compromise / database / DDoS)
+3. Follow runbook (malicious blueprint / auth compromise / database / DDoS)
 4. Post-mortem within 24h
 
 ---

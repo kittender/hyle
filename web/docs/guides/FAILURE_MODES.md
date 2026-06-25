@@ -31,10 +31,11 @@ hyle verify  # Lists missing tools + versions
 
 **Recovery:**
 
-Option 1: Rollback to previous version
+Option 1: Pull a previous version explicitly
 ```bash
-# hyle.lock tracks previous version
-hyle rollback <version>
+# hyle.lock only tracks the current version — there's no rollback command.
+# Re-pull the exact version you want instead:
+hyle pull org/blueprint@<previous-version> --force
 git diff HEAD  # Inspect what reverted
 ```
 
@@ -102,10 +103,10 @@ hyle verify               # Should pass
 ```
 
 **If still stuck:**
+
+`hyle pull` never blocks on missing dependencies — it extracts the blueprint regardless and just prints a warning listing what's missing. Install manually when convenient:
 ```bash
-# Force skip dependency check (not recommended)
-hyle pull org/blueprint --skip-deps
-# But you'll need to install manually later
+hyle deps check    # Re-check and print the suggested install command per tool
 ```
 
 ---
@@ -192,8 +193,8 @@ hyle push --registry https://registry.hylé.com
 **Decision aid:**
 
 ```bash
-# If unsure, ask:
-hyle status  # Shows current version + changes since last publish
+# If unsure, check the current version (no separate "status" command — it's just the manifest):
+grep version hyle.yaml
 
 # Then:
 # — Only docs changed? → push (minor)
@@ -287,13 +288,10 @@ hyle outdated parent-name  # Is it flagged? Unpublished?
 
 3. **Parent is flagged (unsafe):**
    ```bash
-   # Check why
-   hyle outdated parent-name  # See flag reason
-   
-   # If acceptable, force:
-   hyle pull --force-flagged
-   
-   # Else, find alternative parent or remove inheritance
+   # Check the flag reason on the parent's registry detail page (security report)
+
+   # If acceptable, pin to the parent's last clean version in hyle.yaml's extends: field,
+   # or drop the inheritance and inline the parent's files locally instead
    ```
 
 **Prevention:**
@@ -303,30 +301,28 @@ hyle outdated parent-name  # Is it flagged? Unpublished?
 
 ---
 
-## Model Selection & Compatibility
+## Model Selection & Recommendations
 
 ### "Chose incompatible model — blueprint fails with this LLM"
 
 **Symptom:** Blueprint works with Claude Sonnet but fails with Haiku or Ollama. Agent outputs degraded, reasoning breaks.
 
 **Root causes:**
-1. **Model selected from wrong compatibility category** — Chose `budget` but blueprint needs `advanced` reasoning
+1. **Model selected from wrong recommendation category** — Chose `budget` but blueprint needs `advanced` reasoning
 2. **Small model (Haiku/Ollama) can't handle complex prompts** — Too many tokens, context window overflow
 3. **Blueprint only listed in `universal` but actually needs capable model** — Author didn't test properly
 4. **Harness-specific blueprint on wrong platform** — Bedrock blueprint on local Ollama
 
 **How to prevent:**
 
-Check compatibility before pulling:
+Hylé's CLI doesn't select or run a model — `recommendations` in `hyle.yaml` are metadata only, for you to read and act on. Check them before pulling, then configure your own agent/harness accordingly:
 
 ```bash
-hyle pull org/blueprint --show-compatibility
-# Shows: universal, budget, offline, advanced, harness
+# Inspect a blueprint's recommendations before pulling
+curl -s https://registry.hylé.com/blueprints/org/blueprint/latest | jq .recommendations
 
-# Choose wisely:
-hyle pull org/blueprint  # Defaults to author's primary
-hyle pull org/blueprint --with openai/gpt-4o  # Override
-hyle pull org/blueprint --with ollama/qwen2.5:14b
+# Or after pulling, just read the manifest
+cat hyle.yaml   # recommendations block lists tested categories
 ```
 
 **Share what you tested:**
@@ -347,14 +343,7 @@ recommendations:
 
 **If it still fails:**
 
-```bash
-# Fallback to declared compatible model
-hyle pull org/blueprint --with anthropic/claude-sonnet-4-6
-# Test before deploying to production
-
-# 4. If all are down, queue work locally
-# Use Ollama-only mode: `HYLE_LLM=ollama npm start`
-```
+Switch to a model listed under `universal` or `advanced` in your own agent/harness config, then re-test — Hylé itself has no role in that switch.
 
 **Cost implications:**
 
@@ -368,30 +357,23 @@ If you choose Ollama instead of Claude (expensive), costs drop but latency and a
 
 **Steps to diagnose:**
 
-1. **Enable debug logging:**
-   ```bash
-   export HYLE_DEBUG=1
-   hyle pull org/blueprint
-   # Shows detailed request/response logs
-   ```
-
-2. **Check your config:**
+1. **Check your config:**
    ```bash
    # Verify registry URL
    echo $HYLE_REGISTRY_URL
    cat .hyle | grep remote_url
    
-   # Verify auth token
-   echo $HYLE_TOKEN  # Should be set (not printed)
+   # Verify auth
+   cat ~/.hyle/auth.json  # Should show an access_token (re-run `hyle login` if missing)
    
    # Verify manifest
    cat hyle.yaml | head -20
    ```
 
-3. **Isolate the problem:**
+2. **Isolate the problem:**
    ```bash
    # Is it the CLI or the registry?
-   hyle search --debug  # Registry working?
+   hyle search test  # Registry working?
    
    # Is it a specific blueprint?
    hyle pull other-blueprint  # Try different one
@@ -400,14 +382,10 @@ If you choose Ollama instead of Claude (expensive), costs drop but latency and a
    hyle pull org/blueprint@0.9.0  # Try earlier version
    ```
 
-4. **Check logs:**
+3. **Check logs:**
    ```bash
    # Registry logs (if self-hosted)
    docker compose logs registry
-   
-   # CLI cache (sometimes stale)
-   rm -rf ~/.hyle/cache
-   hyle search --fresh org/blueprint
    ```
 
 ---
@@ -421,7 +399,7 @@ If you've narrowed it down and need help:
 Include:
 - CLI version: `hyle --version`
 - Command run: `hyle pull org/blueprint`
-- Full error output (with `HYLE_DEBUG=1`)
+- Full error output
 - `hyle.yaml` + `.hyle` (redact secrets)
 - OS + architecture: `uname -a`
 - `git --version`, `node --version` (if relevant)

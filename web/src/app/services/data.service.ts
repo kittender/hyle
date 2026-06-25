@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
-import { Print, ActivityItem, substrateToprint } from '../models/print.model';
+import { Print, ActivityItem, blueprintToprint } from '../models/print.model';
 import { ApiService } from './api.service';
 import type { SearchParams } from './api.service';
 
@@ -270,13 +270,13 @@ export class DataService {
 
   search$(params: SearchParams): Observable<Print[]> {
     return this.apiService.search(params).pipe(
-      map(results => results.map(substrateToprint))
+      map(results => results.map(blueprintToprint))
     );
   }
 
-  getSubstrate$(author: string, name: string, version?: string): Observable<Print> {
-    return this.apiService.getSubstrate(author, name, version).pipe(
-      map(substrateToprint)
+  getBlueprint$(author: string, name: string, version?: string): Observable<Print> {
+    return this.apiService.getBlueprint(author, name, version).pipe(
+      map(blueprintToprint)
     );
   }
 
@@ -292,7 +292,7 @@ export class DataService {
 
   getTrending$(): Observable<Print[]> {
     return this.apiService.getTrending().pipe(
-      map(results => results.map(substrateToprint))
+      map(results => results.map(blueprintToprint))
     );
   }
 

@@ -76,7 +76,7 @@ export class ProfileComponent implements OnInit {
   loadAuthorProfile(username: string) {
     this.apiService.getAuthor(username).subscribe({
       next: (profile) => {
-        this.myPrints = profile.substrates.map((s: any) => ({
+        this.myPrints = profile.blueprints.map((s: any) => ({
           id: `${s.author}/${s.name}`,
           author: s.author,
           name: s.name,

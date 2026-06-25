@@ -87,7 +87,7 @@ recommendations:
     - cursor/claude-sonnet-4-6
 ```
 
-Users choose their LLM freely. Recommendations help discover tested setups. Registry filters blueprints by recommendation category (e.g., `--category budget`, `--harness bedrock`).
+Users choose their LLM freely. Recommendations help discover tested setups. `hyle search` filters by tag (e.g., `--tag budget`, `--tag bedrock`) — authors should tag blueprints to match their recommendation categories.
 
 ---
 

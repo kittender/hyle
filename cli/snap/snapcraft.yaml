@@ -1,6 +1,6 @@
 name: hyle
 version: "0.1.0"
-summary: AI context substrate manager
+summary: AI context blueprint manager
 description: |
   Package, share, and install versioned snapshots of AI agent workflows.
   Manages CLAUDE.md, agent identities, MCP configs, and ethics policies.

@@ -7,7 +7,7 @@ How to configure `hyle.yaml`, `.hyle`, and `.hyleignore` for your blueprint.
 ## Quick Reference
 
 - **`hyle.yaml`** — Blueprint manifest (published to registry). What files, models, dependencies.
-- **`.hyle`** — Local project config (not published). Registry URL, token, preferences.
+- **`.hyle`** — Local project config (not published). Registry URL only; auth is handled separately by `hyle login`.
 - **`.hyleignore`** — Git-style exclusion patterns (API keys, secrets).
 
 ---
@@ -130,9 +130,9 @@ author: jane-doe
 
 blueprint:
   ontology:
-    - CLAUDE.md
-      override: true  # Replaces parent's CLAUDE.md
     - docs/spring-specifics.md  # Added on top
+  overrides:
+    - CLAUDE.md  # Replaces parent's CLAUDE.md instead of merging
   craft:
     - pom.xml
     - spring-config.yaml
@@ -205,15 +205,6 @@ Configure `.hyle` in your project directory to override global defaults.
 # .hyle — project-local config
 
 remote_url: http://localhost:3000              # Use local registry for testing
-remote_token: ${HYLE_TOKEN}                    # From environment (never hardcoded)
-auto_inject: false                             # Don't auto-comment CLAUDE.md on init
-contribute_deps: false                         # Don't share dep info with registry
-
-scan:
-  ontology: [.md, .ts, .feature]               # Only these file types
-  craft: [package.json, tsconfig.json, .md]
-  identities: [.md]
-  ethics: [.cedar]
 ```
 
 Save to `<project-root>/.hyle`. Local config overrides global `~/.hyle`.
@@ -286,7 +277,7 @@ hyle push --dry-run  # See what hyle will publish
 | `blueprint.identities` | — | array of strings | Agent definitions: AGENTS.md, `.claude/agents/*.md`, persona configs. Glob patterns. |
 | `blueprint.ethics` | — | array of strings | Policies + constraints: `.cedar` files, TruLens/Ragas evals, compliance docs. Glob patterns. |
 | `blueprint.overrides` | — | array of strings | Files in child that fully replace parent's version (instead of merging). |
-| `extends` | — (v0.3+) | array of strings | Parent blueprints to inherit from (e.g., `["acme-base@2.0.0"]`). Max depth 2. |
+| `extends` | — | array of strings | Parent blueprints to inherit from (e.g., `["acme-base@2.0.0"]`). Max depth 2. |
 | `forks` | — | array of strings | Blueprints this was derived from (attribution only, no inheritance). |
 
 **File patterns:** Glob-style (`*.md`, `docs/**/*.pdf`). Relative to project root.
@@ -405,22 +396,11 @@ dependencies:
 Global defaults at `~/.hyle`. Project-local overrides at `<project>/.hyle`. Project config takes precedence.
 
 ```yaml
-# Registry & auth
+# Registry
 remote_url: https://registry.hylé.com           # Default registry URL
-remote_token: ${HYLE_TOKEN}                     # Auth token (from env, never hardcoded)
-
-# Preferences
-currency: EUR                                   # Cost estimates (EUR or USD)
-auto_inject: true                               # Add blueprint reference comment to CLAUDE.md on init
-contribute_deps: true                           # Share resolved dependency commands with community
-
-# File scanning
-scan:
-  ontology: [.md, .pdf, .docx, .feature]        # File types to scan for ontology
-  craft: [package.json, pom.xml, tsconfig.json] # File types for craft
-  identities: [.md]                             # File types for identities
-  ethics: [.cedar, trulens.yaml, ragas.yaml]    # File types for ethics
 ```
+
+Authentication is handled separately by `hyle login` (stores an OAuth token in `~/.hyle/auth.json`), not via this file.
 
 **Precedence (lowest to highest):**
 1. Defaults in code
@@ -477,11 +457,10 @@ dist/
 
 | Variable | Purpose | Example |
 |---|---|---|
-| `HYLE_HOME` | Config directory (default: `~/.hyle`) | `export HYLE_HOME=/opt/hyle-config` |
 | `HYLE_REGISTRY_URL` | Override registry URL | `export HYLE_REGISTRY_URL=http://localhost:3000` |
-| `HYLE_TOKEN` | Authentication token (for publish/private repos) | `export HYLE_TOKEN=ghp_abc123xyz...` |
-| `HYLE_OFFLINE` | Force offline mode (no network calls) | `export HYLE_OFFLINE=1` |
-| `HYLE_DEBUG` | Enable debug logging to stderr | `export HYLE_DEBUG=1` |
+| `HYLE_ALLOW_INSECURE` | Allow non-HTTPS / localhost `remote_url` (dev only) | `export HYLE_ALLOW_INSECURE=1` |
+
+Use the `--offline` flag (not an env var) to skip network calls: `hyle <command> --offline`.
 
 ---
 
@@ -510,9 +489,6 @@ hyle pull my-blueprint --registry http://localhost:3000
 ```yaml
 # .hyle
 remote_url: http://localhost:3000
-default_llm: primary
-auto_inject: false
-split_threshold: "50%"
 ```
 
 ### Production (multi-provider)
@@ -545,7 +521,7 @@ blueprint:
 ## Tips & Best Practices
 
 1. **Keep `hyle.yaml` in git.** It's your blueprint manifest — version control it.
-2. **Never commit `.hyle` with tokens.** Use environment variables (`${HYLE_TOKEN}`) instead.
+2. **Never commit `~/.hyle/auth.json`.** It holds your OAuth token; `hyle login`/`hyle logout` manage it for you.
 3. **Always add `.hyleignore`.** Prevent accidental secret leaks on publish.
 4. **Use `hyle push --dry-run`** before publishing to verify what will be included.
 5. **Document dependencies in blueprint description.** Users need to know what's required.

@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://hyle.eu/schema/hyle.schema.json",
   "title": "HyleManifest",
-  "description": "Hylé substrate manifest schema",
+  "description": "Hylé blueprint manifest schema",
   "type": "object",
   "required": ["name", "author", "version", "models"],
   "additionalProperties": false,
@@ -21,7 +21,7 @@
     },
     "description": {
       "type": "string",
-      "description": "Short human-readable description of the substrate"
+      "description": "Short human-readable description of the blueprint"
     },
     "version": {
       "type": "string",
@@ -41,7 +41,7 @@
     "forks": {
       "type": "array",
       "items": { "type": "string" },
-      "description": "Source substrates this was forked from"
+      "description": "Source blueprints this was forked from"
     },
     "models": {
       "type": "object",
@@ -61,7 +61,7 @@
     "dependencies": {
       "type": "array",
       "items": { "$ref": "#/definitions/DepEntry" },
-      "description": "External tools required by this substrate"
+      "description": "External tools required by this blueprint"
     },
     "ontology": {
       "$ref": "#/definitions/PathArray",

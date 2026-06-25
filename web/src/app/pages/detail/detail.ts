@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { ApiService, SubstrateResponse, DiffResponse } from '../../services/api.service';
+import { ApiService, BlueprintResponse, DiffResponse } from '../../services/api.service';
 import { FileTreeComponent } from '../../components/file-tree/file-tree';
 import { FileViewerComponent } from '../../components/file-viewer/file-viewer';
 import { DiffViewComponent } from '../../components/diff-view/diff-view';
@@ -23,8 +23,8 @@ import { marked } from 'marked';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DetailComponent implements OnInit {
-  print = signal<SubstrateResponse | undefined>(undefined);
-  versions = signal<SubstrateResponse[]>([]);
+  print = signal<BlueprintResponse | undefined>(undefined);
+  versions = signal<BlueprintResponse[]>([]);
   tab = signal<string>('readme');
   selectedFile = signal<string | null>(null);
   diffV1 = signal('');
@@ -53,13 +53,13 @@ export class DetailComponent implements OnInit {
       this.loading.set(true);
       this.error.set(null);
 
-      this.apiService.getSubstrate(author, name).subscribe({
+      this.apiService.getBlueprint(author, name).subscribe({
         next: (print) => {
           this.print.set(print);
           this.loading.set(false);
         },
         error: (err) => {
-          this.error.set('Failed to load substrate');
+          this.error.set('Failed to load blueprint');
           this.loading.set(false);
         }
       });

@@ -1,7 +1,7 @@
 {
   "name": "hyle",
   "version": "0.1.0",
-  "description": "AI Context Substrate Manager — versioned snapshots of agent workflows",
+  "description": "AI Context Blueprint Manager — versioned snapshots of agent workflows",
   "workspaces": ["cli", "web", "registry"],
   "scripts": {
     "test": "bun run --cwd cli test",

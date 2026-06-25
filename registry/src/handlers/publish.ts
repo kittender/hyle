@@ -128,7 +128,7 @@ export async function handlePublish(
   if (manifestScan.scan_status === "flagged") {
     const topFinding = manifestScan.findings.find((f) => f.severity === "critical");
     const detail = topFinding?.detail ?? "Security scan flagged";
-    return new Response(JSON.stringify({ error: `Substrate flagged: ${detail}` }), {
+    return new Response(JSON.stringify({ error: `Blueprint flagged: ${detail}` }), {
       status: 403,
       headers: { "Content-Type": "application/json" },
     });
@@ -154,7 +154,7 @@ export async function handlePublish(
   }
 
   const isStable = !manifest.version.includes("-snapshot");
-  const record = db.insertSubstrate(
+  const record = db.insertBlueprint(
     manifest.author,
     manifest.name,
     manifest.version,
@@ -196,7 +196,7 @@ export async function handlePublish(
       if (updatedScanResult.scan_status === "flagged") {
         const topFinding = updatedScanResult.findings.find((f) => f.severity === "critical");
         const reason = topFinding?.detail ?? "Security scan flagged";
-        db.flagSubstrate(record.id, reason);
+        db.flagBlueprint(record.id, reason);
       }
     }
   });

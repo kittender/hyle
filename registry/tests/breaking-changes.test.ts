@@ -3,7 +3,7 @@ import type { HyleManifest } from "../../../cli/src/manifest";
 import { detectBreakingChanges } from "../src/breaking-changes";
 
 const baseManifest: HyleManifest = {
-  name: "test-substrate",
+  name: "test-blueprint",
   author: "test-author",
   version: "1.0.0",
   models: {
@@ -134,7 +134,7 @@ describe("breaking-changes", () => {
   it("detects extends field change", () => {
     const newManifest: HyleManifest = {
       ...baseManifest,
-      extends: "parent-substrate@1.0.0",
+      extends: "parent-blueprint@1.0.0",
     };
 
     const changes = detectBreakingChanges(baseManifest, newManifest);

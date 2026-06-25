@@ -1,7 +1,7 @@
 {
   "name": "hyle",
   "version": "0.1.0",
-  "description": "AI context substrate manager",
+  "description": "AI context blueprint manager",
   "type": "module",
   "bin": { "hyle": "./src/index.ts" },
   "scripts": {

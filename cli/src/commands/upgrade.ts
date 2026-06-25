@@ -33,7 +33,7 @@ export async function runUpgrade(
 		const entries = readLock(cwd);
 
 		if (entries.length === 0) {
-			console.log("No substrates found in hyle.lock. Run 'hyle pull' first.");
+			console.log("No blueprints found in hyle.lock. Run 'hyle pull' first.");
 			process.exit(0);
 		}
 
@@ -46,7 +46,7 @@ export async function runUpgrade(
 		if (name) {
 			toUpgrade = entries.filter((e) => e.name === name);
 			if (toUpgrade.length === 0) {
-				console.log(`No substrate named '${name}' found in hyle.lock.`);
+				console.log(`No blueprint named '${name}' found in hyle.lock.`);
 				process.exit(0);
 			}
 		}

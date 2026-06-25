@@ -4,7 +4,7 @@ Complete reference for the Hylé Registry backend API. See [DEPLOYMENT.md](../op
 
 ## Base URL
 
-- **Production**: `https://api.hylé.com`
+- **Production**: `https://registry.hylé.com`
 - **Development**: `http://localhost:3001/api` (mock server)
 
 ## Authentication
@@ -16,7 +16,7 @@ Authorization: Bearer <access-token>
 ```
 
 Access tokens are obtained by:
-1. **Public Registry** (`https://api.hylé.com`): Use `hyle login` (GitHub OAuth)
+1. **Public Registry** (`https://registry.hylé.com`): Use `hyle login` (GitHub OAuth)
 2. **Self-Hosted Registry**: Use `hyle login --registry <custom-url>` (supports any OIDC provider)
 
 Tokens are short-lived (expiry varies by provider). Use refresh tokens to obtain new access tokens automatically (CLI handles this transparently).
@@ -53,10 +53,10 @@ All registries expose a standard OpenID Connect discovery endpoint. CLI uses thi
 
 ```json
 {
-  "issuer": "https://api.hylé.com",
+  "issuer": "https://registry.hylé.com",
   "authorization_endpoint": "https://github.com/login/oauth/authorize",
   "token_endpoint": "https://github.com/login/oauth/access_token",
-  "jwks_uri": "https://api.hylé.com/.well-known/jwks.json",
+  "jwks_uri": "https://registry.hylé.com/.well-known/jwks.json",
   "scopes_supported": ["read:user", "user:email"],
   "response_types_supported": ["code"],
   "grant_types_supported": ["authorization_code", "refresh_token"]
@@ -67,7 +67,7 @@ All registries expose a standard OpenID Connect discovery endpoint. CLI uses thi
 
 ```bash
 # Public registry discovery
-curl https://api.hylé.com/.well-known/openid-configuration | jq .
+curl https://registry.hylé.com/.well-known/openid-configuration | jq .
 
 # Self-hosted registry discovery
 curl https://company-registry.internal/.well-known/openid-configuration | jq .
@@ -77,7 +77,7 @@ This endpoint is **unauthenticated** (no Authorization header needed). CLI auto-
 
 ## Core Endpoints
 
-### Search Substrates
+### Search Blueprints
 
 **Endpoint**: `GET /search`
 
@@ -92,7 +92,7 @@ This endpoint is **unauthenticated** (no Authorization header needed). CLI auto-
 
 ```bash
 curl -H "Authorization: Bearer $HYLE_ACCESS_TOKEN" \
-  "https://api.hylé.com/search?q=auth&limit=10"
+  "https://registry.hylé.com/search?q=auth&limit=10"
 ```
 
 **Response** (200 OK):
@@ -104,7 +104,7 @@ curl -H "Authorization: Bearer $HYLE_ACCESS_TOKEN" \
       "name": "auth-middleware",
       "author": "kittender",
       "version": "1.2.0",
-      "description": "OpenID Connect middleware substrate",
+      "description": "OpenID Connect middleware blueprint",
       "tags": ["auth", "oidc"],
       "downloads": 1250,
       "stars": 42,
@@ -117,15 +117,15 @@ curl -H "Authorization: Bearer $HYLE_ACCESS_TOKEN" \
 }
 ```
 
-### Get Substrate Metadata
+### Get Blueprint Metadata
 
-**Endpoint**: `GET /substrates/:author/:name/:version`
+**Endpoint**: `GET /blueprints/:author/:name/:version`
 
 **Example**:
 
 ```bash
 curl -H "Authorization: Bearer $HYLE_ACCESS_TOKEN" \
-  "https://api.hylé.com/substrates/kittender/auth-middleware/1.2.0"
+  "https://registry.hylé.com/blueprints/kittender/auth-middleware/1.2.0"
 ```
 
 **Response** (200 OK):
@@ -135,16 +135,10 @@ curl -H "Authorization: Bearer $HYLE_ACCESS_TOKEN" \
   "name": "auth-middleware",
   "author": "kittender",
   "version": "1.2.0",
-  "description": "OpenID Connect middleware substrate",
+  "description": "OpenID Connect middleware blueprint",
   "homepage": "https://github.com/kittender/auth-middleware",
   "tags": ["auth", "oidc"],
-  "models": {
-    "primary": {
-      "provider": "anthropic",
-      "model": "claude-sonnet-4-6"
-    }
-  },
-  "compatibility": {
+  "recommendations": {
     "universal": [
       "anthropic/claude-sonnet-4-6",
       "openai/gpt-4o"
@@ -189,21 +183,21 @@ curl -H "Authorization: Bearer $HYLE_ACCESS_TOKEN" \
 }
 ```
 
-### Fetch Substrate Bundle
+### Fetch Blueprint Bundle
 
-**Endpoint**: `GET /substrates/:author/:name/:version/bundle`
+**Endpoint**: `GET /blueprints/:author/:name/:version/bundle`
 
-Downloads the complete substrate as a `.tar.gz` file.
+Downloads the complete blueprint as a `.tar.gz` file.
 
 **Example**:
 
 ```bash
 curl -H "Authorization: Bearer $HYLE_ACCESS_TOKEN" \
-  "https://api.hylé.com/substrates/kittender/auth-middleware/1.2.0/bundle" \
-  -o substrate.tar.gz
+  "https://registry.hylé.com/blueprints/kittender/auth-middleware/1.2.0/bundle" \
+  -o blueprint.tar.gz
 
 # Verify checksum
-sha256sum -c <<< "xyz789... substrate.tar.gz"
+sha256sum -c <<< "xyz789... blueprint.tar.gz"
 ```
 
 **Response** (200 OK):
@@ -211,9 +205,9 @@ sha256sum -c <<< "xyz789... substrate.tar.gz"
 - Content-Length: bundle size in bytes
 - Content-Disposition: `attachment; filename="auth-middleware-1.2.0.tar.gz"`
 
-### Publish/Update Substrate
+### Publish/Update Blueprint
 
-**Endpoint**: `POST /substrates/:author/:name`
+**Endpoint**: `POST /blueprints/:author/:name`
 
 **Headers**:
 - `Authorization: Bearer <access-token>` (OAuth2/OIDC access token)
@@ -235,10 +229,10 @@ TOKEN=$(jq -r '.access_token' ~/.hyle/auth.json)
 curl -X POST \
   -H "Authorization: Bearer $TOKEN" \
   -F "manifest=@hyle.yaml" \
-  -F "bundle=@substrate.tar.gz" \
+  -F "bundle=@blueprint.tar.gz" \
   -F "version=1.2.0" \
   -F "stable=true" \
-  "https://api.hylé.com/substrates/kittender/auth-middleware"
+  "https://registry.hylé.com/blueprints/kittender/auth-middleware"
 ```
 
 **Response** (201 Created):
@@ -263,7 +257,7 @@ curl -X POST \
 
 ### Resolve Dependencies
 
-**Endpoint**: `GET /substrates/:author/:name/:version/deps`
+**Endpoint**: `GET /blueprints/:author/:name/:version/deps`
 
 Returns dependency resolution hints (available versions, latest stable, etc.).
 
@@ -271,7 +265,7 @@ Returns dependency resolution hints (available versions, latest stable, etc.).
 
 ```bash
 curl -H "Authorization: Bearer $HYLE_ACCESS_TOKEN" \
-  "https://api.hylé.com/substrates/kittender/auth-middleware/1.2.0/deps"
+  "https://registry.hylé.com/blueprints/kittender/auth-middleware/1.2.0/deps"
 ```
 
 **Response** (200 OK):
@@ -293,9 +287,9 @@ curl -H "Authorization: Bearer $HYLE_ACCESS_TOKEN" \
 
 ### Version History
 
-**Endpoint**: `GET /substrates/:author/:name/versions`
+**Endpoint**: `GET /blueprints/:author/:name/versions`
 
-List all published versions of a substrate.
+List all published versions of a blueprint.
 
 **Query Parameters**:
 - `stable_only` (boolean, optional, default: false): Return only stable versions
@@ -304,7 +298,7 @@ List all published versions of a substrate.
 
 ```bash
 curl -H "Authorization: Bearer $HYLE_ACCESS_TOKEN" \
-  "https://api.hylé.com/substrates/kittender/auth-middleware/versions?stable_only=true"
+  "https://registry.hylé.com/blueprints/kittender/auth-middleware/versions?stable_only=true"
 ```
 
 **Response** (200 OK):
@@ -348,18 +342,18 @@ All error responses follow this format:
 
 | Code | HTTP Status | Meaning |
 |------|-------------|---------|
-| `not_found` | 404 | Substrate or version does not exist |
-| `unauthorized` | 401 | Invalid or missing API key |
-| `forbidden` | 403 | Permission denied (not author of substrate) |
+| `not_found` | 404 | Blueprint or version does not exist |
+| `unauthorized` | 401 | Invalid or missing access token |
+| `forbidden` | 403 | Permission denied (not author of blueprint) |
 | `validation_failed` | 422 | Manifest or bundle validation failed |
 | `version_conflict` | 409 | Version already published |
 | `payload_too_large` | 413 | Bundle exceeds size limit (50MB) |
-| `rate_limited` | 429 | Too many requests (10 req/min per key) |
+| `rate_limited` | 429 | Too many requests (10 req/min per token) |
 | `internal_error` | 500 | Server error (retry with exponential backoff) |
 
 ## Rate Limiting
 
-All endpoints are rate-limited to **10 requests per minute** per API key.
+All endpoints are rate-limited to **10 requests per minute** per access token.
 
 Response headers include:
 - `X-RateLimit-Limit`: 10
@@ -385,7 +379,7 @@ All artifacts are published with SHA-256 checksums:
 sha256sum manifest.tar.gz
 
 # Verify bundle matches published checksum
-curl -s "https://api.hylé.com/substrates/author/name/1.0.0" | \
+curl -s "https://registry.hylé.com/blueprints/author/name/1.0.0" | \
   jq '.bundle_sha256' | \
   sha256sum -c -
 ```
@@ -394,14 +388,14 @@ curl -s "https://api.hylé.com/substrates/author/name/1.0.0" | \
 
 - **All endpoints** require HTTPS (automatic upgrade from HTTP)
 - **Localhost** (`127.0.0.1`, `[::1]`) allowed only with `HYLE_ALLOW_INSECURE=1`
-- **API keys** never logged or cached in plaintext
+- **Access tokens** never logged or cached in plaintext
 - **CORS** restricted to `https://*.hylé.com` and configured registries
 
 ### Stars & Community Features
 
 **Toggle Star**
 
-**Endpoint**: `POST /substrates/:author/:name/stars`
+**Endpoint**: `POST /blueprints/:author/:name/stars`
 
 **Headers**: `Authorization: Bearer <auth-token>`
 
@@ -417,9 +411,9 @@ curl -s "https://api.hylé.com/substrates/author/name/1.0.0" | \
 
 ---
 
-**Get Substrate Reviews**
+**Get Blueprint Reviews**
 
-**Endpoint**: `GET /substrates/:author/:name/reviews`
+**Endpoint**: `GET /blueprints/:author/:name/reviews`
 
 **Query Parameters**:
 - `limit` (integer, optional, default: 10)
@@ -434,7 +428,7 @@ curl -s "https://api.hylé.com/substrates/author/name/1.0.0" | \
       "id": "rev_123",
       "author": "user_456",
       "rating": 5,
-      "text": "Excellent substrate!",
+      "text": "Excellent blueprint!",
       "created_at": "2026-05-20T10:00:00Z",
       "helpful_count": 3
     }
@@ -449,7 +443,7 @@ curl -s "https://api.hylé.com/substrates/author/name/1.0.0" | \
 
 **Submit Review**
 
-**Endpoint**: `POST /substrates/:author/:name/reviews`
+**Endpoint**: `POST /blueprints/:author/:name/reviews`
 
 **Headers**: `Authorization: Bearer <auth-token>`
 
@@ -457,7 +451,7 @@ curl -s "https://api.hylé.com/substrates/author/name/1.0.0" | \
 ```json
 {
   "rating": 5,
-  "text": "Great substrate, highly recommended!"
+  "text": "Great blueprint, highly recommended!"
 }
 ```
 
@@ -466,7 +460,7 @@ curl -s "https://api.hylé.com/substrates/author/name/1.0.0" | \
 {
   "id": "rev_123",
   "rating": 5,
-  "text": "Great substrate, highly recommended!",
+  "text": "Great blueprint, highly recommended!",
   "created_at": "2026-05-20T10:00:00Z"
 }
 ```
@@ -512,7 +506,7 @@ curl -s "https://api.hylé.com/substrates/author/name/1.0.0" | \
   "username": "example-user",
   "email": "user@example.com",
   "avatar": "https://github.com/example-user.png",
-  "bio": "Substrate author",
+  "bio": "Blueprint author",
   "website": "https://example.com",
   "verified": true,
   "created_at": "2026-05-01T00:00:00Z"
@@ -530,10 +524,10 @@ curl -s "https://api.hylé.com/substrates/author/name/1.0.0" | \
 {
   "username": "author-name",
   "avatar": "https://github.com/author-name.png",
-  "bio": "Creator of cool substrates",
+  "bio": "Creator of cool blueprints",
   "website": "https://author.com",
   "verified": true,
-  "substrates": [
+  "blueprints": [
     {
       "name": "java-springboot",
       "version": "1.0.0",
@@ -543,7 +537,7 @@ curl -s "https://api.hylé.com/substrates/author/name/1.0.0" | \
       "published_at": "2026-04-01T00:00:00Z"
     }
   ],
-  "total_substrates": 5,
+  "total_blueprints": 5,
   "total_stars": 500,
   "avg_rating": 4.6
 }
@@ -583,7 +577,7 @@ curl -s "https://api.hylé.com/substrates/author/name/1.0.0" | \
 
 **Get Security Report**
 
-**Endpoint**: `GET /substrates/:author/:name/:version/security-report`
+**Endpoint**: `GET /blueprints/:author/:name/:version/security-report`
 
 **Response** (200 OK):
 ```json
@@ -616,7 +610,7 @@ curl -s "https://api.hylé.com/substrates/author/name/1.0.0" | \
 
 **Get Checksums**
 
-**Endpoint**: `GET /substrates/:author/:name/:version/checksums`
+**Endpoint**: `GET /blueprints/:author/:name/:version/checksums`
 
 **Response** (200 OK):
 ```json
@@ -649,7 +643,7 @@ curl -s "https://api.hylé.com/substrates/author/name/1.0.0" | \
 
 ## Examples
 
-### Publish a Substrate
+### Publish a Blueprint
 
 Using the CLI (recommended):
 
@@ -657,7 +651,7 @@ Using the CLI (recommended):
 # Login (GitHub OAuth device flow)
 hyle login
 
-# Push substrate (CLI handles auth automatically)
+# Push blueprint (CLI handles auth automatically)
 hyle push --version 1.2.0
 ```
 
@@ -668,14 +662,14 @@ Using the API directly:
 
 # Build manifest and bundle
 hyle push --dry-run > manifest.yaml
-tar czf substrate.tar.gz \
+tar czf blueprint.tar.gz \
   hyle.yaml \
   docs/ \
   src/ \
   schema/
 
 # Login to get access token (if not already logged in)
-hyle login --registry https://api.hylé.com
+hyle login --registry https://registry.hylé.com
 
 # Get access token from stored auth
 TOKEN=$(jq -r '.access_token' ~/.hyle/auth.json)
@@ -684,10 +678,10 @@ TOKEN=$(jq -r '.access_token' ~/.hyle/auth.json)
 curl -X POST \
   -H "Authorization: Bearer $TOKEN" \
   -F "manifest=@manifest.yaml" \
-  -F "bundle=@substrate.tar.gz" \
+  -F "bundle=@blueprint.tar.gz" \
   -F "version=1.2.0" \
   -F "stable=true" \
-  "https://api.hylé.com/substrates/myauthor/mysubstrate"
+  "https://registry.hylé.com/blueprints/myauthor/myblueprint"
 ```
 
 ### Search and Pull
@@ -695,10 +689,10 @@ curl -X POST \
 Using the CLI (recommended):
 
 ```bash
-# Search for substrates
+# Search for blueprints
 hyle search auth --tag oidc
 
-# Pull substrate (CLI handles auth automatically)
+# Pull blueprint (CLI handles auth automatically)
 hyle pull author/name@1.0.0
 ```
 
@@ -713,23 +707,22 @@ hyle login
 # Get access token from stored auth
 TOKEN=$(jq -r '.access_token' ~/.hyle/auth.json)
 
-# Search for substrates
+# Search for blueprints
 curl -H "Authorization: Bearer $TOKEN" \
-  "https://api.hylé.com/search?q=auth&tag=oidc"
+  "https://registry.hylé.com/search?q=auth&tag=oidc"
 
 # Get metadata
 curl -H "Authorization: Bearer $TOKEN" \
-  "https://api.hylé.com/substrates/author/name/1.0.0"
+  "https://registry.hylé.com/blueprints/author/name/1.0.0"
 
 # Download bundle
 curl -H "Authorization: Bearer $TOKEN" \
-  "https://api.hylé.com/substrates/author/name/1.0.0/bundle" \
-  -o substrate.tar.gz
+  "https://registry.hylé.com/blueprints/author/name/1.0.0/bundle" \
+  -o blueprint.tar.gz
 ```
 
 ## Related Documentation
 
-- [MANIFEST_EXAMPLES.md](MANIFEST_EXAMPLES.md) — Example `hyle.yaml` manifests
-- [CONFIG_REFERENCE.md](CONFIG_REFERENCE.md) — Configuration reference
-- [SECURITY.md](SECURITY.md) — Security best practices
-- [CONTRIBUTING.md](CONTRIBUTING.md) — Development guidelines
+- [CONFIG.md](CONFIG.md) — Configuration reference
+- [SECURITY.md](../security/SECURITY.md) — Security best practices
+- [CONTRIBUTING.md](../guides/CONTRIBUTING.md) — Development guidelines

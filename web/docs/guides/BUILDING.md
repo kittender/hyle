@@ -339,10 +339,10 @@ git push origin main
 ### First time: create + publish
 
 ```bash
-hyle push --new
+hyle push 0.1.0
 # Publishes v0.1.0 as stable (listed in registry)
 
-# Or use --snapshot for WIP
+# Or, for WIP/testing:
 hyle snapshot
 # Publishes v0.1.0-snapshot (not listed as stable)
 ```

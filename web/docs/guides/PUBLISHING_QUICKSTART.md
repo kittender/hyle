@@ -8,7 +8,7 @@ Get started with Hylé in 5 minutes: install the CLI, find blueprints, and pull 
 
 ```bash
 # macOS / Linux
-curl -fsSL https://install.hylé.com | bash
+curl -fsSL https://get.hylé.com | bash
 
 # Or via package manager (if available)
 brew install kittender/hyle/hyle

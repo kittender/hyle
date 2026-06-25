@@ -74,7 +74,7 @@ export function buildTreeFromManifest(manifest: HyleManifest): PrintTree {
   return tree;
 }
 
-export function substrateToprint(s: any): Print {
+export function blueprintToprint(s: any): Print {
   const date = new Date(s.created_at);
   const dateStr = date.toISOString().split('T')[0];
 

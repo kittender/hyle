@@ -14,11 +14,11 @@ timeline
     
     section Released
     v0.2.0 - Core CLI + Registry + Web : done, v02, 2026-05-20, 30d
+    Blueprint composition (extends) : done, bc, 2026-05-20, 30d
     
     section Phase 5 (Next 4-6 weeks)
     Phase 5A - Multi-platform binaries : active, p5a, after v02, 14d
     Phase 5B - Private registry support : crit, p5b, after v02, 21d
-    Phase 5C - Substrate composition : p5c, after v02, 21d
     Phase 5D - Advanced security : p5d, after v02, 14d
     
     section Phase 6+ (Post-v0.3)
@@ -34,6 +34,7 @@ timeline
 
 **Shipped:**
 - ✅ CLI: init, pull, push, verify, outdated, upgrade (secure after P0-P6 fixes)
+- ✅ Blueprint composition: `extends` field (depth ≤2), merge + `hyle.lock` chain tracking
 - ✅ Registry: publish, search, fetch, diffs, security scans
 - ✅ Web UI: search, detail, auth, portfolios, ratings
 - ✅ Community: stars, reviews, badges, email notifications
@@ -79,7 +80,7 @@ timeline
 
 ## Phase 5B — Private/Org Registry Support (Next 3-4 weeks)
 
-**Goal:** Enable enterprises to self-host registries + use org-scoped substrates.
+**Goal:** Enable enterprises to self-host registries + use org-scoped blueprints.
 
 **Blocker for:** Enterprise adoption (currently non-starter for companies with compliance requirements).
 
@@ -95,13 +96,13 @@ timeline
 ### 5B2: Org Namespace Support
 - [ ] CLI support: `hyle pull @acme/java-springboot`
 - [ ] Registry ACL per org (access control for teams)
-- [ ] Private visibility (substrate not listed publicly)
+- [ ] Private visibility (blueprint not listed publicly)
 - [ ] Authentication: OAuth or API tokens
 
 ### 5B3: CLI Configuration
 - [ ] `.hyle` file supports custom registry URL:
   ```yaml
-  remote_url: https://substrates.internal.corp.com
+  remote_url: https://blueprints.internal.corp.com
   remote_token: ${HYLE_TOKEN}  # env var, never hardcoded
   ```
 - [ ] `hyle login --registry <custom-url>` for auth
@@ -109,7 +110,7 @@ timeline
 
 **Success metrics (8 weeks post-v0.2.0):**
 - 5+ companies self-hosting registry
-- 20+ org-scoped substrates published
+- 20+ org-scoped blueprints published
 - 0 security incidents related to private registry
 
 **Effort:** 3-4 days (backend) + 1 day (CLI) = 4 days  
@@ -119,18 +120,16 @@ timeline
 
 ---
 
-## Phase 5C — Substrate Inheritance/Composition (Next 3-4 weeks)
+## Blueprint Inheritance/Composition (`extends`) — ✅ Shipped in v0.2.0
 
-**Goal:** Enable base corporate substrate + project-specific layers (eliminates copy-paste, enforces consistency).
-
-**Blocker for:** Enterprise adoption (needed for multi-team governance).
+**Goal:** Enable base corporate blueprint + project-specific layers (eliminates copy-paste, enforces consistency).
 
 **Design:**
 ```yaml
 name: acme-java-springboot
-extends: ["hyle-org/base-config@2.0.0"]  # parent substrate(s)
+extends: ["hyle-org/base-config@2.0.0"]  # parent blueprint(s)
 
-substrate:
+blueprint:
   ontology:
     - path: CLAUDE.md
       override: true           # replaces parent
@@ -140,12 +139,12 @@ substrate:
 ```
 
 **Deliverables:**
-- [ ] Manifest schema: `extends` field with version pins + override flag
-- [ ] Pull logic: fetch parent(s), merge with child
-- [ ] Conflict resolution: `override: true` per file
-- [ ] Inheritance depth limit: 2 levels only (parent → child) to prevent cycles
-- [ ] `hyle pull` shows merged diff (parent + child effective result)
-- [ ] `hyle.lock` tracks inheritance chain
+- [x] Manifest schema: `extends` field with version pins + override flag
+- [x] Pull logic: fetch parent(s), merge with child
+- [x] Conflict resolution: `override: true` per file
+- [x] Inheritance depth limit: 2 levels only (parent → child) to prevent cycles
+- [x] `hyle pull` shows merged diff (parent + child effective result)
+- [x] `hyle.lock` tracks inheritance chain
 
 **Example:**
 ```bash
@@ -153,18 +152,15 @@ hyle pull acme-java-springboot
 # Downloads parent (hyle-org/base-config@2.0.0)
 # Downloads child (acme-java-springboot)
 # Shows diff: base CLAUDE.md + project overrides
-# Writes hyle.lock with both substrates + checksums
+# Writes hyle.lock with both blueprints + checksums
 ```
 
-**Success metrics (12 weeks post-v0.2.0):**
-- 10+ corporate substrates using extends
+**Adoption metrics (12 weeks post-v0.2.0):**
+- 10+ corporate blueprints using extends
 - 0 circular inheritance detected (design prevents)
 - Merge conflicts <5% (well-documented resolution)
 
-**Effort:** 3-4 days  
 **Owner:** CLI + registry team
-
-**Dependencies:** Private registry (Phase 5B) needed for enterprise use
 
 ---
 
@@ -189,7 +185,7 @@ hyle pull acme-java-springboot
 ### 5D2: Sandboxed Diff Preview
 - [ ] `hyle pull` shows plaintext diff of CLAUDE.md, AGENTS.md BEFORE applying
 - [ ] Never execute or parse instruction files during pull validation
-- [ ] Require explicit user confirmation for substrates with directive language
+- [ ] Require explicit user confirmation for blueprints with directive language
 
 ### 5D3: Author Trust Tiers
 - [ ] Unverified (default) — new authors
@@ -198,12 +194,12 @@ hyle pull acme-java-springboot
 - [ ] Display tier on detail page + search results
 
 ### 5D4: Quorum Community Flagging
-- [ ] Require 3 independent registered users to flag substrate (not 1)
+- [ ] Require 3 independent registered users to flag blueprint (not 1)
 - [ ] Prevent harassment / false flags
 - [ ] Log flag reason + reviewer
 
 **Success metrics:**
-- 0 malicious substrates reach production
+- 0 malicious blueprints reach production
 - False positive flags <1%
 - Author trust model understood by 90%+ of users
 
@@ -228,7 +224,7 @@ hyle pull acme-java-springboot
 - [ ] Interactive graph on detail page
 - [ ] Detect cycles + breaking changes across inheritance
 
-### 6C: Substrate Recommendations
+### 6C: Blueprint Recommendations
 - [ ] Smart search filtering (recommended for your stack)
 - [ ] Based on user history + community trends
 - [ ] A/B test recommendations (measure CTR, adoption)
@@ -262,12 +258,12 @@ hyle pull acme-java-springboot
 ### Week 1–2 (Beta Launch)
 - ✅ Registry uptime: 99.5%+
 - ✅ Search latency p99: <500ms
-- ✅ 0 malicious substrates published
+- ✅ 0 malicious blueprints published
 - ✅ 0 security incidents
 
 ### Week 3–6 (Early Adoption)
 - ✅ User signups: 100+
-- ✅ Substrates published: 50+
+- ✅ Blueprints published: 50+
 - ✅ Star ratings: avg 4.2+ stars
 - ✅ Email open rate: >15%
 - ✅ Platform downloads split: 30% Windows, 30% Linux, 40% macOS
@@ -275,7 +271,7 @@ hyle pull acme-java-springboot
 ### Month 2–3 (Stabilization)
 - ✅ Author retention: 70%+ publish 2nd version
 - ✅ Private registry interest: 10+ companies inquiring
-- ✅ Substrate extends adoption: 5+ corporate substrates
+- ✅ Blueprint extends adoption: 5+ corporate blueprints
 
 ### Month 4–6 (Growth)
 - ✅ DAU (daily active users): 500+
@@ -290,12 +286,12 @@ hyle pull acme-java-springboot
 
 - [ ] Mobile app (no users yet to justify)
 - [ ] GraphQL API (REST sufficient; add if needed)
-- [ ] Substrate marketplace (no user demand yet)
+- [ ] Blueprint marketplace (no user demand yet)
 - [ ] Paid tiers / monetization (beta free forever)
 - [ ] GitHub Actions integration (GitHub marketplace later)
 - [ ] Slack/Discord bots (lower priority)
 - [ ] Offline CLI cache (online-first acceptable)
-- [ ] Substrate verification/signing (nice-to-have)
+- [ ] Blueprint verification/signing (nice-to-have)
 - [ ] Supply chain SBOMs (too early)
 
 ---
@@ -323,8 +319,7 @@ hyle pull acme-java-springboot
 
 **Public Docs:**
 - [README.md](../README.md) — Product overview
-- [CONFIG_REFERENCE.md](CONFIG_REFERENCE.md) — Configuration schema
-- [MANIFEST_EXAMPLES.md](MANIFEST_EXAMPLES.md) — Example substrates
+- [CONFIG.md](reference/CONFIG.md) — Configuration schema
 
 ---
 

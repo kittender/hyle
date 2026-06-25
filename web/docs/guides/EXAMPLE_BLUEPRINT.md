@@ -537,16 +537,6 @@ Same queries via Ollama (free): $0/day
 ```yaml
 # Override home ~/.hyle settings for this project
 remote_url: https://registry.hylé.com
-
-# When pulling this blueprint, auto-add reference to CLAUDE.md
-auto_inject: true
-
-# Don't upload these patterns to registry
-scan:
-  ontology: [.md, .cursorrules]
-  craft: [angular.json, pom.xml, README.md]
-  identities: [.md]
-  ethics: [.cedar, trulens.yaml]
 ```
 
 ---
@@ -688,7 +678,6 @@ hyle pull acme-corp/enterprise-ai-workflows
 # ✓ Shows diff of what will be added
 # ✓ Checks for required tools (cedar, node, java)
 # ✓ Verifies checksums (SHA-256)
-# ✓ Adds blueprint reference to CLAUDE.md (if auto_inject: true)
 # ✓ Extracts files: CLAUDE.md, ARCHITECTURE.md, .claude/agents/, .cedar/, etc.
 ```
 

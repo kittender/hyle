@@ -30,9 +30,9 @@ If you discover a security vulnerability in Hylé, please **do not** open a publ
 
 ### Trust Model
 
-Hylé substrates are **trusted by intent**: pulling a substrate means you trust the author. Always review `hyle.yaml` before pulling a substrate, especially the:
+Hylé blueprints are **trusted by intent**: pulling a blueprint means you trust the author. Always review `hyle.yaml` before pulling a blueprint, especially the:
 - `dependencies` block (external tools and scripts)
-- `models` block (API providers and credentials)
+- `recommendations` block (LLM providers the author tested with)
 - File paths (ontology, craft, identities, ethics)
 
 ### Path Traversal Prevention
@@ -69,7 +69,7 @@ Hylé strictly validates all file paths to prevent directory traversal attacks:
 ### Manifest Validation & Security Scans
 
 All manifests are validated against a strict schema on load:
-- Required fields: `name`, `author`, `version`, `models`
+- Required fields: `name`, `author`, `version`
 - Slugs: Lowercase alphanumeric with hyphens, max 64 chars
 - Versions: Semantic versioning (x.y.z or x.y.z-snapshot)
 - Semver ranges: For dependencies, versions must be valid semver ranges

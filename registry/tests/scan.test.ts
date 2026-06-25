@@ -88,7 +88,7 @@ describe("Security scanner", () => {
         secondary: { provider: "anthropic", model: "claude-3-haiku" },
       },
       ontology: ["README.md"],
-      description: "A legitimate substrate with proper files",
+      description: "A legitimate blueprint with proper files",
     };
 
     const result = scanManifest(manifest, 10000);
@@ -126,7 +126,7 @@ describe("Security scanner", () => {
         primary: { provider: "anthropic", model: "claude-3-sonnet" },
         secondary: { provider: "anthropic", model: "claude-3-haiku" },
       },
-      description: "This substrate will exfiltrate your data to external servers",
+      description: "This blueprint will exfiltrate your data to external servers",
     };
 
     const result = scanManifest(manifest, 1000);

@@ -16,15 +16,15 @@ import { handleGithubOAuth, handleGithubCallback, handleGetMe, handleUpdateMe, h
 import { handleToggleStar, handleGetStars } from "./handlers/stars";
 import { handleSubmitReview, handleGetReviews } from "./handlers/reviews";
 
-const SUBSTRATE_RE = /^\/substrates\/([a-z0-9-]+)\/([a-z0-9-]+)(?:@([a-z0-9\.\-]+))?(?:\/bundle)?$/;
-const VERSIONS_RE = /^\/substrates\/([a-z0-9-]+)\/([a-z0-9-]+)\/versions$/;
-const CHECKSUMS_RE = /^\/substrates\/([a-z0-9-]+)\/([a-z0-9-]+)@([a-z0-9\.\-]+)\/checksums$/;
-const SECURITY_RE = /^\/substrates\/([a-z0-9-]+)\/([a-z0-9-]+)@([a-z0-9\.\-]+)\/security-report$/;
-const DIFF_RE = /^\/substrates\/([a-z0-9-]+)\/([a-z0-9-]+)@([a-z0-9\.\-]+)\/diff$/;
-const STAR_RE = /^\/substrates\/([a-z0-9-]+)\/([a-z0-9-]+)\/star$/;
-const STARS_RE = /^\/substrates\/([a-z0-9-]+)\/([a-z0-9-]+)\/stars$/;
-const REVIEWS_POST_RE = /^\/substrates\/([a-z0-9-]+)\/([a-z0-9-]+)\/reviews$/;
-const REVIEWS_GET_RE = /^\/substrates\/([a-z0-9-]+)\/([a-z0-9-]+)\/reviews$/;
+const BLUEPRINT_RE = /^\/blueprints\/([a-z0-9-]+)\/([a-z0-9-]+)(?:@([a-z0-9\.\-]+))?(?:\/bundle)?$/;
+const VERSIONS_RE = /^\/blueprints\/([a-z0-9-]+)\/([a-z0-9-]+)\/versions$/;
+const CHECKSUMS_RE = /^\/blueprints\/([a-z0-9-]+)\/([a-z0-9-]+)@([a-z0-9\.\-]+)\/checksums$/;
+const SECURITY_RE = /^\/blueprints\/([a-z0-9-]+)\/([a-z0-9-]+)@([a-z0-9\.\-]+)\/security-report$/;
+const DIFF_RE = /^\/blueprints\/([a-z0-9-]+)\/([a-z0-9-]+)@([a-z0-9\.\-]+)\/diff$/;
+const STAR_RE = /^\/blueprints\/([a-z0-9-]+)\/([a-z0-9-]+)\/star$/;
+const STARS_RE = /^\/blueprints\/([a-z0-9-]+)\/([a-z0-9-]+)\/stars$/;
+const REVIEWS_POST_RE = /^\/blueprints\/([a-z0-9-]+)\/([a-z0-9-]+)\/reviews$/;
+const REVIEWS_GET_RE = /^\/blueprints\/([a-z0-9-]+)\/([a-z0-9-]+)\/reviews$/;
 const AUTHOR_RE = /^\/authors\/([a-z0-9-]+)$/;
 const BUNDLES_RE = /^\/bundles\/(.+\.tar\.gz)$/;
 
@@ -117,7 +117,7 @@ export async function route(
     return handleAuthor(author, db, baseUrl);
   }
 
-  if (pathname === "/substrates" && req.method === "GET") {
+  if (pathname === "/blueprints" && req.method === "GET") {
     const q = url.searchParams.get("q");
     const tags = url.searchParams.get("tags");
     const author = url.searchParams.get("author");
@@ -139,7 +139,7 @@ export async function route(
     );
   }
 
-  if (pathname === "/substrates" && req.method === "POST") {
+  if (pathname === "/blueprints" && req.method === "POST") {
     return await handlePublish(req, db, storage, auth, jwtSecret);
   }
 
@@ -182,11 +182,11 @@ export async function route(
     return handleDiff(author, name, v1, base, db);
   }
 
-  const substrateMa = pathname.match(SUBSTRATE_RE);
-  if (substrateMa && req.method === "GET") {
-    const author = substrateMa[1];
-    const name = substrateMa[2];
-    const version = substrateMa[3];
+  const blueprintMa = pathname.match(BLUEPRINT_RE);
+  if (blueprintMa && req.method === "GET") {
+    const author = blueprintMa[1];
+    const name = blueprintMa[2];
+    const version = blueprintMa[3];
     const isBundle = pathname.includes("/bundle");
 
     if (isBundle) {

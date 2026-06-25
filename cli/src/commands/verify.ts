@@ -168,11 +168,11 @@ export async function runVerify(opts: VerifyOptions): Promise<void> {
 
 		if (process.stdin.isTTY !== false) {
 			if (exitCode === 0) {
-				outro("✓ All substrates verified successfully.");
+				outro("✓ All blueprints verified successfully.");
 			} else if (exitCode === 1) {
 				outro("✗ Checksum mismatch detected.");
 			} else if (exitCode === 3) {
-				outro("⬆️ Substrates are outdated on registry.");
+				outro("⬆️ Blueprints are outdated on registry.");
 			} else {
 				outro("✗ Verification failed.");
 			}

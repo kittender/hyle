@@ -17,7 +17,7 @@ function makeTmpDir(): string {
 
 function createManifest(dir: string) {
   const manifest = {
-    name: "test-substrate",
+    name: "test-blueprint",
     author: "test-author",
     version: "0.1.0",
   };

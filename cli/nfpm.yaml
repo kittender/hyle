@@ -3,7 +3,7 @@ arch: amd64
 platform: linux
 version: "0.1.0"
 maintainer: Kittender <hello@hyle.dev>
-description: AI context substrate manager
+description: AI context blueprint manager
 homepage: https://hylé.com
 license: MIT
 

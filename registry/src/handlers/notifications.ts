@@ -33,12 +33,12 @@ async function sendEmailViaResend(request: ResendEmailRequest): Promise<boolean>
 }
 
 export async function notifyNewStar(
-  substrate_author: string,
-  substrate_name: string,
+  blueprint_author: string,
+  blueprint_name: string,
   star_count: number,
   db: IDatabase
 ): Promise<void> {
-  const user = db.getUserByUsername(substrate_author);
+  const user = db.getUserByUsername(blueprint_author);
   if (!user?.email) return;
 
   const prefs = db.getNotificationPrefs(user.id);
@@ -47,25 +47,25 @@ export async function notifyNewStar(
   await sendEmailViaResend({
     from: "noreply@hyle.dev",
     to: user.email,
-    subject: `Your substrate ${substrate_name} received a star!`,
+    subject: `Your blueprint ${blueprint_name} received a star!`,
     html: `
-      <h2>${substrate_name} received a star!</h2>
-      <p>Your substrate now has ${star_count} stars.</p>
-      <p><a href="https://hylé.com/substrates/${substrate_author}/${substrate_name}">View substrate</a></p>
+      <h2>${blueprint_name} received a star!</h2>
+      <p>Your blueprint now has ${star_count} stars.</p>
+      <p><a href="https://hylé.com/print/${blueprint_author}/${blueprint_name}">View blueprint</a></p>
     `,
   });
 }
 
 export async function notifyNewReview(
-  substrate_author: string,
-  substrate_name: string,
+  blueprint_author: string,
+  blueprint_name: string,
   reviewer: string,
   rating: number,
   body?: string,
   db?: IDatabase
 ): Promise<void> {
   if (!db) return;
-  const user = db.getUserByUsername(substrate_author);
+  const user = db.getUserByUsername(blueprint_author);
   if (!user?.email) return;
 
   const prefs = db.getNotificationPrefs(user.id);
@@ -74,24 +74,24 @@ export async function notifyNewReview(
   await sendEmailViaResend({
     from: "noreply@hyle.dev",
     to: user.email,
-    subject: `${reviewer} reviewed your substrate ${substrate_name}`,
+    subject: `${reviewer} reviewed your blueprint ${blueprint_name}`,
     html: `
-      <h2>New review for ${substrate_name}</h2>
+      <h2>New review for ${blueprint_name}</h2>
       <p><strong>${reviewer}</strong> left a ${rating}-star review:</p>
       <blockquote>${body || "(No comment)"}</blockquote>
-      <p><a href="https://hylé.com/substrates/${substrate_author}/${substrate_name}">View reviews</a></p>
+      <p><a href="https://hylé.com/print/${blueprint_author}/${blueprint_name}">View reviews</a></p>
     `,
   });
 }
 
 export async function notifyNewVersion(
-  substrate_author: string,
-  substrate_name: string,
+  blueprint_author: string,
+  blueprint_name: string,
   version: string,
   db?: IDatabase
 ): Promise<void> {
   if (!db) return;
-  const user = db.getUserByUsername(substrate_author);
+  const user = db.getUserByUsername(blueprint_author);
   if (!user?.email) return;
 
   const prefs = db.getNotificationPrefs(user.id);
@@ -100,11 +100,11 @@ export async function notifyNewVersion(
   await sendEmailViaResend({
     from: "noreply@hyle.dev",
     to: user.email,
-    subject: `New version ${version} of ${substrate_name} published`,
+    subject: `New version ${version} of ${blueprint_name} published`,
     html: `
-      <h2>New version of ${substrate_name}</h2>
+      <h2>New version of ${blueprint_name}</h2>
       <p>Version <strong>${version}</strong> has been published.</p>
-      <p><a href="https://hylé.com/substrates/${substrate_author}/${substrate_name}">View substrate</a></p>
+      <p><a href="https://hylé.com/print/${blueprint_author}/${blueprint_name}">View blueprint</a></p>
     `,
   });
 }

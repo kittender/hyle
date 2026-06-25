@@ -40,7 +40,7 @@ export async function runInit(opts: {
 		}
 	}
 
-	const defaultName = slugify(basename(cwd)) || "my-substrate";
+	const defaultName = slugify(basename(cwd)) || "my-blueprint";
 	const defaultAuthor = getGitAuthor() || "author";
 
 	let name: string;
@@ -54,7 +54,7 @@ export async function runInit(opts: {
 		author = defaultAuthor;
 		version = "0.1.0";
 	} else {
-		name = await prompt("Substrate name", defaultName, validateSlug);
+		name = await prompt("Blueprint name", defaultName, validateSlug);
 		author = await prompt(
 			"Author (GitHub username)",
 			defaultAuthor,
@@ -142,7 +142,7 @@ async function prompt(
 function validateSlug(v: string): string | undefined {
 	return SLUG_RE.test(v)
 		? undefined
-		: "Must be lowercase alphanumeric with hyphens, max 64 chars (e.g. my-substrate)";
+		: "Must be lowercase alphanumeric with hyphens, max 64 chars (e.g. my-blueprint)";
 }
 
 function slugify(s: string): string {
@@ -177,7 +177,7 @@ export async function checkRegistry(
 	try {
 		const config = loadConfig(cwd);
 		const res = await fetcher(
-			`${config.remote_url}/substrates/${author}/${name}`,
+			`${config.remote_url}/blueprints/${author}/${name}`,
 			{
 				signal: AbortSignal.timeout(3000),
 			},

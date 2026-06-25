@@ -4,7 +4,7 @@ PackageLocale: en-US
 Publisher: Kittender
 PackageName: Hylé
 License: MIT
-ShortDescription: AI context substrate manager
+ShortDescription: AI context blueprint manager
 Description: Package, share, and install versioned snapshots of AI agent workflows. Manages CLAUDE.md, agent identities, MCP configs, and ethics policies.
 PackageUrl: https://hylé.com
 ManifestType: defaultLocale

@@ -1,6 +1,6 @@
 import type { IDatabase } from "../db";
 import type { IStorage } from "../storage";
-import type { SubstrateResponse } from "../types";
+import type { BlueprintResponse } from "../types";
 import { computeAllBadges } from "./badges";
 
 export async function handleFetch(
@@ -20,7 +20,7 @@ export async function handleFetch(
   }
 
   if (!record) {
-    return new Response(JSON.stringify({ error: "Substrate not found" }), {
+    return new Response(JSON.stringify({ error: "Blueprint not found" }), {
       status: 404,
       headers: { "Content-Type": "application/json" },
     });
@@ -33,7 +33,7 @@ export async function handleFetch(
   const scan_result = db.getScan(record.id);
   const badges = computeAllBadges(record.author, record.name, db, scan_result);
 
-  const response: SubstrateResponse = {
+  const response: BlueprintResponse = {
     author: record.author,
     name: record.name,
     version: record.version,

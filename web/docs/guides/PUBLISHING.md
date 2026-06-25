@@ -353,7 +353,7 @@ recommendations:
     - ollama/qwen2.5:14b
 ```
 
-Users filter by category: `hyle search java spring --category budget` (find blueprints tested with budget models).
+Users filter by tag: `hyle search java spring --tag budget` (find blueprints tested with budget models).
 
 ### Publishing Strategy by Audience
 

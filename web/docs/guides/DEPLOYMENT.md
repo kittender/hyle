@@ -22,7 +22,7 @@
    - [B1. Build all platform binaries](#b1-build-all-platform-binaries)
    - [B2. Upload binaries to S3](#b2-upload-binaries-to-s3)
    - [B3. Write the install script](#b3-write-the-install-script)
-6. [Part C — Substrate Registry Backend (required)](#part-c--substrate-registry-backend-required)
+6. [Part C — Blueprint Registry Backend (required)](#part-c--blueprint-registry-backend-required)
 7. [Part D — CI/CD with GitHub Actions](#part-d--cicd-with-github-actions)
 8. [Part E — Distribute the CLI Globally](#part-e--distribute-the-cli-globally)
    - [E1. Homebrew (macOS / Linux)](#e1-homebrew-macos--linux)
@@ -51,7 +51,7 @@
                     └─────────────────┘
 
 ┌──────────────────────────────────────────────────────────────────┐
-│                    SUBSTRATE REGISTRY API                        │
+│                    BLUEPRINT REGISTRY API                        │
 │                   https://registry.hylé.com                      │
 │                                                                  │
 │   hyle push/pull  →  Bun Server (any VPS/container host)         │
@@ -481,7 +481,7 @@ detect_platform() {
       ;;
     *)
       echo "Unsupported OS: ${OS}" >&2
-      echo "For Windows, visit: https://hylé.com/install" >&2
+      echo "For Windows, visit: https://get.hylé.com" >&2
       exit 1
       ;;
   esac
@@ -803,7 +803,7 @@ Create `Formula/hyle.rb` in that repo:
 ```ruby
 # Formula/hyle.rb
 class Hyle < Formula
-  desc "AI context substrate manager"
+  desc "AI context blueprint manager"
   homepage "https://hylé.com"
   version "0.1.0"
   license "MIT"
@@ -929,8 +929,8 @@ choco/
     <projectUrl>https://hylé.com</projectUrl>
     <licenseUrl>https://github.com/kittender/hyle/blob/main/LICENSE</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>AI context substrate manager — package, share, and install versioned AI agent workflows.</description>
-    <tags>ai cli developer-tools substrate</tags>
+    <description>AI context blueprint manager — package, share, and install versioned AI agent workflows.</description>
+    <tags>ai cli developer-tools blueprint</tags>
   </metadata>
 </package>
 ```
@@ -992,7 +992,7 @@ Create a GitHub repo `scoop-hyle` with a JSON manifest:
 ```json
 {
   "version": "0.1.0",
-  "description": "AI context substrate manager",
+  "description": "AI context blueprint manager",
   "homepage": "https://hylé.com",
   "license": "MIT",
   "architecture": {
@@ -1055,7 +1055,7 @@ PackageLocale: en-US
 Publisher: Kittender
 PackageName: Hylé
 License: MIT
-ShortDescription: AI context substrate manager
+ShortDescription: AI context blueprint manager
 Description: Package, share, and install versioned snapshots of AI agent workflows.
 PackageUrl: https://hylé.com
 ManifestType: defaultLocale
@@ -1098,7 +1098,7 @@ arch: amd64           # build a separate one for arm64
 platform: linux
 version: "0.1.0"
 maintainer: Kittender <hello@hylé.com>
-description: AI context substrate manager
+description: AI context blueprint manager
 homepage: https://hylé.com
 license: MIT
 
@@ -1196,7 +1196,7 @@ Snap packages run on any Linux distribution and auto-update.
 ```yaml
 name: hyle
 version: "0.1.0"
-summary: AI context substrate manager
+summary: AI context blueprint manager
 description: |
   Package, share, and install versioned snapshots of AI agent workflows.
   Manages CLAUDE.md, agent identities, MCP configs, and ethics policies.
@@ -1249,10 +1249,10 @@ sudo snap install hyle
 The `install.sh` created in Part B is the universal fallback for all platforms. Expose it at a clean URL:
 
 ```
-curl -fsSL https://hylé.com/install | bash
+curl -fsSL https://get.hylé.com | bash
 ```
 
-This requires adding a CloudFront behavior that proxies `/install` to the S3 install.sh file.
+This requires pointing the `get.hylé.com` CloudFront distribution at the S3 install.sh file.
 
 Add to your website docs:
 
@@ -1266,7 +1266,7 @@ brew tap kittender/hyle && brew install hyle
 
 **macOS / Linux (curl)**
 ```bash
-curl -fsSL https://hylé.com/install | bash
+curl -fsSL https://get.hylé.com | bash
 ```
 
 **Windows (winget)**

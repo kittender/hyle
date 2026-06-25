@@ -1,5 +1,5 @@
 import type { IDatabase } from "../db";
-import type { SearchQuery, SubstrateResponse } from "../types";
+import type { SearchQuery, BlueprintResponse } from "../types";
 import { computeAllBadges } from "./badges";
 
 export function handleSearch(
@@ -9,7 +9,7 @@ export function handleSearch(
 ): Response {
   const records = db.search(query);
 
-  const results: SubstrateResponse[] = records.map((record) => {
+  const results: BlueprintResponse[] = records.map((record) => {
     const manifest = JSON.parse(record.manifest_json);
     const bundleUrl = `${baseUrl}/bundles/${record.bundle_path}`;
     const star_count = db.getStarCount(record.author, record.name);

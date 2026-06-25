@@ -39,7 +39,7 @@ export function handleSecurityReport(
 ): Response {
   const record = db.getVersion(author, name, version);
   if (!record) {
-    return new Response(JSON.stringify({ error: "Substrate not found" }), {
+    return new Response(JSON.stringify({ error: "Blueprint not found" }), {
       status: 404,
       headers: { "Content-Type": "application/json" },
     });
@@ -57,7 +57,7 @@ export function handleSecurityReport(
   const badges = computeBadges(scan);
 
   const report: SecurityReport = {
-    substrate: {
+    blueprint: {
       author: record.author,
       name: record.name,
       version: record.version,

@@ -93,8 +93,8 @@ git diff HEAD MERGE_HEAD      # Review what changed
 
 **Fix** (choose one):
 ```bash
-# Let Hylé install it
-hyle pull org/name --install-deps
+# See the install command Hylé suggests for your OS
+hyle deps check
 
 # Manual install
 brew install cedar          # macOS
@@ -223,11 +223,9 @@ hyle pull org/blueprint  # Should succeed
 **Cause**: Blueprint contains large files (>100MB PDFs, datasets, models) that exceed network or disk quota.
 
 **Workaround:**
-```bash
-# Pull without large files
-hyle pull org/blueprint --exclude "*.pdf" --exclude "*.bin"
 
-# Or manually fetch from GitHub
+`hyle pull` has no per-file filter — it always extracts everything declared in the manifest. For large files, fetch directly from GitHub instead:
+```bash
 git clone https://github.com/author/repo
 cd repo
 # Check out specific git tag: git checkout hyle-v1.0.0
@@ -293,7 +291,7 @@ hyle --version
 
 ### "Config validation error: field X is required"
 
-**Cause**: `hyle.yaml` missing required field (name, author, version, models.primary).
+**Cause**: `hyle.yaml` missing required field (name, author, version).
 
 **Fix**: See [Configuration Reference](../reference/CONFIG.md).
 

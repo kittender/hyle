@@ -22,8 +22,8 @@ describe("Security database operations", () => {
       },
     };
 
-    // Insert a substrate
-    const record = db.insertSubstrate(
+    // Insert a blueprint
+    const record = db.insertBlueprint(
       "author",
       "test",
       "1.0.0",
@@ -56,7 +56,7 @@ describe("Security database operations", () => {
     expect(db.countRecentPublishes("author3", 3600)).toBe(0);
   });
 
-  test("flags substrates with reason", () => {
+  test("flags blueprints with reason", () => {
     const manifest: HyleManifest = {
       name: "test",
       author: "author",
@@ -67,7 +67,7 @@ describe("Security database operations", () => {
       },
     };
 
-    const record = db.insertSubstrate(
+    const record = db.insertBlueprint(
       "author",
       "test",
       "1.0.0",
@@ -81,8 +81,8 @@ describe("Security database operations", () => {
 
     expect(record.is_flagged).toBe(false);
 
-    // Flag the substrate
-    db.flagSubstrate(record.id, "Contains malicious code");
+    // Flag the blueprint
+    db.flagBlueprint(record.id, "Contains malicious code");
 
     // Retrieve and verify flagged
     const updated = db.getVersion("author", "test", "1.0.0");

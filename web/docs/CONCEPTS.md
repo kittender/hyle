@@ -176,11 +176,11 @@ recommendations:
 
 **Search & filter:**
 ```bash
-hyle search --category budget       # Only budget-friendly blueprints
-hyle search --harness bedrock       # Only Bedrock-compatible
+hyle search --tag budget       # Only blueprints tagged budget-friendly
+hyle search --tag bedrock      # Only blueprints tagged Bedrock-compatible
 ```
 
-**If no `compatibility` block:** Assumes `universal` (works everywhere).
+**If no `recommendations` block:** Assumes `universal` (works everywhere).
 
 ---
 

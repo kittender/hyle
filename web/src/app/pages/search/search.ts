@@ -2,7 +2,7 @@ import { Component, OnInit, signal, effect, ChangeDetectionStrategy } from '@ang
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { ApiService, SubstrateResponse } from '../../services/api.service';
+import { ApiService, BlueprintResponse } from '../../services/api.service';
 import { BadgeListComponent } from '../../components/badge-list/badge-list';
 
 @Component({
@@ -19,7 +19,7 @@ export class SearchComponent implements OnInit {
   sort = signal<'recent' | 'name'>('recent');
   selectedTags = signal<string[]>([]);
   authorFilter = signal('');
-  results = signal<SubstrateResponse[]>([]);
+  results = signal<BlueprintResponse[]>([]);
   allTags = signal<string[]>([]);
   loading = signal(false);
   error = signal<string | null>(null);
@@ -103,7 +103,7 @@ export class SearchComponent implements OnInit {
         this.loading.set(false);
       },
       error: (err) => {
-        this.error.set(err?.message || 'Failed to load substrates');
+        this.error.set(err?.message || 'Failed to load blueprints');
         this.loading.set(false);
       }
     });

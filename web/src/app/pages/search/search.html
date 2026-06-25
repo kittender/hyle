@@ -5,7 +5,7 @@
       <span class="search-icon">
         <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4"/><path d="M11 11l3 3" stroke-linecap="round"/></svg>
       </span>
-      <input [ngModel]="inputVal()" (ngModelChange)="inputVal.set($event)" name="searchInput" placeholder="Search substrates…" class="search-input">
+      <input [ngModel]="inputVal()" (ngModelChange)="inputVal.set($event)" name="searchInput" placeholder="Search blueprints…" class="search-input">
     </div>
   </form>
 
@@ -38,7 +38,7 @@
       }
 
       @if (loading() && results().length === 0) {
-        <div class="loading-state">Loading substrates…</div>
+        <div class="loading-state">Loading blueprints…</div>
       } @else {
         <div class="section-header">
           <span class="text-base text-muted">
@@ -59,7 +59,7 @@
 
         @if (results().length === 0) {
           <div class="empty-state">
-            No substrates found.
+            No blueprints found.
             <button class="link-btn" (click)="clearSearch()">Clear search</button>
           </div>
         } @else {

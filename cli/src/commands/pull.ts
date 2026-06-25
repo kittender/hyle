@@ -7,7 +7,7 @@ import { loadConfig } from "../config";
 import { checkInstalled } from "../deps";
 import { computeFileChecksums, upsertLockEntry, type ExtendsEntry } from "../lock";
 import type { DepEntry, HyleManifest } from "../manifest";
-import { parseSubstrateRef, mergeManifests } from "../manifest";
+import { parseBlueprintRef, mergeManifests } from "../manifest";
 import { HttpRegistryClient } from "../registry";
 
 export interface PullOptions {
@@ -40,14 +40,14 @@ export async function runPull(name: string, opts: PullOptions): Promise<void> {
 			console.log(`Fetching ${author}/${substrName}...`);
 		}
 
-		const substrate = version
+		const blueprint = version
 			? await registryClient.fetchVersion(author, substrName, version)
 			: await registryClient.fetchLatest(author, substrName);
 
 		if (process.stdin.isTTY !== false) {
-			console.log(`Found version ${substrate.version}`);
-			if (substrate.description) {
-				console.log(`${substrate.description}`);
+			console.log(`Found version ${blueprint.version}`);
+			if (blueprint.description) {
+				console.log(`${blueprint.description}`);
 			}
 		}
 
@@ -60,25 +60,25 @@ export async function runPull(name: string, opts: PullOptions): Promise<void> {
 		const computedChecksum = createHash("sha256")
 			.update(bundleData)
 			.digest("hex");
-		if (computedChecksum !== substrate.checksum) {
+		if (computedChecksum !== blueprint.checksum) {
 			throw new Error(
-				`Checksum mismatch: expected ${substrate.checksum}, got ${computedChecksum}`,
+				`Checksum mismatch: expected ${blueprint.checksum}, got ${computedChecksum}`,
 			);
 		}
 
 		if (opts.dryRun) {
 			console.log(
-				`Would extract ${substrate.version} (${bundleData.length} bytes)`,
+				`Would extract ${blueprint.version} (${bundleData.length} bytes)`,
 			);
-			if (substrate.manifest.extends && substrate.manifest.extends.length > 0) {
-				console.log(`  extends: ${substrate.manifest.extends.join(", ")}`);
+			if (blueprint.manifest.extends && blueprint.manifest.extends.length > 0) {
+				console.log(`  extends: ${blueprint.manifest.extends.join(", ")}`);
 			}
 			return;
 		}
 
 		if (!opts.yes && process.stdin.isTTY !== false) {
 			const confirmed = await confirm({
-				message: `Apply ${author}/${substrName}@${substrate.version} to current directory?`,
+				message: `Apply ${author}/${substrName}@${blueprint.version} to current directory?`,
 			});
 
 			if (typeof confirmed !== "boolean" || !confirmed) {
@@ -92,13 +92,13 @@ export async function runPull(name: string, opts: PullOptions): Promise<void> {
 		const parentManifests: HyleManifest[] = [];
 		const parentBundles: Map<string, Buffer> = new Map();
 
-		if (substrate.manifest.extends && substrate.manifest.extends.length > 0) {
+		if (blueprint.manifest.extends && blueprint.manifest.extends.length > 0) {
 			// Cycle detection: track visited (author, name) to detect circular deps
 			const visited = new Set<string>();
 			visited.add(`${author}/${substrName}`);
 
-			for (const extRef of substrate.manifest.extends) {
-				const [parentAuthor, parentName, parentVersion] = parseSubstrateRef(
+			for (const extRef of blueprint.manifest.extends) {
+				const [parentAuthor, parentName, parentVersion] = parseBlueprintRef(
 					extRef,
 				);
 
@@ -117,7 +117,7 @@ export async function runPull(name: string, opts: PullOptions): Promise<void> {
 					);
 				}
 
-				const parentSubstrate = parentVersion
+				const parentBlueprint = parentVersion
 					? await registryClient.fetchVersion(
 							parentAuthor,
 							parentName,
@@ -125,7 +125,7 @@ export async function runPull(name: string, opts: PullOptions): Promise<void> {
 						)
 					: await registryClient.fetchLatest(parentAuthor, parentName);
 
-				if (parentSubstrate.manifest.extends && parentSubstrate.manifest.extends.length > 0) {
+				if (parentBlueprint.manifest.extends && parentBlueprint.manifest.extends.length > 0) {
 					throw new Error(
 						`Inheritance depth exceeded: ${parentAuthor}/${parentName} also has extends (max depth: 2)`,
 					);
@@ -139,7 +139,7 @@ export async function runPull(name: string, opts: PullOptions): Promise<void> {
 				const parentChecksum = createHash("sha256")
 					.update(parentBundleData)
 					.digest("hex");
-				if (parentChecksum !== parentSubstrate.checksum) {
+				if (parentChecksum !== parentBlueprint.checksum) {
 					throw new Error(
 						`Parent bundle checksum mismatch for ${parentAuthor}/${parentName}`,
 					);
@@ -148,9 +148,9 @@ export async function runPull(name: string, opts: PullOptions): Promise<void> {
 				extendsFromArray.push({
 					author: parentAuthor,
 					name: parentName,
-					version: parentSubstrate.version,
+					version: parentBlueprint.version,
 				});
-				parentManifests.push(parentSubstrate.manifest);
+				parentManifests.push(parentBlueprint.manifest);
 				parentBundles.set(parentKey, parentBundleData);
 			}
 
@@ -287,21 +287,21 @@ export async function runPull(name: string, opts: PullOptions): Promise<void> {
 		}
 
 		if (process.stdin.isTTY !== false) {
-			console.log(`✓ Extracted ${substrate.version}`);
+			console.log(`✓ Extracted ${blueprint.version}`);
 		}
 
 		// Merge manifests using child's merge_policy
 		const mergedManifest =
 			parentManifests.length > 0
-				? mergeManifests(parentManifests, substrate.manifest)
-				: substrate.manifest;
+				? mergeManifests(parentManifests, blueprint.manifest)
+				: blueprint.manifest;
 
 		// Write lock entry (files reflect merged state after parent+child extraction)
 		const files = computeFileChecksums(cwd, mergedManifest);
 		upsertLockEntry(cwd, {
 			name: substrName,
 			author,
-			version: substrate.version,
+			version: blueprint.version,
 			bundle_checksum: computedChecksum,
 			pulled_at: new Date().toISOString(),
 			extends_from: extendsFromArray.length > 0 ? extendsFromArray : undefined,
@@ -313,7 +313,7 @@ export async function runPull(name: string, opts: PullOptions): Promise<void> {
 			console.log("✓ hyle.lock updated");
 		}
 
-		const manifestData = substrate.manifest;
+		const manifestData = blueprint.manifest;
 		if (manifestData.dependencies && manifestData.dependencies.length > 0) {
 			const missingDeps = await checkMissingDeps(manifestData.dependencies);
 			if (missingDeps.length > 0 && !opts.offline) {
@@ -326,7 +326,7 @@ export async function runPull(name: string, opts: PullOptions): Promise<void> {
 			}
 		}
 
-		outro(`✓ Pull complete: ${author}/${substrName}@${substrate.version}`);
+		outro(`✓ Pull complete: ${author}/${substrName}@${blueprint.version}`);
 	} catch (e) {
 		console.error(`✗ ${(e as Error).message}`);
 		process.exit(1);

@@ -31,8 +31,8 @@ bun test                       # 102+ tests (2–3 sec)
 bun scripts/mock-registry.ts --port 3001
 
 # Terminal 2: Test CLI commands
-hyle search test               # Should list mock substrates
-hyle pull org/test-substrate   # Should extract files
+hyle search test               # Should list mock blueprints
+hyle pull org/test-blueprint   # Should extract files
 ```
 
 ---

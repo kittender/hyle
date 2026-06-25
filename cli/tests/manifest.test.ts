@@ -1,12 +1,12 @@
 import { expect, test, describe } from "bun:test";
 import { dump } from "js-yaml";
-import { parseManifest, validateManifest, validateExtendsRef, parseSubstrateRef, mergeManifests, ManifestParseError } from "../src/manifest";
+import { parseManifest, validateManifest, validateExtendsRef, parseBlueprintRef, mergeManifests, ManifestParseError } from "../src/manifest";
 
 // ---- Helpers ----
 
 function minimalYaml(overrides: Record<string, unknown> = {}): string {
   const base: Record<string, unknown> = {
-    name: "my-substrate",
+    name: "my-blueprint",
     author: "alice",
     version: "0.1.0",
     ...overrides,
@@ -19,7 +19,7 @@ function minimalYaml(overrides: Record<string, unknown> = {}): string {
 describe("parseManifest — valid", () => {
   test("minimal valid manifest", () => {
     const m = parseManifest(minimalYaml());
-    expect(m.name).toBe("my-substrate");
+    expect(m.name).toBe("my-blueprint");
     expect(m.author).toBe("alice");
     expect(m.version).toBe("0.1.0");
     expect(m.blueprint).toBeUndefined();
@@ -270,13 +270,13 @@ describe("parseManifest — invalid structure (throws)", () => {
 
 describe("validateManifest — errors", () => {
   test("name with uppercase produces error", () => {
-    const m = parseManifest(minimalYaml({ name: "MySubstrate" }));
+    const m = parseManifest(minimalYaml({ name: "MyBlueprint" }));
     const { errors } = validateManifest(m);
     expect(errors.some((e) => e.field === "name")).toBe(true);
   });
 
   test("name with spaces produces error", () => {
-    const m = parseManifest(minimalYaml({ name: "my substrate" }));
+    const m = parseManifest(minimalYaml({ name: "my blueprint" }));
     const { errors } = validateManifest(m);
     expect(errors.some((e) => e.field === "name")).toBe(true);
   });
@@ -456,19 +456,19 @@ describe("validateManifest — warnings", () => {
 
 });
 
-// ---- parseSubstrateRef ----
+// ---- parseBlueprintRef ----
 
-describe("parseSubstrateRef", () => {
+describe("parseBlueprintRef", () => {
   test("author/name → [author, name, undefined]", () => {
-    expect(parseSubstrateRef("alice/my-substrate")).toEqual(["alice", "my-substrate", undefined]);
+    expect(parseBlueprintRef("alice/my-blueprint")).toEqual(["alice", "my-blueprint", undefined]);
   });
 
   test("author/name@version → [author, name, version]", () => {
-    expect(parseSubstrateRef("alice/my-substrate@1.2.3")).toEqual(["alice", "my-substrate", "1.2.3"]);
+    expect(parseBlueprintRef("alice/my-blueprint@1.2.3")).toEqual(["alice", "my-blueprint", "1.2.3"]);
   });
 
   test("no slash → empty author", () => {
-    const [author] = parseSubstrateRef("noauthor");
+    const [author] = parseBlueprintRef("noauthor");
     expect(author).toBe("");
   });
 });
@@ -477,11 +477,11 @@ describe("parseSubstrateRef", () => {
 
 describe("validateExtendsRef", () => {
   test("valid author/name → no error", () => {
-    expect(validateExtendsRef("alice/my-substrate")).toBeUndefined();
+    expect(validateExtendsRef("alice/my-blueprint")).toBeUndefined();
   });
 
   test("valid author/name@version → no error", () => {
-    expect(validateExtendsRef("alice/my-substrate@1.0.0")).toBeUndefined();
+    expect(validateExtendsRef("alice/my-blueprint@1.0.0")).toBeUndefined();
   });
 
   test("missing slash → error", () => {
@@ -489,15 +489,15 @@ describe("validateExtendsRef", () => {
   });
 
   test("invalid author slug → error", () => {
-    expect(validateExtendsRef("ALICE/my-substrate")).toBeDefined();
+    expect(validateExtendsRef("ALICE/my-blueprint")).toBeDefined();
   });
 
   test("invalid name slug → error", () => {
-    expect(validateExtendsRef("alice/My Substrate")).toBeDefined();
+    expect(validateExtendsRef("alice/My Blueprint")).toBeDefined();
   });
 
   test("invalid semver version → error", () => {
-    expect(validateExtendsRef("alice/my-substrate@notasemver")).toBeDefined();
+    expect(validateExtendsRef("alice/my-blueprint@notasemver")).toBeDefined();
   });
 });
 
@@ -505,13 +505,13 @@ describe("validateExtendsRef", () => {
 
 describe("validateManifest — extends field", () => {
   test("valid extends with single author/name passes", () => {
-    const m = parseManifest(minimalYaml({ extends: ["alice/base-substrate"] }));
+    const m = parseManifest(minimalYaml({ extends: ["alice/base-blueprint"] }));
     const { errors } = validateManifest(m);
     expect(errors.filter((e) => e.field.includes("extends"))).toHaveLength(0);
   });
 
   test("valid extends with author/name@version passes", () => {
-    const m = parseManifest(minimalYaml({ extends: ["alice/base-substrate@1.2.3"] }));
+    const m = parseManifest(minimalYaml({ extends: ["alice/base-blueprint@1.2.3"] }));
     const { errors } = validateManifest(m);
     expect(errors.filter((e) => e.field.includes("extends"))).toHaveLength(0);
   });
@@ -529,7 +529,7 @@ describe("validateManifest — extends field", () => {
   });
 
   test("circular extends (self) → error", () => {
-    const m = parseManifest(minimalYaml({ extends: ["alice/my-substrate"] }));
+    const m = parseManifest(minimalYaml({ extends: ["alice/my-blueprint"] }));
     const { errors } = validateManifest(m);
     expect(errors.some((e) => e.field === "extends[0]" && e.message.includes("Circular"))).toBe(true);
   });
@@ -541,7 +541,7 @@ describe("validateManifest — extends field", () => {
   });
 
   test("extends with invalid version → error", () => {
-    const m = parseManifest(minimalYaml({ extends: ["alice/base-substrate@bad"] }));
+    const m = parseManifest(minimalYaml({ extends: ["alice/base-blueprint@bad"] }));
     const { errors } = validateManifest(m);
     expect(errors.some((e) => e.field.includes("extends"))).toBe(true);
   });

@@ -19,7 +19,7 @@ export async function runOutdated(opts: OutdatedOptions): Promise<void> {
 		const entries = readLock(cwd);
 
 		if (entries.length === 0) {
-			console.log("No substrates found in hyle.lock. Run 'hyle pull' first.");
+			console.log("No blueprints found in hyle.lock. Run 'hyle pull' first.");
 			process.exit(0);
 		}
 
@@ -77,7 +77,7 @@ export async function runOutdated(opts: OutdatedOptions): Promise<void> {
 		} else {
 			// Print table
 			if (process.stdin.isTTY !== false) {
-				console.log("\nSubstrate updates:");
+				console.log("\nBlueprint updates:");
 			}
 
 			for (const result of results) {
@@ -91,9 +91,9 @@ export async function runOutdated(opts: OutdatedOptions): Promise<void> {
 			if (process.stdin.isTTY !== false) {
 				if (anyOutdated) {
 					console.log("\nRun 'hyle upgrade' to update.");
-					outro("Found outdated substrates.");
+					outro("Found outdated blueprints.");
 				} else {
-					outro("All substrates are up-to-date.");
+					outro("All blueprints are up-to-date.");
 				}
 			}
 		}

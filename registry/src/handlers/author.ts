@@ -1,5 +1,5 @@
 import type { IDatabase } from "../db";
-import type { AuthorProfile, SubstrateResponse } from "../types";
+import type { AuthorProfile, BlueprintResponse } from "../types";
 import { computeAllBadges } from "./badges";
 
 export function handleAuthor(
@@ -7,7 +7,7 @@ export function handleAuthor(
   db: IDatabase,
   baseUrl: string
 ): Response {
-  const records = db.getAuthorSubstrates(author);
+  const records = db.getAuthorBlueprints(author);
 
   if (records.length === 0) {
     return new Response(JSON.stringify({ error: "Author not found" }), {
@@ -19,7 +19,7 @@ export function handleAuthor(
   // Fetch user profile data
   const user = db.getUserByUsername(author);
 
-  const substrates: SubstrateResponse[] = records.map((record) => {
+  const blueprints: BlueprintResponse[] = records.map((record) => {
     const manifest = JSON.parse(record.manifest_json);
     const bundleUrl = `${baseUrl}/bundles/${record.bundle_path}`;
     const star_count = db.getStarCount(record.author, record.name);
@@ -47,11 +47,11 @@ export function handleAuthor(
     };
   });
 
-  // Deduplicate by name to get substrate count
+  // Deduplicate by name to get blueprint count
   const uniqueNames = new Set(records.map(r => r.name));
   const total_versions = records.length;
 
-  // Calculate total star count across all substrates by this author
+  // Calculate total star count across all blueprints by this author
   let star_count_total = 0;
   for (const record of records) {
     star_count_total += db.getStarCount(record.author, record.name);
@@ -59,9 +59,9 @@ export function handleAuthor(
 
   const profile: AuthorProfile = {
     author,
-    substrate_count: uniqueNames.size,
+    blueprint_count: uniqueNames.size,
     total_versions,
-    substrates,
+    blueprints,
     bio: user?.bio,
     avatar_url: user?.avatar_url,
     website: user?.website,

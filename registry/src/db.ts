@@ -3,7 +3,7 @@ import type { RegistryRecord, SearchQuery, ScanResult, User, Review } from "./ty
 
 export interface IDatabase {
   init(): void;
-  insertSubstrate(
+  insertBlueprint(
     author: string,
     name: string,
     version: string,
@@ -21,28 +21,28 @@ export interface IDatabase {
   exists(author: string, name: string, version: string): boolean;
   getAllTags(): string[];
   getTrending(limit: number): RegistryRecord[];
-  getAuthorSubstrates(author: string): RegistryRecord[];
-  insertScan(substrateId: number, result: ScanResult): void;
-  getScan(substrateId: number): ScanResult | null;
+  getAuthorBlueprints(author: string): RegistryRecord[];
+  insertScan(blueprintId: number, result: ScanResult): void;
+  getScan(blueprintId: number): ScanResult | null;
   recordPublish(author: string): void;
   countRecentPublishes(author: string, windowSeconds: number): number;
-  flagSubstrate(id: number, reason: string): void;
+  flagBlueprint(id: number, reason: string): void;
   // User operations
   upsertUser(github_id: string, username: string, email?: string, avatar_url?: string): User;
   getUser(id: number): User | null;
   getUserByUsername(username: string): User | null;
   updateUser(id: number, bio?: string, website?: string): User | null;
   // Star operations
-  toggleStar(user_id: number, substrate_author: string, substrate_name: string): boolean;
-  getStarCount(substrate_author: string, substrate_name: string): number;
-  isStarredBy(user_id: number, substrate_author: string, substrate_name: string): boolean;
+  toggleStar(user_id: number, blueprint_author: string, blueprint_name: string): boolean;
+  getStarCount(blueprint_author: string, blueprint_name: string): number;
+  isStarredBy(user_id: number, blueprint_author: string, blueprint_name: string): boolean;
   // Review operations
-  upsertReview(user_id: number, substrate_author: string, substrate_name: string, rating: number, body?: string): Review;
-  getReviews(substrate_author: string, substrate_name: string): Review[];
-  getAvgRating(substrate_author: string, substrate_name: string): number | null;
+  upsertReview(user_id: number, blueprint_author: string, blueprint_name: string, rating: number, body?: string): Review;
+  getReviews(blueprint_author: string, blueprint_name: string): Review[];
+  getAvgRating(blueprint_author: string, blueprint_name: string): number | null;
   // Install count operations
-  incrementInstallCount(substrate_author: string, substrate_name: string): void;
-  getInstallCount(substrate_author: string, substrate_name: string): number;
+  incrementInstallCount(blueprint_author: string, blueprint_name: string): void;
+  getInstallCount(blueprint_author: string, blueprint_name: string): number;
   // Notification prefs
   getNotificationPrefs(user_id: number): { email_on_star: boolean; email_on_review: boolean; email_on_new_version: boolean } | null;
   upsertNotificationPrefs(user_id: number, email_on_star: boolean, email_on_review: boolean, email_on_new_version: boolean): void;
@@ -59,7 +59,7 @@ export class SQLiteDatabase implements IDatabase {
 
   init(): void {
     this.db.exec(`
-      CREATE TABLE IF NOT EXISTS substrates (
+      CREATE TABLE IF NOT EXISTS blueprints (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         author TEXT NOT NULL,
         name TEXT NOT NULL,
@@ -75,18 +75,18 @@ export class SQLiteDatabase implements IDatabase {
         created_at TEXT NOT NULL DEFAULT (datetime('now')),
         UNIQUE(author, name, version)
       );
-      CREATE INDEX IF NOT EXISTS idx_substrates_author_name ON substrates(author, name);
-      CREATE INDEX IF NOT EXISTS idx_substrates_stable ON substrates(is_stable);
+      CREATE INDEX IF NOT EXISTS idx_blueprints_author_name ON blueprints(author, name);
+      CREATE INDEX IF NOT EXISTS idx_blueprints_stable ON blueprints(is_stable);
 
       CREATE TABLE IF NOT EXISTS security_scans (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        substrate_id INTEGER NOT NULL,
+        blueprint_id INTEGER NOT NULL,
         scan_status TEXT NOT NULL DEFAULT 'pending',
         findings_json TEXT NOT NULL DEFAULT '[]',
         scanned_at TEXT NOT NULL DEFAULT (datetime('now')),
-        FOREIGN KEY (substrate_id) REFERENCES substrates(id)
+        FOREIGN KEY (blueprint_id) REFERENCES blueprints(id)
       );
-      CREATE INDEX IF NOT EXISTS idx_scans_substrate ON security_scans(substrate_id);
+      CREATE INDEX IF NOT EXISTS idx_scans_blueprint ON security_scans(blueprint_id);
 
       CREATE TABLE IF NOT EXISTS publish_rate_limits (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -110,35 +110,35 @@ export class SQLiteDatabase implements IDatabase {
       CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 
       CREATE TABLE IF NOT EXISTS install_counts (
-        substrate_author TEXT NOT NULL,
-        substrate_name TEXT NOT NULL,
+        blueprint_author TEXT NOT NULL,
+        blueprint_name TEXT NOT NULL,
         count INTEGER NOT NULL DEFAULT 0,
-        PRIMARY KEY (substrate_author, substrate_name)
+        PRIMARY KEY (blueprint_author, blueprint_name)
       );
 
       CREATE TABLE IF NOT EXISTS stars (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL REFERENCES users(id),
-        substrate_author TEXT NOT NULL,
-        substrate_name TEXT NOT NULL,
+        blueprint_author TEXT NOT NULL,
+        blueprint_name TEXT NOT NULL,
         created_at TEXT NOT NULL DEFAULT (datetime('now')),
-        UNIQUE(user_id, substrate_author, substrate_name)
+        UNIQUE(user_id, blueprint_author, blueprint_name)
       );
       CREATE INDEX IF NOT EXISTS idx_stars_user ON stars(user_id);
-      CREATE INDEX IF NOT EXISTS idx_stars_substrate ON stars(substrate_author, substrate_name);
+      CREATE INDEX IF NOT EXISTS idx_stars_blueprint ON stars(blueprint_author, blueprint_name);
 
       CREATE TABLE IF NOT EXISTS reviews (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL REFERENCES users(id),
-        substrate_author TEXT NOT NULL,
-        substrate_name TEXT NOT NULL,
+        blueprint_author TEXT NOT NULL,
+        blueprint_name TEXT NOT NULL,
         rating INTEGER NOT NULL CHECK(rating >= 1 AND rating <= 5),
         body TEXT,
         created_at TEXT NOT NULL DEFAULT (datetime('now')),
-        UNIQUE(user_id, substrate_author, substrate_name)
+        UNIQUE(user_id, blueprint_author, blueprint_name)
       );
       CREATE INDEX IF NOT EXISTS idx_reviews_user ON reviews(user_id);
-      CREATE INDEX IF NOT EXISTS idx_reviews_substrate ON reviews(substrate_author, substrate_name);
+      CREATE INDEX IF NOT EXISTS idx_reviews_blueprint ON reviews(blueprint_author, blueprint_name);
 
       CREATE TABLE IF NOT EXISTS notification_prefs (
         user_id INTEGER NOT NULL PRIMARY KEY REFERENCES users(id),
@@ -149,7 +149,7 @@ export class SQLiteDatabase implements IDatabase {
     `);
   }
 
-  insertSubstrate(
+  insertBlueprint(
     author: string,
     name: string,
     version: string,
@@ -162,7 +162,7 @@ export class SQLiteDatabase implements IDatabase {
   ): RegistryRecord {
     const tagsJson = JSON.stringify(tags);
     const stmt = this.db.prepare(`
-      INSERT INTO substrates (author, name, version, description, tags, checksum, bundle_path, manifest_json, is_stable)
+      INSERT INTO blueprints (author, name, version, description, tags, checksum, bundle_path, manifest_json, is_stable)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       RETURNING id, author, name, version, description, tags, is_stable, is_flagged, flag_reason, checksum, bundle_path, manifest_json, created_at
     `);
@@ -199,7 +199,7 @@ export class SQLiteDatabase implements IDatabase {
   getLatestStable(author: string, name: string): RegistryRecord | null {
     const stmt = this.db.prepare(`
       SELECT id, author, name, version, description, tags, is_stable, is_flagged, flag_reason, checksum, bundle_path, manifest_json, created_at
-      FROM substrates
+      FROM blueprints
       WHERE author = ? AND name = ? AND is_stable = 1
       ORDER BY version DESC
       LIMIT 1
@@ -212,7 +212,7 @@ export class SQLiteDatabase implements IDatabase {
   getVersion(author: string, name: string, version: string): RegistryRecord | null {
     const stmt = this.db.prepare(`
       SELECT id, author, name, version, description, tags, is_stable, is_flagged, flag_reason, checksum, bundle_path, manifest_json, created_at
-      FROM substrates
+      FROM blueprints
       WHERE author = ? AND name = ? AND version = ?
       LIMIT 1
     `);
@@ -224,7 +224,7 @@ export class SQLiteDatabase implements IDatabase {
   getVersions(author: string, name: string): RegistryRecord[] {
     const stmt = this.db.prepare(`
       SELECT id, author, name, version, description, tags, is_stable, is_flagged, flag_reason, checksum, bundle_path, manifest_json, created_at
-      FROM substrates
+      FROM blueprints
       WHERE author = ? AND name = ?
       ORDER BY created_at DESC
     `);
@@ -236,7 +236,7 @@ export class SQLiteDatabase implements IDatabase {
   search(query: SearchQuery): RegistryRecord[] {
     let sql = `
       SELECT id, author, name, version, description, tags, is_stable, is_flagged, flag_reason, checksum, bundle_path, manifest_json, created_at
-      FROM substrates
+      FROM blueprints
       WHERE is_stable = 1 AND is_flagged = 0
     `;
     const params: any[] = [];
@@ -287,7 +287,7 @@ export class SQLiteDatabase implements IDatabase {
 
   getAllTags(): string[] {
     const stmt = this.db.prepare(`
-      SELECT tags FROM substrates WHERE is_stable = 1 AND is_flagged = 0
+      SELECT tags FROM blueprints WHERE is_stable = 1 AND is_flagged = 0
     `);
     const results = stmt.all() as any[];
     const allTags = new Set<string>();
@@ -305,7 +305,7 @@ export class SQLiteDatabase implements IDatabase {
   getTrending(limit: number): RegistryRecord[] {
     const stmt = this.db.prepare(`
       SELECT id, author, name, version, description, tags, is_stable, is_flagged, flag_reason, checksum, bundle_path, manifest_json, created_at
-      FROM substrates
+      FROM blueprints
       WHERE is_stable = 1 AND is_flagged = 0
       ORDER BY created_at DESC
       LIMIT ?
@@ -315,10 +315,10 @@ export class SQLiteDatabase implements IDatabase {
     return results.map((r) => this.mapRecord(r));
   }
 
-  getAuthorSubstrates(author: string): RegistryRecord[] {
+  getAuthorBlueprints(author: string): RegistryRecord[] {
     const stmt = this.db.prepare(`
       SELECT id, author, name, version, description, tags, is_stable, is_flagged, flag_reason, checksum, bundle_path, manifest_json, created_at
-      FROM substrates
+      FROM blueprints
       WHERE author = ? AND is_stable = 1 AND is_flagged = 0
       ORDER BY created_at DESC
     `);
@@ -329,7 +329,7 @@ export class SQLiteDatabase implements IDatabase {
 
   exists(author: string, name: string, version: string): boolean {
     const stmt = this.db.prepare(
-      `SELECT 1 FROM substrates WHERE author = ? AND name = ? AND version = ? LIMIT 1`
+      `SELECT 1 FROM blueprints WHERE author = ? AND name = ? AND version = ? LIMIT 1`
     );
     return stmt.get(author, name, version) !== null;
   }
@@ -352,27 +352,27 @@ export class SQLiteDatabase implements IDatabase {
     };
   }
 
-  insertScan(substrateId: number, result: ScanResult): void {
+  insertScan(blueprintId: number, result: ScanResult): void {
     const stmt = this.db.prepare(`
-      INSERT INTO security_scans (substrate_id, scan_status, findings_json, scanned_at)
+      INSERT INTO security_scans (blueprint_id, scan_status, findings_json, scanned_at)
       VALUES (?, ?, ?, ?)
     `);
     stmt.run(
-      substrateId,
+      blueprintId,
       result.scan_status,
       JSON.stringify(result.findings),
       result.scanned_at
     );
   }
 
-  getScan(substrateId: number): ScanResult | null {
+  getScan(blueprintId: number): ScanResult | null {
     const stmt = this.db.prepare(`
       SELECT scan_status, findings_json, scanned_at FROM security_scans
-      WHERE substrate_id = ?
+      WHERE blueprint_id = ?
       ORDER BY scanned_at DESC
       LIMIT 1
     `);
-    const row = stmt.get(substrateId) as any;
+    const row = stmt.get(blueprintId) as any;
     if (!row) return null;
     return {
       scan_status: row.scan_status,
@@ -398,9 +398,9 @@ export class SQLiteDatabase implements IDatabase {
     return row?.count ?? 0;
   }
 
-  flagSubstrate(id: number, reason: string): void {
+  flagBlueprint(id: number, reason: string): void {
     const stmt = this.db.prepare(`
-      UPDATE substrates
+      UPDATE blueprints
       SET is_flagged = 1, flag_reason = ?
       WHERE id = ?
     `);
@@ -493,53 +493,53 @@ export class SQLiteDatabase implements IDatabase {
     };
   }
 
-  toggleStar(user_id: number, substrate_author: string, substrate_name: string): boolean {
-    const isStarred = this.isStarredBy(user_id, substrate_author, substrate_name);
+  toggleStar(user_id: number, blueprint_author: string, blueprint_name: string): boolean {
+    const isStarred = this.isStarredBy(user_id, blueprint_author, blueprint_name);
     if (isStarred) {
       const stmt = this.db.prepare(`
-        DELETE FROM stars WHERE user_id = ? AND substrate_author = ? AND substrate_name = ?
+        DELETE FROM stars WHERE user_id = ? AND blueprint_author = ? AND blueprint_name = ?
       `);
-      stmt.run(user_id, substrate_author, substrate_name);
+      stmt.run(user_id, blueprint_author, blueprint_name);
     } else {
       const stmt = this.db.prepare(`
-        INSERT INTO stars (user_id, substrate_author, substrate_name)
+        INSERT INTO stars (user_id, blueprint_author, blueprint_name)
         VALUES (?, ?, ?)
       `);
-      stmt.run(user_id, substrate_author, substrate_name);
+      stmt.run(user_id, blueprint_author, blueprint_name);
     }
     return !isStarred;
   }
 
-  getStarCount(substrate_author: string, substrate_name: string): number {
+  getStarCount(blueprint_author: string, blueprint_name: string): number {
     const stmt = this.db.prepare(`
-      SELECT COUNT(*) as count FROM stars WHERE substrate_author = ? AND substrate_name = ?
+      SELECT COUNT(*) as count FROM stars WHERE blueprint_author = ? AND blueprint_name = ?
     `);
-    const result = stmt.get(substrate_author, substrate_name) as any;
+    const result = stmt.get(blueprint_author, blueprint_name) as any;
     return result?.count ?? 0;
   }
 
-  isStarredBy(user_id: number, substrate_author: string, substrate_name: string): boolean {
+  isStarredBy(user_id: number, blueprint_author: string, blueprint_name: string): boolean {
     const stmt = this.db.prepare(`
-      SELECT 1 FROM stars WHERE user_id = ? AND substrate_author = ? AND substrate_name = ? LIMIT 1
+      SELECT 1 FROM stars WHERE user_id = ? AND blueprint_author = ? AND blueprint_name = ? LIMIT 1
     `);
-    return stmt.get(user_id, substrate_author, substrate_name) !== null;
+    return stmt.get(user_id, blueprint_author, blueprint_name) !== null;
   }
 
-  upsertReview(user_id: number, substrate_author: string, substrate_name: string, rating: number, body?: string): Review {
+  upsertReview(user_id: number, blueprint_author: string, blueprint_name: string, rating: number, body?: string): Review {
     this.db.prepare(`
-      INSERT INTO reviews (user_id, substrate_author, substrate_name, rating, body)
+      INSERT INTO reviews (user_id, blueprint_author, blueprint_name, rating, body)
       VALUES (?, ?, ?, ?, ?)
-      ON CONFLICT(user_id, substrate_author, substrate_name) DO UPDATE SET rating = ?, body = COALESCE(?, body)
-    `).run(user_id, substrate_author, substrate_name, rating, body || null, rating, body || null);
+      ON CONFLICT(user_id, blueprint_author, blueprint_name) DO UPDATE SET rating = ?, body = COALESCE(?, body)
+    `).run(user_id, blueprint_author, blueprint_name, rating, body || null, rating, body || null);
 
     // Fetch the review back with user info
     const stmt = this.db.prepare(`
       SELECT r.id, u.username, u.avatar_url, r.rating, r.body, r.created_at
       FROM reviews r
       JOIN users u ON r.user_id = u.id
-      WHERE r.user_id = ? AND r.substrate_author = ? AND r.substrate_name = ?
+      WHERE r.user_id = ? AND r.blueprint_author = ? AND r.blueprint_name = ?
     `);
-    const result = stmt.get(user_id, substrate_author, substrate_name) as any;
+    const result = stmt.get(user_id, blueprint_author, blueprint_name) as any;
     return {
       id: result.id,
       username: result.username,
@@ -550,15 +550,15 @@ export class SQLiteDatabase implements IDatabase {
     };
   }
 
-  getReviews(substrate_author: string, substrate_name: string): Review[] {
+  getReviews(blueprint_author: string, blueprint_name: string): Review[] {
     const stmt = this.db.prepare(`
       SELECT r.id, u.username, u.avatar_url, r.rating, r.body, r.created_at
       FROM reviews r
       JOIN users u ON r.user_id = u.id
-      WHERE r.substrate_author = ? AND r.substrate_name = ?
+      WHERE r.blueprint_author = ? AND r.blueprint_name = ?
       ORDER BY r.created_at DESC
     `);
-    const results = stmt.all(substrate_author, substrate_name) as any[];
+    const results = stmt.all(blueprint_author, blueprint_name) as any[];
     return results.map(r => ({
       id: r.id,
       username: r.username,
@@ -569,27 +569,27 @@ export class SQLiteDatabase implements IDatabase {
     }));
   }
 
-  getAvgRating(substrate_author: string, substrate_name: string): number | null {
+  getAvgRating(blueprint_author: string, blueprint_name: string): number | null {
     const stmt = this.db.prepare(`
-      SELECT AVG(rating) as avg FROM reviews WHERE substrate_author = ? AND substrate_name = ?
+      SELECT AVG(rating) as avg FROM reviews WHERE blueprint_author = ? AND blueprint_name = ?
     `);
-    const result = stmt.get(substrate_author, substrate_name) as any;
+    const result = stmt.get(blueprint_author, blueprint_name) as any;
     return result?.avg ? parseFloat(result.avg) : null;
   }
 
-  incrementInstallCount(substrate_author: string, substrate_name: string): void {
+  incrementInstallCount(blueprint_author: string, blueprint_name: string): void {
     const stmt = this.db.prepare(`
-      INSERT INTO install_counts (substrate_author, substrate_name, count) VALUES (?, ?, 1)
-      ON CONFLICT(substrate_author, substrate_name) DO UPDATE SET count = count + 1
+      INSERT INTO install_counts (blueprint_author, blueprint_name, count) VALUES (?, ?, 1)
+      ON CONFLICT(blueprint_author, blueprint_name) DO UPDATE SET count = count + 1
     `);
-    stmt.run(substrate_author, substrate_name);
+    stmt.run(blueprint_author, blueprint_name);
   }
 
-  getInstallCount(substrate_author: string, substrate_name: string): number {
+  getInstallCount(blueprint_author: string, blueprint_name: string): number {
     const stmt = this.db.prepare(`
-      SELECT count FROM install_counts WHERE substrate_author = ? AND substrate_name = ?
+      SELECT count FROM install_counts WHERE blueprint_author = ? AND blueprint_name = ?
     `);
-    const result = stmt.get(substrate_author, substrate_name) as any;
+    const result = stmt.get(blueprint_author, blueprint_name) as any;
     return result?.count ?? 0;
   }
 

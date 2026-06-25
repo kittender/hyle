@@ -6,7 +6,7 @@ import type { HyleManifest, DiffResponse } from "../src/types";
 let db: SQLiteDatabase;
 
 const baseManifest: HyleManifest = {
-  name: "test-substrate",
+  name: "test-blueprint",
   author: "test-author",
   version: "1.0.0",
   models: {
@@ -23,7 +23,7 @@ const baseManifest: HyleManifest = {
 };
 
 const v2Manifest: HyleManifest = {
-  name: "test-substrate",
+  name: "test-blueprint",
   author: "test-author",
   version: "2.0.0",
   models: {
@@ -45,34 +45,34 @@ describe("diff handler", () => {
     db = new SQLiteDatabase(":memory:");
     db.init();
 
-    // Insert test substrates
-    db.insertSubstrate(
+    // Insert test blueprints
+    db.insertBlueprint(
       "test-author",
-      "test-substrate",
+      "test-blueprint",
       "1.0.0",
       JSON.stringify(baseManifest),
       "test/bundle.tar.gz",
       "abc123",
-      "Base substrate",
+      "Base blueprint",
       [],
       true
     );
 
-    db.insertSubstrate(
+    db.insertBlueprint(
       "test-author",
-      "test-substrate",
+      "test-blueprint",
       "2.0.0",
       JSON.stringify(v2Manifest),
       "test/bundle-v2.tar.gz",
       "def456",
-      "Updated substrate",
+      "Updated blueprint",
       [],
       true
     );
   });
 
   it("returns diff with breaking changes", async () => {
-    const response = handleDiff("test-author", "test-substrate", "2.0.0", "1.0.0", db);
+    const response = handleDiff("test-author", "test-blueprint", "2.0.0", "1.0.0", db);
 
     expect(response.status).toBe(200);
     const text = await response.text();
@@ -89,7 +89,7 @@ describe("diff handler", () => {
   });
 
   it("includes both left and right YAML", async () => {
-    const response = handleDiff("test-author", "test-substrate", "2.0.0", "1.0.0", db);
+    const response = handleDiff("test-author", "test-blueprint", "2.0.0", "1.0.0", db);
     const text = await response.text();
     const data = JSON.parse(text) as DiffResponse;
 
@@ -100,24 +100,24 @@ describe("diff handler", () => {
   });
 
   it("returns 404 for non-existent versions", () => {
-    const response = handleDiff("test-author", "test-substrate", "99.0.0", "1.0.0", db);
+    const response = handleDiff("test-author", "test-blueprint", "99.0.0", "1.0.0", db);
     expect(response.status).toBe(404);
   });
 
   it("returns no breaking changes for identical versions", async () => {
-    db.insertSubstrate(
+    db.insertBlueprint(
       "test-author",
-      "test-substrate",
+      "test-blueprint",
       "1.0.1",
       JSON.stringify(baseManifest),
       "test/bundle-patch.tar.gz",
       "ghi789",
-      "Patch substrate",
+      "Patch blueprint",
       [],
       true
     );
 
-    const response = handleDiff("test-author", "test-substrate", "1.0.1", "1.0.0", db);
+    const response = handleDiff("test-author", "test-blueprint", "1.0.1", "1.0.0", db);
     const text = await response.text();
     const data = JSON.parse(text) as DiffResponse;
 

@@ -88,7 +88,7 @@ export interface Badge {
   variant: "success" | "warning" | "danger" | "info";
 }
 
-export interface SubstrateResponse {
+export interface BlueprintResponse {
   author: string;
   name: string;
   version: string;
@@ -108,7 +108,7 @@ export interface SubstrateResponse {
 }
 
 export interface SecurityReport {
-  substrate: { author: string; name: string; version: string };
+  blueprint: { author: string; name: string; version: string };
   scan_result: ScanResult;
   badges: Badge[];
   checksum: string;
@@ -137,9 +137,9 @@ export interface SearchQuery {
 
 export interface AuthorProfile {
   author: string;
-  substrate_count: number;
+  blueprint_count: number;
   total_versions: number;
-  substrates: SubstrateResponse[];
+  blueprints: BlueprintResponse[];
   bio?: string;
   avatar_url?: string;
   website?: string;

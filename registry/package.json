@@ -1,7 +1,7 @@
 {
   "name": "hyle-registry-api",
   "version": "0.1.0",
-  "description": "Hylé substrate registry API",
+  "description": "Hylé blueprint registry API",
   "type": "module",
   "scripts": {
     "dev": "bun run src/server.ts",

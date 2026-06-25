@@ -1,5 +1,5 @@
 import type { IDatabase } from "../db";
-import type { SubstrateResponse } from "../types";
+import type { BlueprintResponse } from "../types";
 import { computeAllBadges } from "./badges";
 
 export function handleVersions(
@@ -11,13 +11,13 @@ export function handleVersions(
   const records = db.getVersions(author, name);
 
   if (records.length === 0) {
-    return new Response(JSON.stringify({ error: "Substrate not found" }), {
+    return new Response(JSON.stringify({ error: "Blueprint not found" }), {
       status: 404,
       headers: { "Content-Type": "application/json" },
     });
   }
 
-  const results: SubstrateResponse[] = records.map((record) => {
+  const results: BlueprintResponse[] = records.map((record) => {
     const manifest = JSON.parse(record.manifest_json);
     const bundleUrl = `${baseUrl}/bundles/${record.bundle_path}`;
     const star_count = db.getStarCount(record.author, record.name);

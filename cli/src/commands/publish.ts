@@ -99,7 +99,7 @@ export async function runPublish(
 
 		writeFileSync(manifestPath, dump(updatedManifest, { lineWidth: 80 }));
 
-		// Create and push git tag for substrate release
+		// Create and push git tag for blueprint release
 		await createAndPushGitTag(newVersion, cwd);
 
 		outro(
@@ -224,14 +224,14 @@ async function createBundle(
 
 async function createAndPushGitTag(version: string, cwd: string): Promise<void> {
 	try {
-		// Use hyle-v prefix to distinguish substrate releases from code releases
+		// Use hyle-v prefix to distinguish blueprint releases from code releases
 		const tagName = `hyle-v${version}`;
 
 		// Check if git is available
 		execSync("git --version", { cwd, stdio: "ignore" });
 
 		// Create annotated tag with version info
-		execSync(`git tag -a ${tagName} -m "Hylé substrate release: v${version}"`, {
+		execSync(`git tag -a ${tagName} -m "Hylé blueprint release: v${version}"`, {
 			cwd,
 			stdio: "ignore",
 		});

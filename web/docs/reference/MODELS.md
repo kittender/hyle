@@ -170,7 +170,7 @@ recommendations:
     - ollama/qwen2.5:14b
 ```
 
-Users can then find it: `hyle search --category budget`
+Users can then find it: `hyle search --tag budget`
 
 **Q: Can I recommend different providers?**
 A: Yes! Mix and match in recommendations:

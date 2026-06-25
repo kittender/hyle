@@ -54,11 +54,53 @@ On pull: fetch manifest from registry → preview diff → SHA-256 verify → ch
 
 ```bash
 hyle init                      # Generate hyle.yaml
-hyle push --new my-blueprint   # Create + publish
+hyle push 0.1.0                # First publish (explicit version)
 hyle snapshot                  # Patch bump (WIP)
 hyle push                      # Minor bump (stable)
 hyle release                   # Major bump (stable)
 ```
+
+#### Publish only what matters — your manifest is the allowlist
+
+A blueprint is **not** your whole repo. The `hyle.yaml` manifest lists the exact
+paths to publish, so only files you explicitly point to ship — nothing else.
+This means you can sit inside a 500k-line monorepo, a private product codebase, or
+any messy working tree and still publish a clean, focused blueprint. Source files,
+secrets, build artifacts, and unrelated code stay put because the manifest never
+references them.
+
+You point to precise paths, grouped by the four categories:
+
+```yaml
+# hyle.yaml
+name: claude-springboot-tdd
+author: yourname
+
+ontology:                      # knowledge docs
+  - CLAUDE.md
+  - docs/architecture/overview.md
+craft:                         # technical structure
+  - .mcp/servers.json
+  - SKILLS.md
+identities:                    # agent roles
+  - .claude/agents/reviewer.md
+  - .claude/agents/test-writer.md
+ethics:                        # policies & compliance
+  - policies/data-access.cedar
+```
+
+Only those eight files get packaged and pushed. The rest of the codebase — however
+big — is invisible to the blueprint.
+
+Two ways to fill the manifest:
+
+- **Manual** — list paths yourself for full control.
+- **Scan helpers** — `hyle ontology [path]`, `hyle craft [path]`, `hyle identities [path]`,
+  `hyle ethics [path]` scan a directory and append matching files to `hyle.yaml`,
+  so you opt files *in* rather than risk shipping the whole tree.
+
+Add `.hyleignore` (gitignore-style) as a second guard to exclude API keys, secrets,
+or private docs even if a path or scan would otherwise catch them.
 
 ---
 
@@ -82,7 +124,7 @@ Detailed guides and reference:
 - [Core concepts](web/docs/CONCEPTS.md) — User journey, trust tiers, four domains, model fallbacks (with diagrams)
 
 **Getting started:**
-- [Building blueprints](web/docs/guides/BUILDING_BLUEPRINTS.md) — step-by-step: from project to published blueprint
+- [Building blueprints](web/docs/guides/BUILDING.md) — step-by-step: from project to published blueprint
 - [Publishing guide](web/docs/guides/PUBLISHING.md) — versioning strategy, costs, security best practices
 - [Example blueprint](web/docs/guides/EXAMPLE_BLUEPRINT.md) — real-world Java Spring Boot + Angular walkthrough
 - [Failure modes](web/docs/guides/FAILURE_MODES.md) — edge cases & recovery scenarios

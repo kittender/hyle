@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of, catchError } from 'rxjs';
 import { API_BASE_URL } from '../app.config';
 
-export interface SubstrateResponse {
+export interface BlueprintResponse {
   author: string;
   name: string;
   version: string;
@@ -29,9 +29,9 @@ export interface SubstrateResponse {
 
 export interface AuthorProfile {
   author: string;
-  substrate_count: number;
+  blueprint_count: number;
   total_versions: number;
-  substrates: SubstrateResponse[];
+  blueprints: BlueprintResponse[];
   bio?: string;
   avatar_url?: string;
   website?: string;
@@ -79,7 +79,7 @@ export class ApiService {
     @Inject(API_BASE_URL) private baseUrl: string,
   ) {}
 
-  search(params: SearchParams): Observable<SubstrateResponse[]> {
+  search(params: SearchParams): Observable<BlueprintResponse[]> {
     const queryParams = new URLSearchParams();
     if (params.q) queryParams.set('q', params.q);
     if (params.author) queryParams.set('author', params.author);
@@ -88,8 +88,8 @@ export class ApiService {
     if (params.offset !== undefined) queryParams.set('offset', String(params.offset));
     if (params.limit !== undefined) queryParams.set('limit', String(params.limit));
 
-    const url = `${this.baseUrl}/substrates?${queryParams.toString()}`;
-    return this.http.get<SubstrateResponse[]>(url).pipe(
+    const url = `${this.baseUrl}/blueprints?${queryParams.toString()}`;
+    return this.http.get<BlueprintResponse[]>(url).pipe(
       catchError(err => {
         console.error('Search failed:', err);
         return of([]);
@@ -97,20 +97,20 @@ export class ApiService {
     );
   }
 
-  getSubstrate(author: string, name: string, version?: string): Observable<SubstrateResponse> {
+  getBlueprint(author: string, name: string, version?: string): Observable<BlueprintResponse> {
     const versionPart = version ? `@${version}` : '';
-    const url = `${this.baseUrl}/substrates/${author}/${name}${versionPart}`;
-    return this.http.get<SubstrateResponse>(url).pipe(
+    const url = `${this.baseUrl}/blueprints/${author}/${name}${versionPart}`;
+    return this.http.get<BlueprintResponse>(url).pipe(
       catchError(err => {
-        console.error('Failed to fetch substrate:', err);
+        console.error('Failed to fetch blueprint:', err);
         throw err;
       })
     );
   }
 
-  getVersions(author: string, name: string): Observable<SubstrateResponse[]> {
-    const url = `${this.baseUrl}/substrates/${author}/${name}/versions`;
-    return this.http.get<SubstrateResponse[]>(url).pipe(
+  getVersions(author: string, name: string): Observable<BlueprintResponse[]> {
+    const url = `${this.baseUrl}/blueprints/${author}/${name}/versions`;
+    return this.http.get<BlueprintResponse[]>(url).pipe(
       catchError(err => {
         console.error('Failed to fetch versions:', err);
         return of([]);
@@ -118,9 +118,9 @@ export class ApiService {
     );
   }
 
-  getTrending(limit: number = 20): Observable<SubstrateResponse[]> {
+  getTrending(limit: number = 20): Observable<BlueprintResponse[]> {
     const url = `${this.baseUrl}/trending?limit=${limit}`;
-    return this.http.get<SubstrateResponse[]>(url).pipe(
+    return this.http.get<BlueprintResponse[]>(url).pipe(
       catchError(err => {
         console.error('Failed to fetch trending:', err);
         return of([]);
@@ -149,7 +149,7 @@ export class ApiService {
   }
 
   getDiff(author: string, name: string, v1: string, base: string): Observable<DiffResponse> {
-    const url = `${this.baseUrl}/substrates/${author}/${name}@${v1}/diff?base=${base}`;
+    const url = `${this.baseUrl}/blueprints/${author}/${name}@${v1}/diff?base=${base}`;
     return this.http.get<DiffResponse>(url).pipe(
       catchError(err => {
         console.error('Failed to fetch diff:', err);
@@ -159,7 +159,7 @@ export class ApiService {
   }
 
   getStars(author: string, name: string): Observable<StarResponse> {
-    const url = `${this.baseUrl}/substrates/${author}/${name}/stars`;
+    const url = `${this.baseUrl}/blueprints/${author}/${name}/stars`;
     return this.http.get<StarResponse>(url).pipe(
       catchError(err => {
         console.error('Failed to fetch stars:', err);
@@ -169,7 +169,7 @@ export class ApiService {
   }
 
   toggleStar(author: string, name: string): Observable<ToggleStarResponse> {
-    const url = `${this.baseUrl}/substrates/${author}/${name}/star`;
+    const url = `${this.baseUrl}/blueprints/${author}/${name}/star`;
     return this.http.post<ToggleStarResponse>(url, {}).pipe(
       catchError(err => {
         console.error('Failed to toggle star:', err);
@@ -179,7 +179,7 @@ export class ApiService {
   }
 
   getReviews(author: string, name: string): Observable<Review[]> {
-    const url = `${this.baseUrl}/substrates/${author}/${name}/reviews`;
+    const url = `${this.baseUrl}/blueprints/${author}/${name}/reviews`;
     return this.http.get<Review[]>(url).pipe(
       catchError(err => {
         console.error('Failed to fetch reviews:', err);
@@ -189,7 +189,7 @@ export class ApiService {
   }
 
   submitReview(author: string, name: string, rating: number, body?: string): Observable<Review> {
-    const url = `${this.baseUrl}/substrates/${author}/${name}/reviews`;
+    const url = `${this.baseUrl}/blueprints/${author}/${name}/reviews`;
     return this.http.post<Review>(url, { rating, body }).pipe(
       catchError(err => {
         console.error('Failed to submit review:', err);

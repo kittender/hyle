@@ -21,8 +21,8 @@ These are **not bugs**; they're deliberate trade-offs baked into v0.2.0:
 
 ---
 
-### 2. Compatibility categories are author-declared, not enforced
-**What:** Author declares `compatibility.budget` but doesn't actually test with budget models. Users select from category + face surprises.
+### 2. Recommendation categories are author-declared, not enforced
+**What:** Author declares `recommendations.budget` but doesn't actually test with budget models. Users select from category + face surprises.
 
 **Why:** Hylé doesn't force testing; category labels are advisory. Author responsibility.
 
@@ -37,7 +37,7 @@ These are **not bugs**; they're deliberate trade-offs baked into v0.2.0:
 
 **Workaround:** Use 2-level hierarchy: corporate base + project-specific child.
 
-**Roadmap:** [Phase 5C](../ROADMAP.md) — Substrate composition (final design)
+**Status:** Shipped in v0.2.0 (see [ROADMAP.md](../ROADMAP.md)) — permanent design choice, not slated to change.
 
 ---
 
@@ -51,7 +51,7 @@ These limitations **no longer apply**:
 | Private blueprints | Private GitHub repos = private blueprints (by design) |
 | Drift detection | `hyle.lock` + `hyle outdated` + `hyle upgrade` + `hyle verify` |
 | CI/CD integration | `hyle verify` with exit codes (0 = clean, 1 = drift) |
-| Substrate composition | `extends` field implemented (v0.2.0) |
+| Blueprint composition | `extends` field implemented (v0.2.0) |
 
 ---
 
@@ -61,12 +61,12 @@ These features are explicitly **not on the roadmap**:
 
 - **Mobile app** — no user demand yet; web UI sufficient
 - **GraphQL API** — REST sufficient; add if community requests
-- **Substrate marketplace** — registry search covers use case
+- **Blueprint marketplace** — registry search covers use case
 - **Paid tiers / monetization** — beta free forever
 - **GitHub Actions integration** — GitHub marketplace later (low priority)
 - **Slack/Discord bots** — lower priority; CLI primary
 - **Offline CLI cache** — online-first model acceptable for beta
-- **Substrate signing/verification** — cryptographic signing; nice-to-have, not essential
+- **Blueprint signing/verification** — cryptographic signing; nice-to-have, not essential
 - **Supply chain SBOMs** — too early; no demand
 
 ---

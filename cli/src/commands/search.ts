@@ -1,5 +1,5 @@
 import { loadConfig } from "../config";
-import { HttpRegistryClient, type SubstrateInfo } from "../registry";
+import { HttpRegistryClient, type BlueprintInfo } from "../registry";
 
 export interface SearchOptions {
 	tag?: string;
@@ -36,7 +36,7 @@ export async function runSearch(
 		}
 
 		if (trimmed.length === 0) {
-			console.log("No substrates found.");
+			console.log("No blueprints found.");
 			return;
 		}
 
@@ -47,12 +47,12 @@ export async function runSearch(
 		console.log("─".repeat(95));
 
 		// Table rows
-		for (const substrate of trimmed) {
-			const name = (substrate.name || "").slice(0, 24).padEnd(25);
-			const author = (substrate.author || "").slice(0, 14).padEnd(15);
-			const version = (substrate.version || "").slice(0, 9).padEnd(10);
-			const tags = (substrate.tags?.join(", ") || "").slice(0, 24).padEnd(25);
-			const desc = (substrate.description || "").slice(0, 40);
+		for (const blueprint of trimmed) {
+			const name = (blueprint.name || "").slice(0, 24).padEnd(25);
+			const author = (blueprint.author || "").slice(0, 14).padEnd(15);
+			const version = (blueprint.version || "").slice(0, 9).padEnd(10);
+			const tags = (blueprint.tags?.join(", ") || "").slice(0, 24).padEnd(25);
+			const desc = (blueprint.description || "").slice(0, 40);
 
 			console.log(name + author + version + tags + desc);
 		}

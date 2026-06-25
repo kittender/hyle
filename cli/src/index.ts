@@ -21,7 +21,7 @@ import { runVerify } from "./commands/verify";
 
 const program = new Command()
 	.name("hyle")
-	.description("AI context substrate manager")
+	.description("AI context blueprint manager")
 	.version(pkg.version)
 	.option("--offline", "Skip all network calls (registry checks, etc.)");
 
@@ -60,7 +60,7 @@ program
 
 program
 	.command("pull [name]")
-	.description("Pull substrate from registry")
+	.description("Pull blueprint from registry")
 	.option("--dry-run", "Preview diff without applying")
 	.option("--force", "Overwrite existing files")
 	.option("-y, --yes", "Skip confirmations")
@@ -81,7 +81,7 @@ program
 
 program
 	.command("outdated")
-	.description("Show substrates with newer versions available")
+	.description("Show blueprints with newer versions available")
 	.option("--json", "Output JSON")
 	.action(async (opts: { json?: boolean }) => {
 		const globals = program.opts<{ offline?: boolean }>();
@@ -93,7 +93,7 @@ program
 
 program
 	.command("upgrade [name]")
-	.description("Upgrade substrate(s) to latest version")
+	.description("Upgrade blueprint(s) to latest version")
 	.option("-y, --yes", "Skip confirmations")
 	.action(async (name: string, opts: { yes?: boolean }) => {
 		const globals = program.opts<{ offline?: boolean }>();
@@ -105,7 +105,7 @@ program
 
 program
 	.command("verify")
-	.description("Verify substrate integrity against hyle.lock")
+	.description("Verify blueprint integrity against hyle.lock")
 	.option("--registry", "Also check versions against registry")
 	.option("--json", "Output JSON")
 	.action(async (opts: { registry?: boolean; json?: boolean }) => {

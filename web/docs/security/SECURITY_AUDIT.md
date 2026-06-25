@@ -2,19 +2,19 @@
 
 **Date:** 2026-05-20  
 **Scope:** Full stack (CLI, registry, web)  
-**Findings:** 10 issues (6 critical, 4 recommended)
+**Findings:** 11 issues (6 critical, 5 recommended)
 
 See [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) for P0-P6 fixes required before shipping.
 
 ---
 
-## Threat Model — AI Substrate Attack Vectors
+## Threat Model — AI Blueprint Attack Vectors
 
-Hylé distributes AI agent instructions (CLAUDE.md, AGENTS.md, ontology). Unlike npm (executes JS), Hylé substrates *direct LLM behavior*.
+Hylé distributes AI agent instructions (CLAUDE.md, AGENTS.md, ontology). Unlike npm (executes JS), Hylé blueprints *direct LLM behavior*.
 
 ### Attack: Malicious CLAUDE.md
 
-Compromised substrate can:
+Compromised blueprint can:
 
 1. **Exfiltrate context** via instruction like:
    ```
@@ -40,10 +40,10 @@ Compromised substrate can:
 
 ```mermaid
 graph LR
-    A["Attacker publishes<br/>malicious substrate<br/>@attacker/malicious@1.0.0"] 
+    A["Attacker publishes<br/>malicious blueprint<br/>@attacker/malicious@1.0.0"] 
     B["async scan marked<br/>pending"]
-    C["Substrate listed<br/>with scan_status=pending<br/>no warning"]
-    D["Dev sees high rating<br/>pulls substrate"]
+    C["Blueprint listed<br/>with scan_status=pending<br/>no warning"]
+    D["Dev sees high rating<br/>pulls blueprint"]
     E["hyle pull — checksum<br/>validated ✓"]
     F["CLAUDE.md applied<br/>to project"]
     G["Dev runs AI agent<br/>next meeting"]
@@ -168,7 +168,7 @@ if (!JWT_SECRET) {
 **File:** registry/src/handlers/publish.ts:161  
 **Severity:** CRITICAL (defeats threat model)
 
-**Issue:** Security scan runs asynchronously via `queueMicrotask()`. Dangerous substrate published immediately, marked "pending", flagged later.
+**Issue:** Security scan runs asynchronously via `queueMicrotask()`. Dangerous blueprint published immediately, marked "pending", flagged later.
 
 **Attack:** See threat model timeline above.
 
@@ -178,7 +178,7 @@ if (!JWT_SECRET) {
 const manifestScan = scanManifest(manifest, bundleData.length);
 if (manifestScan.scan_status === "flagged") {
   return new Response(
-    JSON.stringify({ error: `Substrate flagged: ${manifestScan.findings[0].detail}` }),
+    JSON.stringify({ error: `Blueprint flagged: ${manifestScan.findings[0].detail}` }),
     { status: 403, headers: { "Content-Type": "application/json" } }
   );
 }
@@ -188,12 +188,12 @@ if (manifestScan.scan_status === "flagged") {
 // Bundle scan (heavy I/O) — async OK
 queueMicrotask(() => {
   const bundleScan = scanBundleFiles(bundleData);
-  updateScanResults(substrateName, bundleScan);
+  updateScanResults(blueprintName, bundleScan);
 });
 ```
 
 **Effort:** 60 min  
-**Test:** Publish substrate with `ignore previous instructions` in manifest → verify rejected before insert
+**Test:** Publish blueprint with `ignore previous instructions` in manifest → verify rejected before insert
 
 ---
 

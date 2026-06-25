@@ -109,8 +109,8 @@ Keep examples up-to-date with schema.
 
 Semantic versioning (maintainers only):
 
-- **Patch** (`x.x.+1`): Bug fixes → `hyle push`
-- **Minor** (`x.+1.0`): Features → `hyle push`
+- **Patch** (`x.x.+1`): Bug fixes, WIP → `hyle snapshot`
+- **Minor** (`x.+1.0`): Features, backward compatible → `hyle push`
 - **Major** (`+1.0.0`): Breaking → `hyle release`
 
 ```bash

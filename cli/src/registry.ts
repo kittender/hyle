@@ -1,6 +1,6 @@
 import type { HyleManifest } from "./manifest";
 
-export interface SubstrateInfo {
+export interface BlueprintInfo {
 	author: string;
 	name: string;
 	version: string;
@@ -18,19 +18,19 @@ export interface RegistryClient {
 		manifest: HyleManifest,
 		isStable: boolean,
 	): Promise<PublishResult>;
-	fetchLatest(author: string, name: string): Promise<SubstrateInfo>;
+	fetchLatest(author: string, name: string): Promise<BlueprintInfo>;
 	fetchVersion(
 		author: string,
 		name: string,
 		version: string,
-	): Promise<SubstrateInfo>;
+	): Promise<BlueprintInfo>;
 	fetchBundle(
 		author: string,
 		name: string,
 		version?: string,
 	): Promise<Uint8Array>;
-	search(query: string, tags?: string[]): Promise<SubstrateInfo[]>;
-	versions(author: string, name: string): Promise<SubstrateInfo[]>;
+	search(query: string, tags?: string[]): Promise<BlueprintInfo[]>;
+	versions(author: string, name: string): Promise<BlueprintInfo[]>;
 }
 
 export interface PublishResult {
@@ -83,7 +83,7 @@ export class HttpRegistryClient implements RegistryClient {
 			headers.Authorization = `Bearer ${this.authToken}`;
 		}
 
-		const response = await this.fetcher(`${this.baseUrl}/substrates`, {
+		const response = await this.fetcher(`${this.baseUrl}/blueprints`, {
 			method: "POST",
 			headers,
 			body: formData,
@@ -99,7 +99,7 @@ export class HttpRegistryClient implements RegistryClient {
 		return (await response.json()) as PublishResult;
 	}
 
-	async fetchLatest(author: string, name: string): Promise<SubstrateInfo> {
+	async fetchLatest(author: string, name: string): Promise<BlueprintInfo> {
 		return this.fetchVersion(author, name, "latest");
 	}
 
@@ -107,9 +107,9 @@ export class HttpRegistryClient implements RegistryClient {
 		author: string,
 		name: string,
 		version: string,
-	): Promise<SubstrateInfo> {
+	): Promise<BlueprintInfo> {
 		const versionSuffix = version === "latest" ? "" : `@${version}`;
-		const url = `${this.baseUrl}/substrates/${author}/${name}${versionSuffix}`;
+		const url = `${this.baseUrl}/blueprints/${author}/${name}${versionSuffix}`;
 
 		const response = await this.fetcher(url, {
 			signal: AbortSignal.timeout(10000),
@@ -121,7 +121,7 @@ export class HttpRegistryClient implements RegistryClient {
 			);
 		}
 
-		return (await response.json()) as SubstrateInfo;
+		return (await response.json()) as BlueprintInfo;
 	}
 
 	async fetchBundle(
@@ -130,7 +130,7 @@ export class HttpRegistryClient implements RegistryClient {
 		version?: string,
 	): Promise<Uint8Array> {
 		const versionSuffix = version ? `@${version}` : "";
-		const url = `${this.baseUrl}/substrates/${author}/${name}${versionSuffix}/bundle`;
+		const url = `${this.baseUrl}/blueprints/${author}/${name}${versionSuffix}/bundle`;
 
 		const response = await this.fetcher(url, {
 			signal: AbortSignal.timeout(30000),
@@ -145,8 +145,8 @@ export class HttpRegistryClient implements RegistryClient {
 		return new Uint8Array(await response.arrayBuffer());
 	}
 
-	async search(query: string, tags?: string[]): Promise<SubstrateInfo[]> {
-		const url = new URL(`${this.baseUrl}/substrates`);
+	async search(query: string, tags?: string[]): Promise<BlueprintInfo[]> {
+		const url = new URL(`${this.baseUrl}/blueprints`);
 		if (query) url.searchParams.set("q", query);
 		if (tags && tags.length > 0) url.searchParams.set("tags", tags.join(","));
 
@@ -160,11 +160,11 @@ export class HttpRegistryClient implements RegistryClient {
 			);
 		}
 
-		return (await response.json()) as SubstrateInfo[];
+		return (await response.json()) as BlueprintInfo[];
 	}
 
-	async versions(author: string, name: string): Promise<SubstrateInfo[]> {
-		const url = `${this.baseUrl}/substrates/${author}/${name}/versions`;
+	async versions(author: string, name: string): Promise<BlueprintInfo[]> {
+		const url = `${this.baseUrl}/blueprints/${author}/${name}/versions`;
 
 		const response = await this.fetcher(url, {
 			signal: AbortSignal.timeout(10000),
@@ -176,6 +176,6 @@ export class HttpRegistryClient implements RegistryClient {
 			);
 		}
 
-		return (await response.json()) as SubstrateInfo[];
+		return (await response.json()) as BlueprintInfo[];
 	}
 }
