@@ -1,0 +1,32 @@
+name: react-frontend
+author: imalianny
+version: 1.5.0
+description: >-
+  A clean and refined blueprint for frontend development — React, TypeScript, and
+  design system guidance.
+tags: [frontend, react, typescript, design-system, a11y]
+url: https://github.com/imalianny/react-frontend
+license: MIT
+language: TypeScript
+fork_count: 58
+long_description: >-
+  Frontend-specialised blueprint focused on component-driven development. The
+  ontology includes a design token spec and component inventory. Craft examples cover
+  React hooks, accessible component patterns, and type-safe API integration. Ethics
+  module includes accessibility constraints.
+
+recommendations:
+  universal:
+    - anthropic/claude-sonnet-4-6
+
+blueprint:
+  ontology:
+    - ontology/design-tokens.md
+    - ontology/component-spec.md
+  identities:
+    - identities/roles.yaml
+  craft:
+    - craft/examples/Button.tsx
+    - craft/conventions.md
+  ethics:
+    - ethics/accessibility.md

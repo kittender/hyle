@@ -13,9 +13,9 @@
       <button type="submit" class="hero-search-btn">Search</button>
     </form>
     <div class="hero-stats">
-      <span><strong>{{ totalPrints }}</strong> blueprints</span>
+      <span><strong>{{ totalPrints() }}</strong> blueprints</span>
       <span class="dot">·</span>
-      <span><strong>{{ totalStars.toLocaleString() }}</strong> stars</span>
+      <span><strong>{{ totalStars().toLocaleString() }}</strong> stars</span>
       <span class="dot">·</span>
       <span>Updated daily</span>
     </div>
@@ -31,7 +31,7 @@
       <button class="link-btn" (click)="navigateTo('/search')">Browse all →</button>
     </div>
     <div class="featured-grid">
-      @for (p of featured; track p.id) {
+      @for (p of featured(); track p.id) {
         <app-print-card [print]="p"></app-print-card>
       }
     </div>
@@ -51,7 +51,7 @@
         </div>
       </div>
       <div class="stacked-list">
-        @for (p of mostPulled; track p.id; let i = $index) {
+        @for (p of mostPulled(); track p.id; let i = $index) {
           <div class="most-pulled-row" (click)="navigateToPrint(p.id)">
             <span class="rank-num">#{{ i + 1 }}</span>
             <div class="most-pulled-content">
@@ -93,7 +93,7 @@
         </div>
       </div>
       <div class="team-picks-list">
-        @for (p of teamPicks; track p.id) {
+        @for (p of teamPicks(); track p.id) {
           <div class="team-pick-row" (click)="navigateToPrint(p.id)">
             @if (p.verified || p.community) {
               <div class="result-badges">

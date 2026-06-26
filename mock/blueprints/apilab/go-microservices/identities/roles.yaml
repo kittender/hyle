@@ -1,0 +1,12 @@
+roles:
+  - id: service-owner
+    display_name: "Service Owner"
+    authority: senior
+    can_delegate: [developer]
+    scopes: [ontology, craft, ethics]
+
+  - id: developer
+    display_name: "Go Developer"
+    authority: standard
+    can_delegate: []
+    scopes: [craft]

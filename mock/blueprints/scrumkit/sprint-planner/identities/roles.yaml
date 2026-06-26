@@ -1,0 +1,12 @@
+roles:
+  - id: scrum-master
+    display_name: "Scrum Master / Facilitator"
+    authority: senior
+    can_delegate: []
+    scopes: [ontology, craft, ethics]
+
+  - id: dev-team
+    display_name: "Development Team"
+    authority: standard
+    can_delegate: []
+    scopes: [craft]

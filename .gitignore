@@ -13,3 +13,4 @@ dist
 .env.local
 .env.*.local
 settings.local.json
+test-output.log

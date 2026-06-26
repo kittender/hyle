@@ -1,0 +1,6 @@
+roles:
+  - id: fullstack-dev
+    display_name: "Full-stack Developer"
+    authority: standard
+    can_delegate: []
+    scopes: [craft, ontology]

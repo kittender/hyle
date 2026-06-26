@@ -1,0 +1,18 @@
+roles:
+  - id: product-owner
+    display_name: "Product Owner"
+    authority: senior
+    can_delegate: [business-analyst]
+    scopes: [ontology, craft, ethics]
+
+  - id: business-analyst
+    display_name: "Business Analyst"
+    authority: standard
+    can_delegate: []
+    scopes: [craft, ontology]
+
+  - id: stakeholder
+    display_name: "Stakeholder Voice"
+    authority: advisory
+    can_delegate: []
+    scopes: [ontology]

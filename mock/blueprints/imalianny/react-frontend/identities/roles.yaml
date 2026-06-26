@@ -1,0 +1,12 @@
+roles:
+  - id: designer
+    display_name: "Product Designer"
+    authority: senior
+    can_delegate: [frontend-dev]
+    scopes: [ontology, ethics]
+
+  - id: frontend-dev
+    display_name: "Frontend Developer"
+    authority: standard
+    can_delegate: []
+    scopes: [craft, ontology]

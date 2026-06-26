@@ -55,41 +55,61 @@ export interface ActivityItem {
 
 type HyleManifest = any; // Import from CLI when needed
 
+/**
+ * Build a nested file tree from a manifest's `blueprint.{ontology,identities,
+ * craft,ethics}` path arrays. Paths like "craft/examples/UserService.java" nest
+ * into folders; the leaf file maps to null.
+ */
 export function buildTreeFromManifest(manifest: HyleManifest): PrintTree {
   const tree: PrintTree = {};
-
+  const bp = (manifest && manifest.blueprint) || {};
   const folders = ['ontology', 'identities', 'craft', 'ethics'] as const;
+
   for (const folder of folders) {
-    const files = manifest[folder];
-    if (Array.isArray(files)) {
-      tree[folder] = {};
-      for (const file of files) {
-        tree[folder]![file] = null;
-      }
-    } else {
-      tree[folder] = null;
+    const paths: string[] = Array.isArray(bp[folder]) ? bp[folder] : [];
+    for (const path of paths) {
+      const parts = path.split('/').filter(Boolean);
+      let node: PrintTree = tree;
+      parts.forEach((part, i) => {
+        const isLeaf = i === parts.length - 1;
+        if (isLeaf) {
+          if (!(part in node)) node[part] = null;
+        } else {
+          if (!node[part]) node[part] = {};
+          node = node[part] as PrintTree;
+        }
+      });
     }
   }
 
   return tree;
 }
 
+function hasBadge(s: any, type: string): boolean {
+  return Array.isArray(s.badges) && s.badges.some((b: any) => b?.type === type);
+}
+
 export function blueprintToprint(s: any): Print {
   const date = new Date(s.created_at);
-  const dateStr = date.toISOString().split('T')[0];
+  const dateStr = isNaN(date.getTime()) ? '' : date.toISOString().split('T')[0];
+  const manifest = s.manifest || {};
 
   return {
     id: `${s.author}/${s.name}`,
     author: s.author,
     name: s.name,
-    stars: 0,
-    forks: 0,
+    stars: s.star_count ?? 0,
+    forks: s.fork_count ?? manifest.fork_count ?? 0,
+    pulls: { all: s.install_count ?? 0 },
     description: s.description || '',
-    language: s.manifest.models?.primary?.provider ?? 'Unknown',
-    license: 'Unknown',
+    longDesc: s.long_description ?? manifest.long_description ?? s.description ?? '',
+    language: s.language ?? manifest.language ?? 'Unknown',
+    license: s.license ?? manifest.license ?? 'Unknown',
     updated: dateStr,
     tags: s.tags || [],
+    verified: hasBadge(s, 'verified'),
+    community: hasBadge(s, 'community'),
     versions: [],
-    tree: buildTreeFromManifest(s.manifest),
+    tree: buildTreeFromManifest(manifest),
   };
 }

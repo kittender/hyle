@@ -1,0 +1,34 @@
+name: go-microservices
+author: apilab
+version: 1.2.0
+description: >-
+  Go microservices blueprint — idiomatic project layout, gRPC + REST, and
+  observability baked in.
+tags: [go, microservices, grpc, backend, observability]
+url: https://github.com/apilab/go-microservices
+license: BSD-3-Clause
+language: Go
+fork_count: 47
+long_description: >-
+  A pragmatic blueprint for teams building Go services. Ontology defines service
+  boundaries and the standard project layout; craft ships idiomatic handler and
+  middleware examples with structured logging and tracing; ethics enforces a
+  least-privilege networking baseline.
+
+dependencies:
+  - name: go
+    version: ">=1.22.0"
+    url: https://go.dev
+    install:
+      macos: { manager: brew, pkg: go }
+      linux: { manager: apt, pkg: golang }
+
+blueprint:
+  ontology:
+    - ontology/service-layout.md
+  identities:
+    - identities/roles.yaml
+  craft:
+    - craft/examples/handler.go
+  ethics:
+    - ethics/policies.md

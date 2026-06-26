@@ -1,0 +1,26 @@
+name: sprint-planner
+author: scrumkit
+version: 1.0.0
+description: >-
+  Run backlog refinement and sprint planning with an AI facilitator — estimation,
+  capacity, and a crisp sprint goal.
+tags: [agile, scrum, planning, estimation, backlog]
+url: https://github.com/scrumkit/sprint-planner
+license: MIT
+language: Markdown
+fork_count: 18
+long_description: >-
+  A facilitation blueprint for the planning ceremonies. Ontology defines capacity and
+  estimation vocabulary; craft provides a refinement agenda and a planning-poker
+  prompt; ethics keeps the facilitator neutral and protects the team from
+  over-commitment.
+
+blueprint:
+  ontology:
+    - ontology/estimation.md
+  identities:
+    - identities/roles.yaml
+  craft:
+    - craft/refinement-agenda.md
+  ethics:
+    - ethics/policies.md

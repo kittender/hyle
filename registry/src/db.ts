@@ -1,5 +1,20 @@
 import { Database } from "bun:sqlite";
-import type { RegistryRecord, SearchQuery, ScanResult, User, Review } from "./types";
+import type {
+  RegistryRecord,
+  SearchQuery,
+  ScanResult,
+  User,
+  Review,
+  OverviewStats,
+  ActivityEvent,
+  ActivityType,
+  StarredBlueprint,
+} from "./types";
+
+export interface MostPulledRecord {
+  record: RegistryRecord;
+  pull_count: number;
+}
 
 export interface IDatabase {
   init(): void;
@@ -46,6 +61,21 @@ export interface IDatabase {
   // Notification prefs
   getNotificationPrefs(user_id: number): { email_on_star: boolean; email_on_review: boolean; email_on_new_version: boolean } | null;
   upsertNotificationPrefs(user_id: number, email_on_star: boolean, email_on_review: boolean, email_on_new_version: boolean): void;
+  // Install events (period-bucketed pulls)
+  recordInstallEvent(blueprint_author: string, blueprint_name: string, installed_at?: string): void;
+  getPullCountSince(blueprint_author: string, blueprint_name: string, sinceIso: string | null): number;
+  getMostPulled(sinceIso: string | null, limit: number): MostPulledRecord[];
+  // Activity feed
+  insertActivity(event: Omit<ActivityEvent, "id">): void;
+  getActivity(author: string | undefined, limit: number): ActivityEvent[];
+  // Featured / team picks
+  setFeatured(blueprint_author: string, blueprint_name: string, rank: number): void;
+  getFeatured(): RegistryRecord[];
+  isFeatured(blueprint_author: string, blueprint_name: string): boolean;
+  // Per-user stars + socials + overview stats
+  getStarsByUser(user_id: number): StarredBlueprint[];
+  setUserSocials(user_id: number, socials: Record<string, string>): void;
+  getOverviewStats(): OverviewStats;
 }
 
 export class SQLiteDatabase implements IDatabase {
@@ -104,6 +134,7 @@ export class SQLiteDatabase implements IDatabase {
         avatar_url TEXT,
         bio TEXT,
         website TEXT,
+        socials TEXT,
         created_at TEXT NOT NULL DEFAULT (datetime('now')),
         last_login TEXT
       );
@@ -145,6 +176,36 @@ export class SQLiteDatabase implements IDatabase {
         email_on_star INTEGER NOT NULL DEFAULT 0,
         email_on_review INTEGER NOT NULL DEFAULT 0,
         email_on_new_version INTEGER NOT NULL DEFAULT 0
+      );
+
+      CREATE TABLE IF NOT EXISTS install_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        blueprint_author TEXT NOT NULL,
+        blueprint_name TEXT NOT NULL,
+        installed_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_install_events_bp ON install_events(blueprint_author, blueprint_name);
+      CREATE INDEX IF NOT EXISTS idx_install_events_at ON install_events(installed_at);
+
+      CREATE TABLE IF NOT EXISTS activity_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type TEXT NOT NULL,
+        blueprint_author TEXT NOT NULL,
+        blueprint_name TEXT NOT NULL,
+        version TEXT,
+        note TEXT,
+        actor_username TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_activity_author ON activity_events(blueprint_author);
+      CREATE INDEX IF NOT EXISTS idx_activity_actor ON activity_events(actor_username);
+      CREATE INDEX IF NOT EXISTS idx_activity_at ON activity_events(created_at);
+
+      CREATE TABLE IF NOT EXISTS featured (
+        blueprint_author TEXT NOT NULL,
+        blueprint_name TEXT NOT NULL,
+        rank INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (blueprint_author, blueprint_name)
       );
     `);
   }
@@ -234,10 +295,16 @@ export class SQLiteDatabase implements IDatabase {
   }
 
   search(query: SearchQuery): RegistryRecord[] {
+    // Only the latest stable version of each blueprint appears in browse/search.
     let sql = `
       SELECT id, author, name, version, description, tags, is_stable, is_flagged, flag_reason, checksum, bundle_path, manifest_json, created_at
       FROM blueprints
       WHERE is_stable = 1 AND is_flagged = 0
+        AND created_at = (
+          SELECT MAX(b2.created_at) FROM blueprints b2
+          WHERE b2.author = blueprints.author AND b2.name = blueprints.name
+            AND b2.is_stable = 1 AND b2.is_flagged = 0
+        )
     `;
     const params: any[] = [];
 
@@ -266,6 +333,10 @@ export class SQLiteDatabase implements IDatabase {
 
     if (query.sort === 'name') {
       sql += ` ORDER BY name ASC`;
+    } else if (query.sort === 'stars') {
+      sql += ` ORDER BY (SELECT COUNT(*) FROM stars s WHERE s.blueprint_author = blueprints.author AND s.blueprint_name = blueprints.name) DESC, created_at DESC`;
+    } else if (query.sort === 'pulls') {
+      sql += ` ORDER BY (SELECT COUNT(*) FROM install_events ie WHERE ie.blueprint_author = blueprints.author AND ie.blueprint_name = blueprints.name) DESC, created_at DESC`;
     } else {
       sql += ` ORDER BY created_at DESC`;
     }
@@ -307,6 +378,11 @@ export class SQLiteDatabase implements IDatabase {
       SELECT id, author, name, version, description, tags, is_stable, is_flagged, flag_reason, checksum, bundle_path, manifest_json, created_at
       FROM blueprints
       WHERE is_stable = 1 AND is_flagged = 0
+        AND created_at = (
+          SELECT MAX(b2.created_at) FROM blueprints b2
+          WHERE b2.author = blueprints.author AND b2.name = blueprints.name
+            AND b2.is_stable = 1 AND b2.is_flagged = 0
+        )
       ORDER BY created_at DESC
       LIMIT ?
     `);
@@ -320,6 +396,11 @@ export class SQLiteDatabase implements IDatabase {
       SELECT id, author, name, version, description, tags, is_stable, is_flagged, flag_reason, checksum, bundle_path, manifest_json, created_at
       FROM blueprints
       WHERE author = ? AND is_stable = 1 AND is_flagged = 0
+        AND created_at = (
+          SELECT MAX(b2.created_at) FROM blueprints b2
+          WHERE b2.author = blueprints.author AND b2.name = blueprints.name
+            AND b2.is_stable = 1 AND b2.is_flagged = 0
+        )
       ORDER BY created_at DESC
     `);
 
@@ -412,7 +493,7 @@ export class SQLiteDatabase implements IDatabase {
       INSERT INTO users (github_id, username, email, avatar_url)
       VALUES (?, ?, ?, ?)
       ON CONFLICT(github_id) DO UPDATE SET email = COALESCE(?, email), avatar_url = COALESCE(?, avatar_url), last_login = datetime('now')
-      RETURNING id, github_id, username, email, email_verified, avatar_url, bio, website, created_at, last_login
+      RETURNING id, github_id, username, email, email_verified, avatar_url, bio, website, socials, created_at, last_login
     `);
     const result = stmt.get(github_id, username, email || null, avatar_url || null, email || null, avatar_url || null) as any;
     return {
@@ -424,6 +505,7 @@ export class SQLiteDatabase implements IDatabase {
       avatar_url: result.avatar_url,
       bio: result.bio,
       website: result.website,
+      socials: result.socials ? JSON.parse(result.socials) : undefined,
       created_at: result.created_at,
       last_login: result.last_login,
     };
@@ -431,7 +513,7 @@ export class SQLiteDatabase implements IDatabase {
 
   getUser(id: number): User | null {
     const stmt = this.db.prepare(`
-      SELECT id, github_id, username, email, email_verified, avatar_url, bio, website, created_at, last_login
+      SELECT id, github_id, username, email, email_verified, avatar_url, bio, website, socials, created_at, last_login
       FROM users WHERE id = ?
     `);
     const result = stmt.get(id) as any;
@@ -445,6 +527,7 @@ export class SQLiteDatabase implements IDatabase {
       avatar_url: result.avatar_url,
       bio: result.bio,
       website: result.website,
+      socials: result.socials ? JSON.parse(result.socials) : undefined,
       created_at: result.created_at,
       last_login: result.last_login,
     };
@@ -452,7 +535,7 @@ export class SQLiteDatabase implements IDatabase {
 
   getUserByUsername(username: string): User | null {
     const stmt = this.db.prepare(`
-      SELECT id, github_id, username, email, email_verified, avatar_url, bio, website, created_at, last_login
+      SELECT id, github_id, username, email, email_verified, avatar_url, bio, website, socials, created_at, last_login
       FROM users WHERE username = ?
     `);
     const result = stmt.get(username) as any;
@@ -466,6 +549,7 @@ export class SQLiteDatabase implements IDatabase {
       avatar_url: result.avatar_url,
       bio: result.bio,
       website: result.website,
+      socials: result.socials ? JSON.parse(result.socials) : undefined,
       created_at: result.created_at,
       last_login: result.last_login,
     };
@@ -475,7 +559,7 @@ export class SQLiteDatabase implements IDatabase {
     const stmt = this.db.prepare(`
       UPDATE users SET bio = COALESCE(?, bio), website = COALESCE(?, website)
       WHERE id = ?
-      RETURNING id, github_id, username, email, email_verified, avatar_url, bio, website, created_at, last_login
+      RETURNING id, github_id, username, email, email_verified, avatar_url, bio, website, socials, created_at, last_login
     `);
     const result = stmt.get(bio || null, website || null, id) as any;
     if (!result) return null;
@@ -488,6 +572,7 @@ export class SQLiteDatabase implements IDatabase {
       avatar_url: result.avatar_url,
       bio: result.bio,
       website: result.website,
+      socials: result.socials ? JSON.parse(result.socials) : undefined,
       created_at: result.created_at,
       last_login: result.last_login,
     };
@@ -583,6 +668,8 @@ export class SQLiteDatabase implements IDatabase {
       ON CONFLICT(blueprint_author, blueprint_name) DO UPDATE SET count = count + 1
     `);
     stmt.run(blueprint_author, blueprint_name);
+    // Also log a timestamped event so period-bucketed pull stats stay accurate.
+    this.recordInstallEvent(blueprint_author, blueprint_name);
   }
 
   getInstallCount(blueprint_author: string, blueprint_name: string): number {
@@ -616,5 +703,169 @@ export class SQLiteDatabase implements IDatabase {
       user_id, email_on_star ? 1 : 0, email_on_review ? 1 : 0, email_on_new_version ? 1 : 0,
       email_on_star ? 1 : 0, email_on_review ? 1 : 0, email_on_new_version ? 1 : 0
     );
+  }
+
+  // ---- Install events (period-bucketed pulls) ----
+
+  recordInstallEvent(blueprint_author: string, blueprint_name: string, installed_at?: string): void {
+    if (installed_at) {
+      this.db.prepare(
+        `INSERT INTO install_events (blueprint_author, blueprint_name, installed_at) VALUES (?, ?, ?)`
+      ).run(blueprint_author, blueprint_name, installed_at);
+    } else {
+      this.db.prepare(
+        `INSERT INTO install_events (blueprint_author, blueprint_name) VALUES (?, ?)`
+      ).run(blueprint_author, blueprint_name);
+    }
+  }
+
+  getPullCountSince(blueprint_author: string, blueprint_name: string, sinceIso: string | null): number {
+    let sql = `SELECT COUNT(*) as count FROM install_events WHERE blueprint_author = ? AND blueprint_name = ?`;
+    const params: any[] = [blueprint_author, blueprint_name];
+    if (sinceIso) {
+      sql += ` AND installed_at >= ?`;
+      params.push(sinceIso);
+    }
+    const result = this.db.prepare(sql).get(...params) as any;
+    return result?.count ?? 0;
+  }
+
+  getMostPulled(sinceIso: string | null, limit: number): MostPulledRecord[] {
+    // Rank the latest stable record per blueprint by install events in the window.
+    const params: any[] = [];
+    let windowClause = "";
+    if (sinceIso) {
+      windowClause = `AND ie.installed_at >= ?`;
+      params.push(sinceIso);
+    }
+    const sql = `
+      SELECT b.id, b.author, b.name, b.version, b.description, b.tags, b.is_stable,
+             b.is_flagged, b.flag_reason, b.checksum, b.bundle_path, b.manifest_json, b.created_at,
+             (SELECT COUNT(*) FROM install_events ie
+                WHERE ie.blueprint_author = b.author AND ie.blueprint_name = b.name ${windowClause}) AS pull_count
+      FROM blueprints b
+      JOIN (
+        SELECT author, name, MAX(created_at) AS latest
+        FROM blueprints
+        WHERE is_stable = 1 AND is_flagged = 0
+        GROUP BY author, name
+      ) latest ON latest.author = b.author AND latest.name = b.name AND latest.latest = b.created_at
+      WHERE b.is_stable = 1 AND b.is_flagged = 0
+      ORDER BY pull_count DESC, b.created_at DESC
+      LIMIT ?
+    `;
+    params.push(limit);
+    const rows = this.db.prepare(sql).all(...params) as any[];
+    return rows.map((r) => ({ record: this.mapRecord(r), pull_count: r.pull_count }));
+  }
+
+  // ---- Activity feed ----
+
+  insertActivity(event: Omit<ActivityEvent, "id">): void {
+    if (event.created_at) {
+      this.db.prepare(`
+        INSERT INTO activity_events (type, blueprint_author, blueprint_name, version, note, actor_username, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        event.type, event.blueprint_author, event.blueprint_name,
+        event.version ?? null, event.note ?? null, event.actor_username ?? null, event.created_at
+      );
+    } else {
+      this.db.prepare(`
+        INSERT INTO activity_events (type, blueprint_author, blueprint_name, version, note, actor_username)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).run(
+        event.type, event.blueprint_author, event.blueprint_name,
+        event.version ?? null, event.note ?? null, event.actor_username ?? null
+      );
+    }
+  }
+
+  getActivity(author: string | undefined, limit: number): ActivityEvent[] {
+    let sql = `SELECT id, type, blueprint_author, blueprint_name, version, note, actor_username, created_at FROM activity_events`;
+    const params: any[] = [];
+    if (author) {
+      sql += ` WHERE blueprint_author = ? OR actor_username = ?`;
+      params.push(author, author);
+    }
+    sql += ` ORDER BY created_at DESC LIMIT ?`;
+    params.push(limit);
+    const rows = this.db.prepare(sql).all(...params) as any[];
+    return rows.map((r) => ({
+      id: r.id,
+      type: r.type as ActivityType,
+      blueprint_author: r.blueprint_author,
+      blueprint_name: r.blueprint_name,
+      version: r.version ?? undefined,
+      note: r.note ?? undefined,
+      actor_username: r.actor_username ?? undefined,
+      created_at: r.created_at,
+    }));
+  }
+
+  // ---- Featured / team picks ----
+
+  setFeatured(blueprint_author: string, blueprint_name: string, rank: number): void {
+    this.db.prepare(`
+      INSERT INTO featured (blueprint_author, blueprint_name, rank) VALUES (?, ?, ?)
+      ON CONFLICT(blueprint_author, blueprint_name) DO UPDATE SET rank = ?
+    `).run(blueprint_author, blueprint_name, rank, rank);
+  }
+
+  isFeatured(blueprint_author: string, blueprint_name: string): boolean {
+    const row = this.db.prepare(
+      `SELECT 1 FROM featured WHERE blueprint_author = ? AND blueprint_name = ? LIMIT 1`
+    ).get(blueprint_author, blueprint_name);
+    return row !== null;
+  }
+
+  getFeatured(): RegistryRecord[] {
+    // Latest stable record for each featured blueprint, ordered by curated rank.
+    const sql = `
+      SELECT b.id, b.author, b.name, b.version, b.description, b.tags, b.is_stable,
+             b.is_flagged, b.flag_reason, b.checksum, b.bundle_path, b.manifest_json, b.created_at
+      FROM blueprints b
+      JOIN featured f ON f.blueprint_author = b.author AND f.blueprint_name = b.name
+      JOIN (
+        SELECT author, name, MAX(created_at) AS latest
+        FROM blueprints
+        WHERE is_stable = 1 AND is_flagged = 0
+        GROUP BY author, name
+      ) latest ON latest.author = b.author AND latest.name = b.name AND latest.latest = b.created_at
+      WHERE b.is_stable = 1 AND b.is_flagged = 0
+      ORDER BY f.rank ASC
+    `;
+    const rows = this.db.prepare(sql).all() as any[];
+    return rows.map((r) => this.mapRecord(r));
+  }
+
+  // ---- Per-user stars, socials, overview stats ----
+
+  getStarsByUser(user_id: number): StarredBlueprint[] {
+    const rows = this.db.prepare(
+      `SELECT blueprint_author, blueprint_name FROM stars WHERE user_id = ? ORDER BY created_at DESC`
+    ).all(user_id) as any[];
+    return rows.map((r) => ({ author: r.blueprint_author, name: r.blueprint_name }));
+  }
+
+  setUserSocials(user_id: number, socials: Record<string, string>): void {
+    this.db.prepare(`UPDATE users SET socials = ? WHERE id = ?`).run(JSON.stringify(socials), user_id);
+  }
+
+  getOverviewStats(): OverviewStats {
+    const blueprints = this.db.prepare(`
+      SELECT COUNT(DISTINCT author || '/' || name) AS c
+      FROM blueprints WHERE is_stable = 1 AND is_flagged = 0
+    `).get() as any;
+    const authors = this.db.prepare(`
+      SELECT COUNT(DISTINCT author) AS c
+      FROM blueprints WHERE is_stable = 1 AND is_flagged = 0
+    `).get() as any;
+    const stars = this.db.prepare(`SELECT COUNT(*) AS c FROM stars`).get() as any;
+    return {
+      total_blueprints: blueprints?.c ?? 0,
+      total_stars: stars?.c ?? 0,
+      total_authors: authors?.c ?? 0,
+    };
   }
 }

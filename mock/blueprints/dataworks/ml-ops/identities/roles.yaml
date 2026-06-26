@@ -1,0 +1,12 @@
+roles:
+  - id: data-scientist
+    display_name: "Data Scientist"
+    authority: standard
+    can_delegate: []
+    scopes: [ontology, craft]
+
+  - id: mlops-engineer
+    display_name: "MLOps Engineer"
+    authority: senior
+    can_delegate: [data-scientist]
+    scopes: [craft, ethics]

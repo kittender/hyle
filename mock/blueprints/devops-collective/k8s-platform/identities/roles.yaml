@@ -1,0 +1,12 @@
+roles:
+  - id: sre
+    display_name: "Site Reliability Engineer"
+    authority: senior
+    can_delegate: [platform-engineer]
+    scopes: [ontology, craft, ethics]
+
+  - id: platform-engineer
+    display_name: "Platform Engineer"
+    authority: standard
+    can_delegate: []
+    scopes: [craft]

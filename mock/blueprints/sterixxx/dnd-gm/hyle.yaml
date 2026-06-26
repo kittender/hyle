@@ -1,0 +1,26 @@
+name: dnd-gm
+author: sterixxx
+version: 0.1.0
+description: >-
+  Prepare your Dungeons & Dragons sessions with AI — NPCs, maps, encounters, and lore
+  generated and refined to taste.
+tags: [dnd, rpg, creative, gamemaster, tabletop]
+url: https://github.com/sterixxx/dnd-gm
+license: GPL-3.0
+language: Markdown
+fork_count: 1
+long_description: >-
+  A blueprint for Dungeon Masters who want AI-powered session prep. Ontology covers
+  rules references and setting lore; identities define GM, NPC, and worldbuilder
+  voices; craft provides encounter and NPC generators; ethics keeps content within an
+  agreed safety line.
+
+blueprint:
+  ontology:
+    - ontology/setting.md
+  identities:
+    - identities/roles.yaml
+  craft:
+    - craft/encounter-builder.md
+  ethics:
+    - ethics/safety.md

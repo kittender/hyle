@@ -1,0 +1,12 @@
+roles:
+  - id: owner
+    display_name: "Project Owner"
+    authority: senior
+    can_delegate: [contributor]
+    scopes: [ontology, identities, craft, ethics]
+
+  - id: contributor
+    display_name: "Contributor"
+    authority: standard
+    can_delegate: []
+    scopes: [craft, ontology]

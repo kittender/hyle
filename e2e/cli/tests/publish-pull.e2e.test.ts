@@ -23,7 +23,7 @@ test('publish → pull round-trip against the live registry', async () => {
     await writeFile(join(author.dir, 'CLAUDE.md'), `# ${NAME}\nHello from e2e.\n`);
     await writeFile(
       join(author.dir, 'hyle.yaml'),
-      `name: ${NAME}\nauthor: ${AUTHOR}\nontology:\n  - CLAUDE.md\n`,
+      `name: ${NAME}\nauthor: ${AUTHOR}\nversion: 0.1.0\nmodels:\n  primary:\n    provider: anthropic\n    model: claude-sonnet-4-6\n  secondary:\n    provider: anthropic\n    model: claude-haiku-4-5-20251001\nblueprint:\n  ontology:\n    - CLAUDE.md\n`,
     );
 
     const push = await runHyle(['push', '0.1.0', '--yes'], author.dir);

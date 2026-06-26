@@ -1,0 +1,12 @@
+roles:
+  - id: backend-dev
+    display_name: "Backend Developer"
+    authority: standard
+    can_delegate: []
+    scopes: [craft, ontology]
+
+  - id: data-engineer
+    display_name: "Data Engineer"
+    authority: standard
+    can_delegate: []
+    scopes: [craft]

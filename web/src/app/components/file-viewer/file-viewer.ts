@@ -1,6 +1,6 @@
-import { Component, Input, OnChanges, SimpleChanges, ElementRef, ViewChild, AfterViewChecked } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges, ElementRef, ViewChild, AfterViewChecked, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DataService } from '../../services/data.service';
+import { ApiService } from '../../services/api.service';
 import { CopyButtonComponent } from '../copy-button/copy-button';
 
 declare const Prism: any;
@@ -9,6 +9,7 @@ declare const Prism: any;
   selector: 'app-file-viewer',
   standalone: true,
   imports: [CommonModule, CopyButtonComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (!filePath) {
       <div style="display:flex; align-items:center; justify-content:center; height:100%; color:var(--muted); font-size:13px;">
@@ -45,6 +46,9 @@ export class FileViewerComponent implements OnChanges, AfterViewChecked {
   @Input() filePath: string | null = null;
   @Input() content: string | null = null;
   @Input() lang: string = 'plain';
+  @Input() author = '';
+  @Input() name = '';
+  @Input() version?: string;
   @ViewChild('codeEl') codeEl?: ElementRef;
 
   displayContent = '';
@@ -53,23 +57,28 @@ export class FileViewerComponent implements OnChanges, AfterViewChecked {
   pathParts: { text: string }[] = [];
   private needsHighlight = false;
 
-  constructor(private dataService: DataService) {}
+  constructor(private apiService: ApiService, private cdr: ChangeDetectorRef) {}
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['content'] && this.content !== null) {
-      // Content provided directly
+      // Content provided directly (e.g. manifest preview).
       this.displayContent = this.content;
       this.displayLang = this.lang;
       this.lines = this.displayContent.split('\n');
       this.pathParts = [{ text: 'manifest.yaml' }];
       this.needsHighlight = true;
-    } else if (changes['filePath'] && this.filePath) {
-      // Load from DataService
-      this.displayContent = this.dataService.getFileContent(this.filePath);
-      this.displayLang = this.dataService.getLang(this.filePath);
-      this.lines = this.displayContent.split('\n');
-      this.pathParts = this.filePath.split('/').map(t => ({ text: t }));
-      this.needsHighlight = true;
+      this.cdr.markForCheck();
+    } else if (changes['filePath'] && this.filePath && this.author && this.name) {
+      // Fetch the real file content from the registry bundle.
+      const path = this.filePath;
+      this.pathParts = path.split('/').map(t => ({ text: t }));
+      this.apiService.getFileContent(this.author, this.name, path, this.version).subscribe(file => {
+        this.displayContent = file.content || `# ${path}\n# (empty or unavailable)`;
+        this.displayLang = file.language || 'plain';
+        this.lines = this.displayContent.split('\n');
+        this.needsHighlight = true;
+        this.cdr.markForCheck();
+      });
     }
   }
 

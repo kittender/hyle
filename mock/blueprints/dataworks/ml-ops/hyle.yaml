@@ -1,0 +1,36 @@
+name: ml-ops
+author: dataworks
+version: 0.9.0
+description: >-
+  Machine learning blueprint with experiment tracking, data versioning ethics, and
+  MLOps identity roles.
+tags: [ml, python, mlops, data-science, ai]
+url: https://github.com/dataworks/ml-ops
+license: BSD-3-Clause
+language: Python
+fork_count: 37
+long_description: >-
+  Purpose-built for ML teams. The ontology covers data schemas and experiment-logging
+  conventions. Identities define data scientist and MLOps engineer roles with scope
+  boundaries. Ethics includes bias-audit templates and GDPR rules for training data.
+
+recommendations:
+  advanced:
+    - anthropic/claude-opus-4-8
+
+dependencies:
+  - name: python
+    version: ">=3.11.0"
+    url: https://python.org
+    install:
+      macos: { manager: brew, pkg: python@3.11 }
+
+blueprint:
+  ontology:
+    - ontology/experiment-log.md
+  identities:
+    - identities/roles.yaml
+  craft:
+    - craft/examples/train.py
+  ethics:
+    - ethics/bias-audit.md

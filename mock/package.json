@@ -1,0 +1,17 @@
+{
+  "name": "hyle-mock-seed",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Seeds the local Hylé registry with realistic mock blueprints + social graph.",
+  "scripts": {
+    "seed": "bun run seed.ts"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0",
+    "tar": "^7.4.3"
+  },
+  "devDependencies": {
+    "bun-types": "latest"
+  }
+}

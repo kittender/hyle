@@ -1,0 +1,39 @@
+name: python-async
+author: justbob
+version: 2.1.0
+description: >-
+  Boilerplate for advanced Python projects — no framework assumptions, focuses on
+  clean domain logic and async patterns.
+tags: [python, async, domain-driven, backend]
+url: https://github.com/justbob/python-async
+license: Apache-2.0
+language: Python
+fork_count: 64
+long_description: >-
+  A framework-agnostic Python blueprint emphasising clean architecture without the
+  overhead. The craft folder contains async service patterns, repository
+  abstractions, and domain event examples. Ethics constraints focus on data handling
+  and PII management.
+
+recommendations:
+  universal:
+    - anthropic/claude-sonnet-4-6
+  offline:
+    - ollama/qwen2.5-coder:14b
+
+dependencies:
+  - name: python
+    version: ">=3.12.0"
+    url: https://python.org
+    install:
+      macos: { manager: brew, pkg: python@3.12 }
+
+blueprint:
+  ontology:
+    - ontology/domain-glossary.md
+  identities:
+    - identities/roles.yaml
+  craft:
+    - craft/examples/service.py
+  ethics:
+    - ethics/policies.yaml

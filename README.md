@@ -1,6 +1,6 @@
 # Hylé
 
-> ⚠️ **WIP — unreleased.** No public release (CLI `0.1.0`), no package-manager distribution, no hosted registry yet. Run the stack locally to try it → **[QUICKSTART.md](web/docs/QUICKSTART.md)**.
+> ⚠️ **WIP — unreleased.** No public release (CLI `0.1.0`), no package-manager distribution, no hosted registry yet. Run the stack locally to try it → **[QUICKSTART.md](web/docs/1_QUICKSTART.md)**.
 
 **Blueprint manager for LLM-powered projects** — like Docker Hub for AI agent configs. Pull best-practice AI workflows (CLAUDE.md, agents, policies, MCP configs, docs) or publish your own.
 
@@ -28,15 +28,20 @@ cd cli && bun run link         # builds dist/hyle.js, links bare `hyle` onto PAT
 hyle --help
 ```
 
+To preview how it works with mock data:
+```bash
+docker compose --profile mock up --build
+```
+
 Don't want to link? Run from source: `bun run cli/src/index.ts <command>`.
 
 > ⓘ **Local registry starts empty** — nothing to `pull` until something is published. To try the full loop, `push` a blueprint of your own first, or point `remote_url` at a registry with content.
 
 | Need | Doc |
 |------|-----|
-| Local-test → deploy walkthrough | **[QUICKSTART.md](web/docs/QUICKSTART.md)** |
-| Dev setup | [DEV_QUICK_START.md](web/docs/guides/DEV_QUICK_START.md) |
-| Package-manager installers (brew/choco/apt) | [backlog](web/docs/BACKLOG.md) |
+| Local-test → deploy walkthrough | **[QUICKSTART.md](web/docs/1_QUICKSTART.md)** |
+| Dev setup | [DEV_QUICK_START.md](web/docs/contribute/DEV_QUICK_START.md) |
+| Package-manager installers (brew/choco/apt) | [backlog](web/docs/contribute/BACKLOG.md) |
 
 ### Prerequisites
 
@@ -139,7 +144,7 @@ Three services, one docker-compose stack. Same images deploy anywhere (on-prem, 
 | **Registry** | Bun + TS + SQLite (`registry/`) | Blueprint API; enforces `name+author+version` uniqueness; `auth=none` default |
 | **Web** | Angular 21 (`web/`) | Search, blueprint detail, docs viewer |
 
-Auth opt-in (GitHub OAuth / generic OIDC). Details → **[ARCHITECTURE.md](web/docs/reference/ARCHITECTURE.md)**.
+Auth opt-in (GitHub OAuth / generic OIDC). Details → **[ARCHITECTURE.md](web/docs/knowledge/ARCHITECTURE.md)**.
 
 **Self-hosted & open source** — free FOSS, run the registry on your own infra. No vendor lock-in; infrastructure costs only (like self-hosted GitLab/Artifactory/Jenkins).
 
@@ -147,7 +152,7 @@ Auth opt-in (GitHub OAuth / generic OIDC). Details → **[ARCHITECTURE.md](web/d
 
 ## Documentation
 
-Layered: **orient → quickstart → guide → reference.** Read down only as far as your task needs. Start with [Core concepts](web/docs/CONCEPTS.md) for the mental model (all diagrams live there).
+Layered: **orient → quickstart → guide → reference.** Read down only as far as your task needs. Start with [Core concepts](web/docs/2_CONCEPTS.md) for the mental model (all diagrams live there).
 
 ```mermaid
 graph TD
@@ -177,12 +182,12 @@ graph TD
 
 | I want to… | Start here | Go deeper |
 |---|---|---|
-| **Understand Hylé** | [Core concepts](web/docs/CONCEPTS.md) | — |
-| **Use a blueprint** | [search & pull](web/docs/reference/CLI_COMMANDS.md) | [Troubleshooting](web/docs/guides/TROUBLESHOOTING.md) |
-| **Publish a blueprint** | [Building](web/docs/guides/BUILDING.md) | [Publishing](web/docs/guides/PUBLISHING.md) · [Example](web/docs/guides/EXAMPLE_BLUEPRINT.md) |
-| **Self-host the registry** | [Self-host quickstart](web/docs/operations/DEPLOYMENT_QUICK_START.md) | [Production deployment](web/docs/operations/DEPLOYMENT.md) |
-| **Contribute code** | [Dev quick start](web/docs/guides/DEV_QUICK_START.md) | [Contributing](web/docs/guides/CONTRIBUTING.md) |
+| **Understand Hylé** | [Core concepts](web/docs/2_CONCEPTS.md) | — |
+| **Use a blueprint** | [search & pull](web/docs/3_CLI_COMMANDS.md) | [Troubleshooting](web/docs/4_TROUBLESHOOTING.md) |
+| **Publish a blueprint** | [Building](web/docs/publish/1_BUILDING.md) | [Publishing](web/docs/knowledge/HOW_TO_PUBLISH.md) · [Example](web/docs/publsih/3_EXAMPLE_BLUEPRINT.md) |
+| **Self-host the registry** | [Self-host quickstart](web/docs/deploy/DEPLOYMENT_QUICK_START.md) | [Production deployment](web/docs/deploy/DEPLOYMENT.md) |
+| **Contribute code** | [Dev quick start](web/docs/contribute/DEV_QUICK_START.md) | [Contributing](web/docs/guides/CONTRIBUTING.md) |
 
-**Reference** (look up, don't read end-to-end): [CLI Commands](web/docs/reference/CLI_COMMANDS.md) · [Configuration](web/docs/reference/CONFIG.md) · [Models](web/docs/reference/MODELS.md) · [Tags](web/docs/reference/TAGS.md) · [Architecture](web/docs/reference/ARCHITECTURE.md) · [Registry API](web/docs/reference/REGISTRY_API.md) · [Known limitations](web/docs/reference/KNOWN_LIMITATIONS.md)
+**Reference** (look up, don't read end-to-end): [CLI Commands](web/docs/3_CLI_COMMANDS.md) · [Configuration](web/docs/publish/2_CONFIG.md) · [Models](web/docs/knowledge/MODELS_RECOMMENDATIONS.md) · [Tags](web/docs/knowledge/CHOOSING_TAGS.md) · [Architecture](web/docs/knowledge/ARCHITECTURE.md) · [Registry API](web/docs/contribute/REGISTRY_API.md)
 
-**Security:** [Policy](web/docs/security/SECURITY.md) · [Audit](web/docs/security/SECURITY_AUDIT.md) — **Roadmap:** [Backlog](web/docs/BACKLOG.md)
+**Security:** [Policy](web/docs/security/SECURITY.md) · [Audit](web/docs/security/SECURITY_AUDIT.md) — **Roadmap:** [Backlog](web/docs/contribute/BACKLOG.md)

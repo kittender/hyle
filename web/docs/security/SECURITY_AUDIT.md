@@ -243,5 +243,4 @@ Before each release:
 ---
 
 **Audit conducted by:** Senior Architect  
-**Depth:** Code walkthrough + threat modeling + OWASP top 10  
-**Next review:** After v0.2.0 release or post-incident
+**Depth:** Code walkthrough + threat modeling + OWASP top 10 

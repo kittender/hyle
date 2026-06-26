@@ -24,6 +24,11 @@ npx playwright test           # or: npm test
 
 Override the target with `BASE_URL` (default `http://localhost:8080`).
 
+The cross-stack spec [`publish-browse.spec.ts`](web/tests/publish-browse.spec.ts)
+also drives the real CLI (via `bun`, against `:3000`) for the author-side actions —
+publish, then a minor release — and asserts a visitor sees each version in the UI.
+It needs `bun` on PATH and skips itself if the registry is unreachable.
+
 ## CLI (`e2e/cli`)
 
 Drives the CLI from `../../cli` against the live registry.

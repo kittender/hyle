@@ -28,5 +28,23 @@ services:
       - registry
     restart: unless-stopped
 
+  # Optional mock data ingestion. Off by default; enable with:
+  #   docker compose --profile mock up
+  # Publishes ./mock blueprints via the API, then writes the social graph
+  # (stars, reviews, install events, featured picks, activity) into the volume.
+  seed:
+    build: ./mock
+    profiles: ["mock"]
+    depends_on:
+      registry:
+        condition: service_healthy
+    environment:
+      HYLE_REGISTRY_URL: http://registry:3000
+      DB_PATH: /data/hyle-registry.db
+    volumes:
+      - registry-data:/data
+      - ./mock:/mock:ro
+    restart: "no"
+
 volumes:
   registry-data:

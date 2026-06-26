@@ -1,0 +1,48 @@
+name: good-java
+author: andrej-kirskyn
+version: 1.3.1
+description: >-
+  Comprehensive blueprint for best Java dev practices — Spring Boot, clean
+  architecture, enterprise patterns.
+tags: [java, spring, enterprise, backend, clean-arch]
+url: https://github.com/andrej-kirskyn/good-java
+license: MIT
+language: Java
+fork_count: 89
+long_description: >-
+  A production-grade blueprint for Java teams using Spring Boot. Covers
+  domain-driven design in the ontology, a structured agent hierarchy for
+  architect/developer/reviewer roles, rich service/repository pattern examples in
+  craft, and GDPR-aligned ethics policies. Actively maintained.
+
+recommendations:
+  universal:
+    - anthropic/claude-sonnet-4-6
+  advanced:
+    - anthropic/claude-opus-4-8
+
+dependencies:
+  - name: java
+    version: ">=21.0.0"
+    url: https://adoptium.net
+    install:
+      macos: { manager: brew, pkg: temurin }
+      linux: { manager: apt, pkg: temurin-21-jdk }
+  - name: maven
+    version: ">=3.9.0"
+    url: https://maven.apache.org
+    install:
+      macos: { manager: brew, pkg: maven }
+
+blueprint:
+  ontology:
+    - ontology/domain-glossary.md
+  identities:
+    - identities/roles.yaml
+    - identities/agents/architect.md
+  craft:
+    - craft/conventions.md
+    - craft/examples/UserService.java
+  ethics:
+    - ethics/policies.yaml
+    - ethics/gdpr.md

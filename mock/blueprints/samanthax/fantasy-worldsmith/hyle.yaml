@@ -1,0 +1,35 @@
+name: fantasy-worldsmith
+author: samanthax
+version: 1.1.0
+description: >-
+  Everything you need to start writing your own fantasy book with LLM help —
+  world-building, characters, plot arcs, lore consistency.
+tags: [writing, fantasy, creative, worldbuilding, fiction]
+url: https://github.com/samanthax/fantasy-worldsmith
+license: CC-BY-4.0
+language: Markdown
+fork_count: 4
+long_description: >-
+  A blueprint tailored for writers who want AI assistance crafting fantasy novels.
+  The ontology holds a living world bible and lore-consistency rules; identities give
+  voice to a worldbuilder, a character-smith, and a continuity editor; craft provides
+  plot-arc scaffolds and chapter-drafting prompts; ethics protects originality and
+  attribution.
+
+recommendations:
+  universal:
+    - anthropic/claude-opus-4-8
+  budget:
+    - anthropic/claude-sonnet-4-6
+
+blueprint:
+  ontology:
+    - ontology/world-bible.md
+    - ontology/lore-rules.md
+  identities:
+    - identities/characters.yaml
+  craft:
+    - craft/plot-arc.md
+    - craft/chapter-prompt.md
+  ethics:
+    - ethics/originality.md

@@ -1,0 +1,18 @@
+roles:
+  - id: game-master
+    display_name: "Game Master"
+    authority: senior
+    can_delegate: [npc-voice, worldbuilder]
+    scopes: [ontology, craft, ethics]
+
+  - id: npc-voice
+    display_name: "NPC Voice"
+    authority: standard
+    can_delegate: []
+    scopes: [craft]
+
+  - id: worldbuilder
+    display_name: "Worldbuilder"
+    authority: standard
+    can_delegate: []
+    scopes: [ontology]

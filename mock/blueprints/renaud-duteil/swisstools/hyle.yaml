@@ -1,0 +1,26 @@
+name: swisstools
+author: renaud-duteil
+version: 3.0.0
+description: >-
+  Language-agnostic base for starting any dev project. Minimal assumptions,
+  maximal flexibility.
+tags: [agnostic, base, minimal, starter]
+url: https://github.com/renaud-duteil/swisstools
+license: MIT
+language: YAML
+fork_count: 102
+long_description: >-
+  The go-to blueprint when you want structure without language lock-in. Defines a
+  lean ontology, a two-role identity system (owner/contributor), and a
+  checklist-driven craft folder that works regardless of language. Used as a base by
+  many other published blueprints.
+
+blueprint:
+  ontology:
+    - ontology/glossary.md
+  identities:
+    - identities/roles.yaml
+  craft:
+    - craft/checklist.md
+  ethics:
+    - ethics/policies.md

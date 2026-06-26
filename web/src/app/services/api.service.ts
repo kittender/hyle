@@ -18,6 +18,13 @@ export interface BlueprintResponse {
   created_at: string;
   star_count?: number;
   avg_rating?: number;
+  install_count?: number;
+  license?: string;
+  language?: string;
+  long_description?: string;
+  fork_count?: number;
+  is_team_pick?: boolean;
+  pull_count?: number;
   scan_result?: any;
   badges?: any[];
   tree?: any;
@@ -35,8 +42,34 @@ export interface AuthorProfile {
   bio?: string;
   avatar_url?: string;
   website?: string;
+  socials?: Record<string, string>;
   star_count_total?: number;
 }
+
+export interface OverviewStats {
+  total_blueprints: number;
+  total_stars: number;
+  total_authors: number;
+}
+
+export interface ActivityEvent {
+  id: number;
+  type: 'push' | 'pull' | 'verified' | 'community';
+  blueprint_author: string;
+  blueprint_name: string;
+  version?: string;
+  note?: string;
+  actor_username?: string;
+  created_at: string;
+}
+
+export interface FileContent {
+  path: string;
+  content: string;
+  language: string;
+}
+
+export type PullPeriod = 'month' | 'half' | 'year' | 'all';
 
 export interface DiffResponse {
   v1: string;
@@ -67,7 +100,7 @@ export interface SearchParams {
   q?: string;
   author?: string;
   tags?: string;
-  sort?: 'recent' | 'name';
+  sort?: 'recent' | 'name' | 'stars' | 'pulls';
   offset?: number;
   limit?: number;
 }
@@ -134,6 +167,70 @@ export class ApiService {
       catchError(err => {
         console.error('Failed to fetch tags:', err);
         return of([]);
+      })
+    );
+  }
+
+  getOverviewStats(): Observable<OverviewStats> {
+    const url = `${this.baseUrl}/stats/overview`;
+    return this.http.get<OverviewStats>(url).pipe(
+      catchError(err => {
+        console.error('Failed to fetch overview stats:', err);
+        return of({ total_blueprints: 0, total_stars: 0, total_authors: 0 });
+      })
+    );
+  }
+
+  getMostPulled(period: PullPeriod = 'month', limit: number = 4): Observable<BlueprintResponse[]> {
+    const url = `${this.baseUrl}/stats/most-pulled?period=${period}&limit=${limit}`;
+    return this.http.get<BlueprintResponse[]>(url).pipe(
+      catchError(err => {
+        console.error('Failed to fetch most-pulled:', err);
+        return of([]);
+      })
+    );
+  }
+
+  getTeamPicks(): Observable<BlueprintResponse[]> {
+    const url = `${this.baseUrl}/stats/team-picks`;
+    return this.http.get<BlueprintResponse[]>(url).pipe(
+      catchError(err => {
+        console.error('Failed to fetch team picks:', err);
+        return of([]);
+      })
+    );
+  }
+
+  getActivity(author?: string, limit: number = 20): Observable<ActivityEvent[]> {
+    const params = new URLSearchParams();
+    if (author) params.set('author', author);
+    params.set('limit', String(limit));
+    const url = `${this.baseUrl}/stats/activity?${params.toString()}`;
+    return this.http.get<ActivityEvent[]>(url).pipe(
+      catchError(err => {
+        console.error('Failed to fetch activity:', err);
+        return of([]);
+      })
+    );
+  }
+
+  getUserStars(username: string): Observable<BlueprintResponse[]> {
+    const url = `${this.baseUrl}/users/${username}/stars`;
+    return this.http.get<BlueprintResponse[]>(url).pipe(
+      catchError(err => {
+        console.error('Failed to fetch user stars:', err);
+        return of([]);
+      })
+    );
+  }
+
+  getFileContent(author: string, name: string, path: string, version?: string): Observable<FileContent> {
+    const versionPart = version ? `@${version}` : '';
+    const url = `${this.baseUrl}/blueprints/${author}/${name}${versionPart}/files?path=${encodeURIComponent(path)}`;
+    return this.http.get<FileContent>(url).pipe(
+      catchError(err => {
+        console.error('Failed to fetch file content:', err);
+        return of({ path, content: '', language: 'plain' });
       })
     );
   }

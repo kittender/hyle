@@ -1,0 +1,28 @@
+roles:
+  - id: architect
+    display_name: "Software Architect"
+    authority: senior
+    can_delegate:
+      - developer
+      - reviewer
+    scopes:
+      - ontology
+      - identities
+      - craft
+      - ethics
+
+  - id: developer
+    display_name: "Java Developer"
+    authority: standard
+    can_delegate:
+      - reviewer
+    scopes:
+      - craft
+      - ontology
+
+  - id: reviewer
+    display_name: "Code Reviewer"
+    authority: standard
+    can_delegate: []
+    scopes:
+      - craft

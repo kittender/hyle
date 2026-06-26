@@ -1,0 +1,14 @@
+version: "1.0"
+policies:
+  - id: no-blocking-io
+    severity: warning
+    description: >
+      Never call blocking I/O inside a coroutine; use async drivers or run in an
+      executor.
+    applies_to: [backend-dev]
+
+  - id: pii-minimisation
+    severity: critical
+    description: >
+      Collect and store the minimum personal data required for the feature.
+    applies_to: [backend-dev, data-engineer]

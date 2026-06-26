@@ -75,7 +75,7 @@
         <app-file-tree [tree]="print()?.tree || {}" [selectedFile]="selectedFile()" (fileSelected)="onFileSelected($event)"></app-file-tree>
       </div>
       <div class="file-viewer-col">
-        <app-file-viewer [filePath]="selectedFile()"></app-file-viewer>
+        <app-file-viewer [filePath]="selectedFile()" [author]="print()?.author || ''" [name]="print()?.name || ''" [version]="print()?.version"></app-file-viewer>
       </div>
       <div class="file-sidebar-col">
         <app-quickstart-panel [printId]="print()?.id || ''" [compact]="true"></app-quickstart-panel>

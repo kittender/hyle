@@ -1,0 +1,33 @@
+name: k8s-platform
+author: devops-collective
+version: 1.1.0
+description: >-
+  Kubernetes deployment blueprint with GitOps workflows, security policies, and SRE
+  identity roles.
+tags: [kubernetes, devops, gitops, sre, infrastructure]
+url: https://github.com/devops-collective/k8s-platform
+license: Apache-2.0
+language: YAML
+fork_count: 29
+long_description: >-
+  Infrastructure blueprint for platform and SRE teams. Ontology covers cluster
+  specifications and runbook conventions. Identities define SRE and platform engineer
+  roles. Craft includes Kubernetes manifest examples and Helm conventions. Ethics
+  enforces a security baseline.
+
+dependencies:
+  - name: kubectl
+    version: ">=1.29.0"
+    url: https://kubernetes.io
+    install:
+      macos: { manager: brew, pkg: kubernetes-cli }
+
+blueprint:
+  ontology:
+    - ontology/cluster-spec.md
+  identities:
+    - identities/roles.yaml
+  craft:
+    - craft/examples/deployment.yaml
+  ethics:
+    - ethics/security-baseline.md

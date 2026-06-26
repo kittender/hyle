@@ -4,7 +4,7 @@
   "title": "HyleManifest",
   "description": "Hylé blueprint manifest schema",
   "type": "object",
-  "required": ["name", "author", "version", "models"],
+  "required": ["name", "author", "version", "models", "blueprint"],
   "additionalProperties": false,
   "properties": {
     "name": {
@@ -63,21 +63,27 @@
       "items": { "$ref": "#/definitions/DepEntry" },
       "description": "External tools required by this blueprint"
     },
-    "ontology": {
-      "$ref": "#/definitions/PathArray",
-      "description": "Knowledge docs: CLAUDE.md, specs, diagrams, feature files"
-    },
-    "craft": {
-      "$ref": "#/definitions/PathArray",
-      "description": "Technical structure: SKILLS.md, ARCHITECTURE.md, MCP configs, package.json"
-    },
-    "identities": {
-      "$ref": "#/definitions/PathArray",
-      "description": "Agent roles: AGENTS.md, .claude/agents/*.md"
-    },
-    "ethics": {
-      "$ref": "#/definitions/PathArray",
-      "description": "Policies and compliance: .cedar files, evals"
+    "blueprint": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ontology": {
+          "$ref": "#/definitions/PathArray",
+          "description": "Knowledge docs: CLAUDE.md, specs, diagrams, feature files"
+        },
+        "craft": {
+          "$ref": "#/definitions/PathArray",
+          "description": "Technical structure: SKILLS.md, ARCHITECTURE.md, MCP configs, package.json"
+        },
+        "identities": {
+          "$ref": "#/definitions/PathArray",
+          "description": "Agent roles: AGENTS.md, .claude/agents/*.md"
+        },
+        "ethics": {
+          "$ref": "#/definitions/PathArray",
+          "description": "Policies and compliance: .cedar files, evals"
+        }
+      }
     }
   },
   "definitions": {

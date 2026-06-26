@@ -61,6 +61,7 @@ export class PrintCardComponent {
   constructor(private router: Router) {}
 
   navigate() {
-    this.router.navigate(['/print', this.print.id]);
+    const [author, name] = this.print.id.split('/');
+    this.router.navigate(['/print', author, name]);
   }
 }

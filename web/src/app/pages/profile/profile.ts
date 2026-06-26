@@ -3,9 +3,8 @@ import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
-import { DataService } from '../../services/data.service';
-import { ApiService } from '../../services/api.service';
-import { Print, ActivityItem } from '../../models/print.model';
+import { ApiService, ActivityEvent } from '../../services/api.service';
+import { Print, ActivityItem, blueprintToprint } from '../../models/print.model';
 
 const SOCIAL_DEFS = [
   { key: 'github', label: 'GitHub', color: '#c9d1d9', bg: 'rgba(36,41,46,0.55)' },
@@ -54,7 +53,6 @@ export class ProfileComponent implements OnInit {
 
   constructor(
     public authService: AuthService,
-    private dataService: DataService,
     private apiService: ApiService,
     private router: Router,
     private route: ActivatedRoute,
@@ -63,44 +61,46 @@ export class ProfileComponent implements OnInit {
   ngOnInit() {
     this.route.url.subscribe(segments => {
       this.isPublic = segments.some(s => s.path === 'public');
+      // The public profile demo falls back to a known seeded author.
+      const username = this.authService.user()?.username ?? (this.isPublic ? 'andrej-kirskyn' : null);
+      if (username) {
+        this.loadAuthorProfile(username);
+        this.loadStarred(username);
+        this.loadActivity(username);
+      }
     });
-
-    if (this.authService.user()) {
-      const username = this.authService.user()!.username;
-      this.loadAuthorProfile(username);
-    }
-    this.starredPrints = this.dataService.MOCK_STARRED;
-    this.activity = this.dataService.MOCK_ACTIVITY;
   }
 
   loadAuthorProfile(username: string) {
     this.apiService.getAuthor(username).subscribe({
       next: (profile) => {
-        this.myPrints = profile.blueprints.map((s: any) => ({
-          id: `${s.author}/${s.name}`,
-          author: s.author,
-          name: s.name,
-          stars: s.star_count || 0,
-          forks: 0,
-          pulls: { month: 0, half: 0, year: 0, all: 0 },
-          description: s.description || '',
-          longDesc: s.description || '',
-          language: '',
-          license: '',
-          updated: s.created_at || '',
-          tags: s.tags || [],
-          verified: false,
-          versions: [],
-          tree: {}
-        }));
-        if (profile.bio) {
-          this.bio.set(profile.bio);
+        this.myPrints = profile.blueprints.map(blueprintToprint);
+        if (profile.bio) this.bio.set(profile.bio);
+        if (profile.socials && Object.keys(profile.socials).length > 0) {
+          this.socials.set({ ...this.socials(), ...profile.socials });
         }
       },
       error: () => {
-        // Fallback to mock data
-        this.myPrints = this.dataService.PRINTS.filter(p => p.author === username);
+        this.myPrints = [];
       }
+    });
+  }
+
+  loadStarred(username: string) {
+    this.apiService.getUserStars(username).subscribe(results => {
+      this.starredPrints = results.map(blueprintToprint);
+    });
+  }
+
+  loadActivity(username: string) {
+    this.apiService.getActivity(username, 20).subscribe(events => {
+      this.activity = events.map((e: ActivityEvent): ActivityItem => ({
+        type: e.type,
+        print: `${e.blueprint_author}/${e.blueprint_name}`,
+        version: e.version || '',
+        date: (e.created_at || '').slice(0, 10),
+        note: e.note || '',
+      }));
     });
   }
 

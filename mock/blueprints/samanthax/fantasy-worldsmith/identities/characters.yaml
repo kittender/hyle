@@ -1,0 +1,21 @@
+agents:
+  - id: worldbuilder
+    display_name: "Worldbuilder"
+    role: >
+      Maintains the world bible. Invents geography, factions, and history that stay
+      internally consistent.
+    scopes: [ontology]
+
+  - id: character-smith
+    display_name: "Character-smith"
+    role: >
+      Develops characters with wants, flaws, and arcs. Keeps voice consistent across
+      chapters.
+    scopes: [ontology, craft]
+
+  - id: continuity-editor
+    display_name: "Continuity Editor"
+    role: >
+      Reads every draft against the lore rules and flags contradictions before they
+      become canon.
+    scopes: [ethics, ontology]

@@ -1,7 +1,8 @@
-import { Component, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, signal, ChangeDetectionStrategy, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Router, ActivatedRoute } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ApiService, BlueprintResponse, DiffResponse } from '../../services/api.service';
 import { FileTreeComponent } from '../../components/file-tree/file-tree';
@@ -12,6 +13,7 @@ import { CopyButtonComponent } from '../../components/copy-button/copy-button';
 import { StarButtonComponent } from '../../components/star-button/star-button';
 import { ReviewFormComponent } from '../../components/review-form/review-form';
 import { BadgeListComponent } from '../../components/badge-list/badge-list';
+import { buildTreeFromManifest } from '../../models/print.model';
 import { marked } from 'marked';
 
 @Component({
@@ -36,6 +38,8 @@ export class DetailComponent implements OnInit {
   author = signal('');
   name = signal('');
 
+  private destroyRef = inject(DestroyRef);
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -44,42 +48,50 @@ export class DetailComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.route.paramMap.subscribe(params => {
-      const author = params.get('author') || '';
-      const name = params.get('name') || '';
-      this.author.set(author);
-      this.name.set(name);
+    this.route.paramMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        const author = params.get('author') || '';
+        const name = params.get('name') || '';
+        this.author.set(author);
+        this.name.set(name);
 
-      this.loading.set(true);
-      this.error.set(null);
+        this.loading.set(true);
+        this.error.set(null);
 
-      this.apiService.getBlueprint(author, name).subscribe({
-        next: (print) => {
-          this.print.set(print);
-          this.loading.set(false);
-        },
-        error: (err) => {
-          this.error.set('Failed to load blueprint');
-          this.loading.set(false);
-        }
+        this.apiService.getBlueprint(author, name)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: (print) => {
+              // Build the file tree from the manifest's blueprint path arrays.
+              print.tree = buildTreeFromManifest(print.manifest);
+              this.print.set(print);
+              this.loading.set(false);
+            },
+            error: (err) => {
+              this.error.set('Failed to load blueprint');
+              this.loading.set(false);
+            }
+          });
+
+        this.apiService.getVersions(author, name)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: (versions) => {
+              this.versions.set(versions);
+              if (versions.length > 1) {
+                // Set diffV1 to latest, diffV2 to previous
+                this.diffV1.set(versions[0].version);
+                this.diffV2.set(versions[1].version);
+                this.loadDiff();
+              }
+            },
+            error: () => {} // Silently fail version loading
+          });
+
+        this.tab.set('readme');
+        this.selectedFile.set(null);
       });
-
-      this.apiService.getVersions(author, name).subscribe({
-        next: (versions) => {
-          this.versions.set(versions);
-          if (versions.length > 1) {
-            // Set diffV1 to latest, diffV2 to previous
-            this.diffV1.set(versions[0].version);
-            this.diffV2.set(versions[1].version);
-            this.loadDiff();
-          }
-        },
-        error: () => {} // Silently fail version loading
-      });
-
-      this.tab.set('readme');
-      this.selectedFile.set(null);
-    });
   }
 
   setTab(t: string) {
@@ -105,6 +117,7 @@ export class DetailComponent implements OnInit {
   private loadDiff() {
     if (!this.diffV1() || !this.diffV2()) return;
     this.apiService.getDiff(this.author(), this.name(), this.diffV1(), this.diffV2())
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (diff) => {
           this.diffContent.set(diff);

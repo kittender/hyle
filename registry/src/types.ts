@@ -9,6 +9,7 @@ export interface User {
   avatar_url?: string;
   bio?: string;
   website?: string;
+  socials?: Record<string, string>;
   created_at: string;
   last_login?: string;
 }
@@ -105,6 +106,46 @@ export interface BlueprintResponse {
   badges?: Badge[];
   star_count?: number;
   avg_rating?: number;
+  install_count?: number;
+  /** Author-supplied metadata carried verbatim in the manifest. */
+  license?: string;
+  language?: string;
+  long_description?: string;
+  fork_count?: number;
+  /** Curated "Hylé team pick" flag (from the featured table). */
+  is_team_pick?: boolean;
+  /** Pull count within a requested period (set by /stats/most-pulled). */
+  pull_count?: number;
+}
+
+export interface OverviewStats {
+  total_blueprints: number;
+  total_stars: number;
+  total_authors: number;
+}
+
+export type ActivityType = "push" | "pull" | "verified" | "community";
+
+export interface ActivityEvent {
+  id: number;
+  type: ActivityType;
+  blueprint_author: string;
+  blueprint_name: string;
+  version?: string;
+  note?: string;
+  actor_username?: string;
+  created_at: string;
+}
+
+export interface StarredBlueprint {
+  author: string;
+  name: string;
+}
+
+export interface FileContentResponse {
+  path: string;
+  content: string;
+  language: string;
 }
 
 export interface SecurityReport {
@@ -131,7 +172,7 @@ export interface SearchQuery {
   tags?: string;
   author?: string;
   limit?: number;
-  sort?: 'recent' | 'name';
+  sort?: 'recent' | 'name' | 'stars' | 'pulls';
   offset?: number;
 }
 
@@ -143,6 +184,7 @@ export interface AuthorProfile {
   bio?: string;
   avatar_url?: string;
   website?: string;
+  socials?: Record<string, string>;
   star_count_total?: number;
 }
 

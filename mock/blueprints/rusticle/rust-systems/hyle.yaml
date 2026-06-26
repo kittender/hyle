@@ -1,0 +1,32 @@
+name: rust-systems
+author: rusticle
+version: 0.9.0
+description: >-
+  Systems-programming blueprint for Rust — ownership-first design, error handling,
+  and zero-cost abstractions.
+tags: [rust, systems, performance, backend]
+url: https://github.com/rusticle/rust-systems
+license: MIT
+language: Rust
+fork_count: 33
+long_description: >-
+  For teams writing performance-critical Rust. The ontology captures ownership and
+  lifetime conventions; craft demonstrates idiomatic error handling with thiserror
+  and result-oriented APIs; ethics covers unsafe-code review requirements.
+
+dependencies:
+  - name: rust
+    version: ">=1.78.0"
+    url: https://rust-lang.org
+    install:
+      macos: { manager: brew, pkg: rust }
+
+blueprint:
+  ontology:
+    - ontology/ownership.md
+  identities:
+    - identities/roles.yaml
+  craft:
+    - craft/examples/error.rs
+  ethics:
+    - ethics/unsafe-review.md

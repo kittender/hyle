@@ -1,0 +1,35 @@
+name: product-owner
+author: agileforge
+version: 2.2.0
+description: >-
+  Turn an LLM into a product-owner co-pilot — generate specs, user stories, and
+  acceptance criteria with proper agile context.
+tags: [agile, product, user-stories, specs, scrum]
+url: https://github.com/agileforge/product-owner
+license: CC-BY-4.0
+language: Markdown
+fork_count: 76
+long_description: >-
+  A blueprint that gives an AI agent the context of a seasoned product owner. The
+  ontology defines agile vocabulary and the INVEST criteria; identities model the PO,
+  BA, and stakeholder voices; craft ships prompt recipes for splitting epics into
+  stories and writing Gherkin acceptance criteria; ethics keeps scope honest and
+  estimates non-committal.
+
+recommendations:
+  universal:
+    - anthropic/claude-sonnet-4-6
+  advanced:
+    - anthropic/claude-opus-4-8
+
+blueprint:
+  ontology:
+    - ontology/agile-glossary.md
+    - ontology/invest.md
+  identities:
+    - identities/roles.yaml
+  craft:
+    - craft/user-story-template.md
+    - craft/story-splitting.md
+  ethics:
+    - ethics/policies.md

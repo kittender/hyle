@@ -15,6 +15,9 @@ import { handleSecurityReport } from "./handlers/security";
 import { handleGithubOAuth, handleGithubCallback, handleGetMe, handleUpdateMe, handleGetNotificationPrefs, handleUpdateNotificationPrefs, handleOidcDiscovery } from "./handlers/auth";
 import { handleToggleStar, handleGetStars } from "./handlers/stars";
 import { handleSubmitReview, handleGetReviews } from "./handlers/reviews";
+import { handleOverview, handleMostPulled, handleTeamPicks, handleActivity } from "./handlers/stats";
+import { handleUserStars } from "./handlers/users";
+import { handleFileContent } from "./handlers/files";
 
 const BLUEPRINT_RE = /^\/blueprints\/([a-z0-9-]+)\/([a-z0-9-]+)(?:@([a-z0-9\.\-]+))?(?:\/bundle)?$/;
 const VERSIONS_RE = /^\/blueprints\/([a-z0-9-]+)\/([a-z0-9-]+)\/versions$/;
@@ -26,6 +29,8 @@ const STARS_RE = /^\/blueprints\/([a-z0-9-]+)\/([a-z0-9-]+)\/stars$/;
 const REVIEWS_POST_RE = /^\/blueprints\/([a-z0-9-]+)\/([a-z0-9-]+)\/reviews$/;
 const REVIEWS_GET_RE = /^\/blueprints\/([a-z0-9-]+)\/([a-z0-9-]+)\/reviews$/;
 const AUTHOR_RE = /^\/authors\/([a-z0-9-]+)$/;
+const USER_STARS_RE = /^\/users\/([a-z0-9-]+)\/stars$/;
+const FILES_RE = /^\/blueprints\/([a-z0-9-]+)\/([a-z0-9-]+)(?:@([a-z0-9\.\-]+))?\/files$/;
 const BUNDLES_RE = /^\/bundles\/(.+\.tar\.gz)$/;
 
 import type { RegistryConfig } from "./config";
@@ -87,6 +92,31 @@ export async function route(
     return handleTrending(limit ? parseInt(limit) : 20, db, baseUrl);
   }
 
+  if (pathname === "/stats/overview" && req.method === "GET") {
+    return handleOverview(db);
+  }
+
+  if (pathname === "/stats/most-pulled" && req.method === "GET") {
+    const period = url.searchParams.get("period");
+    const limit = url.searchParams.get("limit");
+    return handleMostPulled(period, limit ? parseInt(limit) : 4, db, baseUrl);
+  }
+
+  if (pathname === "/stats/team-picks" && req.method === "GET") {
+    return handleTeamPicks(db, baseUrl);
+  }
+
+  if (pathname === "/stats/activity" && req.method === "GET") {
+    const author = url.searchParams.get("author");
+    const limit = url.searchParams.get("limit");
+    return handleActivity(author, limit ? parseInt(limit) : 20, db);
+  }
+
+  const userStarsMatch = pathname.match(USER_STARS_RE);
+  if (userStarsMatch && req.method === "GET") {
+    return handleUserStars(userStarsMatch[1], db, baseUrl);
+  }
+
   const starMatch = pathname.match(STAR_RE);
   if (starMatch && req.method === "POST") {
     const author = starMatch[1];
@@ -126,7 +156,7 @@ export async function route(
     const tags = url.searchParams.get("tags");
     const author = url.searchParams.get("author");
     const limit = url.searchParams.get("limit");
-    const sort = url.searchParams.get("sort") as "recent" | "name" | null;
+    const sort = url.searchParams.get("sort") as "recent" | "name" | "stars" | "pulls" | null;
     const offset = url.searchParams.get("offset");
 
     return handleSearch(
@@ -184,6 +214,15 @@ export async function route(
     }
 
     return handleDiff(author, name, v1, base, db);
+  }
+
+  const filesMatch = pathname.match(FILES_RE);
+  if (filesMatch && req.method === "GET") {
+    const author = filesMatch[1];
+    const name = filesMatch[2];
+    const version = filesMatch[3];
+    const path = url.searchParams.get("path");
+    return await handleFileContent(author, name, version, path, db, storage);
   }
 
   const blueprintMa = pathname.match(BLUEPRINT_RE);

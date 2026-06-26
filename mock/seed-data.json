@@ -1,0 +1,218 @@
+{
+  "_comment": "Social graph + per-blueprint metadata layered on top of the published blueprints. See README.md for the schema. Star/install targets are chosen to cross the badge thresholds in registry/src/handlers/badges.ts.",
+
+  "users": [
+    { "username": "hyle-org", "github_id": "seed-hyle-org", "email": "team@hyle.dev", "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4", "bio": "The official Hylé team. We maintain the starter blueprint and the CLI.", "website": "https://hyle.dev", "socials": { "github": "hyle-org", "x": "hyle_dev", "mastodon": "hyle" } },
+    { "username": "andrej-kirskyn", "github_id": "seed-andrej", "email": "andrej@example.com", "avatar_url": "https://avatars.githubusercontent.com/u/1024?v=4", "bio": "Senior JVM engineer. Loves clean architecture and well-structured AI workflows.", "website": "https://andrej.dev", "socials": { "github": "andrej-kirskyn", "linkedin": "andrej-kirskyn", "x": "andrej_dev" } },
+    { "username": "justbob", "github_id": "seed-justbob", "email": "bob@example.com", "avatar_url": "https://avatars.githubusercontent.com/u/2048?v=4", "bio": "Python person. Async all the things.", "website": "", "socials": { "github": "justbob" } },
+    { "username": "imalianny", "github_id": "seed-imalianny", "email": "alianny@example.com", "avatar_url": "https://avatars.githubusercontent.com/u/3072?v=4", "bio": "Frontend & design systems. Accessibility is not optional.", "website": "https://alianny.design", "socials": { "github": "imalianny", "bluesky": "alianny.design", "instagram": "alianny.design" } },
+    { "username": "webcraft", "github_id": "seed-webcraft", "email": "hi@webcraft.dev", "avatar_url": "https://avatars.githubusercontent.com/u/4096?v=4", "bio": "Full-stack studio. Next.js, Prisma, edge.", "website": "https://webcraft.dev", "socials": { "github": "webcraft", "x": "webcraft_dev" } },
+    { "username": "apilab", "github_id": "seed-apilab", "email": "team@apilab.io", "avatar_url": "https://avatars.githubusercontent.com/u/5120?v=4", "bio": "We build boring, reliable Go services.", "website": "https://apilab.io", "socials": { "github": "apilab" } },
+    { "username": "rusticle", "github_id": "seed-rusticle", "email": "ferris@rusticle.rs", "avatar_url": "https://avatars.githubusercontent.com/u/6144?v=4", "bio": "Rustacean. Zero-cost or it doesn't ship.", "website": "", "socials": { "github": "rusticle", "mastodon": "rusticle" } },
+    { "username": "devops-collective", "github_id": "seed-devops", "email": "ops@devops.coop", "avatar_url": "https://avatars.githubusercontent.com/u/7168?v=4", "bio": "A worker co-op of SREs and platform engineers.", "website": "https://devops.coop", "socials": { "github": "devops-collective" } },
+    { "username": "dataworks", "github_id": "seed-dataworks", "email": "ml@dataworks.ai", "avatar_url": "https://avatars.githubusercontent.com/u/8192?v=4", "bio": "ML platform team. Reproducible or it didn't happen.", "website": "https://dataworks.ai", "socials": { "github": "dataworks", "linkedin": "dataworks-ai" } },
+    { "username": "agileforge", "github_id": "seed-agileforge", "email": "hello@agileforge.io", "avatar_url": "https://avatars.githubusercontent.com/u/9216?v=4", "bio": "Product coaching for teams that ship. Stories, not specs-by-the-pound.", "website": "https://agileforge.io", "socials": { "github": "agileforge", "linkedin": "agileforge", "x": "agileforge" } },
+    { "username": "scrumkit", "github_id": "seed-scrumkit", "email": "kit@scrumkit.dev", "avatar_url": "https://avatars.githubusercontent.com/u/10240?v=4", "bio": "Lightweight facilitation tools for Scrum teams.", "website": "https://scrumkit.dev", "socials": { "github": "scrumkit" } },
+    { "username": "samanthax", "github_id": "seed-samanthax", "email": "sam@samanthax.ink", "avatar_url": "https://avatars.githubusercontent.com/u/11264?v=4", "bio": "Fantasy author & worldbuilder. Writing with AI, owning every word.", "website": "https://samanthax.ink", "socials": { "github": "samanthax", "bluesky": "samanthax.ink", "mastodon": "samanthax" } },
+    { "username": "sterixxx", "github_id": "seed-sterixxx", "email": "ster@example.com", "avatar_url": "https://avatars.githubusercontent.com/u/12288?v=4", "bio": "Forever DM. Prep gremlin.", "website": "", "socials": { "github": "sterixxx", "x": "sterixxx_dm" } },
+    { "username": "marie-lenoir", "github_id": "seed-marie", "email": "marie@example.com", "avatar_url": "https://avatars.githubusercontent.com/u/13312?v=4", "bio": "Staff engineer. Reviews blueprints for fun.", "website": "", "socials": { "github": "marie-lenoir", "linkedin": "marie-lenoir" } },
+    { "username": "kenji-watanabe", "github_id": "seed-kenji", "email": "kenji@example.com", "avatar_url": "https://avatars.githubusercontent.com/u/14336?v=4", "bio": "Backend dev, Tokyo. Go & Rust.", "website": "", "socials": { "github": "kenji-watanabe" } },
+    { "username": "priya-nair", "github_id": "seed-priya", "email": "priya@example.com", "avatar_url": "https://avatars.githubusercontent.com/u/15360?v=4", "bio": "Product owner turned coach.", "website": "", "socials": { "github": "priya-nair", "linkedin": "priya-nair" } }
+  ],
+
+  "blueprints": [
+    {
+      "author": "hyle-org", "name": "starter", "featured": 2,
+      "versions": [
+        { "version": "1.0.0", "created_at": "2025-10-01T09:00:00Z", "notes": "Initial official release." },
+        { "version": "1.0.3", "created_at": "2026-03-01T11:30:00Z", "notes": "Minor documentation improvements across all folders." },
+        { "version": "1.0.4", "created_at": "2026-04-18T14:10:00Z", "notes": "Updated for hyle 2.3 compatibility. Revised quickstart docs." }
+      ],
+      "stars": 2890,
+      "starred_by": ["andrej-kirskyn", "imalianny", "marie-lenoir", "priya-nair", "kenji-watanabe"],
+      "reviews": [
+        { "username": "marie-lenoir", "rating": 5, "body": "The cleanest starting point. Forked it for three projects already.", "created_at": "2026-04-20T10:00:00Z" },
+        { "username": "andrej-kirskyn", "rating": 5, "body": "Exactly the right amount of opinion: almost none.", "created_at": "2026-03-12T08:30:00Z" },
+        { "username": "priya-nair", "rating": 4, "body": "Great scaffold. Wish the ethics folder shipped a couple more examples.", "created_at": "2026-02-02T16:45:00Z" }
+      ],
+      "installs": { "month": 1400, "half": 1900, "year": 1500, "older": 800 }
+    },
+    {
+      "author": "andrej-kirskyn", "name": "good-java", "featured": null,
+      "versions": [
+        { "version": "1.0.0", "created_at": "2025-10-20T09:00:00Z", "notes": "Initial release with core craft patterns and Java conventions." },
+        { "version": "1.1.0", "created_at": "2025-12-01T09:00:00Z", "notes": "Added ethics policy templates and scope management examples." },
+        { "version": "1.2.1", "created_at": "2026-02-15T09:00:00Z", "notes": "Fixed identity hierarchy delegation chain for nested agents." },
+        { "version": "1.3.0", "created_at": "2026-04-10T09:00:00Z", "notes": "Added Spring Security identity patterns. New GDPR ethics module." },
+        { "version": "1.3.1", "created_at": "2026-04-22T09:00:00Z", "notes": "Released patch: dependency updates." }
+      ],
+      "stars": 1234,
+      "starred_by": ["marie-lenoir", "kenji-watanabe", "justbob"],
+      "reviews": [
+        { "username": "kenji-watanabe", "rating": 5, "body": "Best Spring Boot blueprint on the registry. The architect agent is great.", "created_at": "2026-04-12T12:00:00Z" },
+        { "username": "marie-lenoir", "rating": 4, "body": "Solid enterprise patterns. GDPR module is a nice touch.", "created_at": "2026-03-01T09:00:00Z" }
+      ],
+      "installs": { "month": 980, "half": 1200, "year": 900, "older": 400 }
+    },
+    {
+      "author": "justbob", "name": "python-async", "featured": null,
+      "versions": [
+        { "version": "1.0.2", "created_at": "2025-11-05T09:00:00Z", "notes": "Minor fixes and docs clarifications." },
+        { "version": "2.0.0", "created_at": "2026-01-10T09:00:00Z", "notes": "Major rewrite: domain-driven structure throughout." },
+        { "version": "2.1.0", "created_at": "2026-03-28T09:00:00Z", "notes": "Async patterns overhaul. Added FastAPI-compatible examples." }
+      ],
+      "stars": 897,
+      "starred_by": ["kenji-watanabe", "andrej-kirskyn"],
+      "reviews": [
+        { "username": "kenji-watanabe", "rating": 4, "body": "Framework-agnostic and it shows. Clean.", "created_at": "2026-02-01T09:00:00Z" }
+      ],
+      "installs": { "month": 760, "half": 900, "year": 700, "older": 300 }
+    },
+    {
+      "author": "imalianny", "name": "react-frontend", "featured": null,
+      "versions": [
+        { "version": "1.0.0", "created_at": "2025-11-15T09:00:00Z", "notes": "Initial release." },
+        { "version": "1.4.0", "created_at": "2026-02-20T09:00:00Z", "notes": "React 19 patterns. New component examples." },
+        { "version": "1.5.0", "created_at": "2026-04-05T09:00:00Z", "notes": "Added design token ontology and accessibility ethics rules." }
+      ],
+      "stars": 723,
+      "starred_by": ["marie-lenoir", "priya-nair"],
+      "reviews": [
+        { "username": "marie-lenoir", "rating": 5, "body": "The a11y policies alone are worth it.", "created_at": "2026-03-05T09:00:00Z" }
+      ],
+      "installs": { "month": 540, "half": 700, "year": 500, "older": 250 }
+    },
+    {
+      "author": "webcraft", "name": "nextjs-fullstack", "featured": null,
+      "versions": [
+        { "version": "1.0.0", "created_at": "2025-10-10T09:00:00Z", "notes": "Initial release." },
+        { "version": "1.2.0", "created_at": "2025-12-05T09:00:00Z", "notes": "Added auth patterns with NextAuth v5." },
+        { "version": "2.0.0", "created_at": "2026-04-12T09:00:00Z", "notes": "Next.js 15 App Router patterns, Prisma 6." }
+      ],
+      "stars": 612,
+      "starred_by": ["imalianny", "kenji-watanabe"],
+      "reviews": [
+        { "username": "imalianny", "rating": 4, "body": "Pairs perfectly with my react-frontend blueprint (which it extends!).", "created_at": "2026-04-13T09:00:00Z" }
+      ],
+      "installs": { "month": 480, "half": 620, "year": 460, "older": 200 }
+    },
+    {
+      "author": "apilab", "name": "go-microservices", "featured": null,
+      "versions": [
+        { "version": "1.0.0", "created_at": "2025-12-12T09:00:00Z", "notes": "Initial release." },
+        { "version": "1.2.0", "created_at": "2026-03-18T09:00:00Z", "notes": "Added gRPC handler examples and tracing middleware." }
+      ],
+      "stars": 388,
+      "starred_by": ["kenji-watanabe"],
+      "reviews": [
+        { "username": "kenji-watanabe", "rating": 5, "body": "Idiomatic layout, no magic. Exactly what I want from a Go blueprint.", "created_at": "2026-03-20T09:00:00Z" }
+      ],
+      "installs": { "month": 360, "half": 420, "year": 300, "older": 120 }
+    },
+    {
+      "author": "rusticle", "name": "rust-systems", "featured": null,
+      "versions": [
+        { "version": "0.8.0", "created_at": "2026-01-22T09:00:00Z", "notes": "Beta: ownership conventions and error patterns." },
+        { "version": "0.9.0", "created_at": "2026-03-30T09:00:00Z", "notes": "Added unsafe-review ethics and thiserror examples." },
+        { "version": "0.9.1-snapshot", "created_at": "2026-04-24T09:00:00Z", "notes": "WIP: async runtime conventions (unstable).", "stable": false }
+      ],
+      "stars": 256,
+      "starred_by": ["kenji-watanabe", "rusticle"],
+      "reviews": [
+        { "username": "kenji-watanabe", "rating": 4, "body": "Good ownership guidance. Looking forward to the async chapter.", "created_at": "2026-04-01T09:00:00Z" }
+      ],
+      "installs": { "month": 210, "half": 260, "year": 180, "older": 60 }
+    },
+    {
+      "author": "devops-collective", "name": "k8s-platform", "featured": null,
+      "versions": [
+        { "version": "1.0.0", "created_at": "2025-11-30T09:00:00Z", "notes": "Initial release." },
+        { "version": "1.1.0", "created_at": "2026-03-20T09:00:00Z", "notes": "Added OPA-style policy examples in the ethics module." }
+      ],
+      "stars": 334,
+      "starred_by": ["marie-lenoir"],
+      "reviews": [
+        { "username": "marie-lenoir", "rating": 4, "body": "Security baseline is sensible and strict. Used it to bootstrap a cluster.", "created_at": "2026-03-25T09:00:00Z" }
+      ],
+      "installs": { "month": 300, "half": 360, "year": 240, "older": 110 }
+    },
+    {
+      "author": "dataworks", "name": "ml-ops", "featured": null,
+      "versions": [
+        { "version": "0.8.0", "created_at": "2026-01-20T09:00:00Z", "notes": "MLflow integration patterns in craft." },
+        { "version": "0.9.0", "created_at": "2026-03-15T09:00:00Z", "notes": "Beta: added bias-audit ethics module." }
+      ],
+      "stars": 445,
+      "starred_by": ["priya-nair", "marie-lenoir"],
+      "reviews": [
+        { "username": "priya-nair", "rating": 5, "body": "The bias-audit policies should be mandatory reading for every ML team.", "created_at": "2026-03-18T09:00:00Z" }
+      ],
+      "installs": { "month": 400, "half": 480, "year": 360, "older": 150 }
+    },
+    {
+      "author": "agileforge", "name": "product-owner", "featured": 1,
+      "versions": [
+        { "version": "1.0.0", "created_at": "2025-12-08T09:00:00Z", "notes": "Initial release: user-story template and INVEST ontology." },
+        { "version": "2.0.0", "created_at": "2026-02-18T09:00:00Z", "notes": "Added story-splitting patterns and stakeholder identity." },
+        { "version": "2.2.0", "created_at": "2026-04-15T09:00:00Z", "notes": "Gherkin acceptance-criteria recipes; estimate-as-range ethics." }
+      ],
+      "stars": 980,
+      "starred_by": ["priya-nair", "marie-lenoir", "andrej-kirskyn", "imalianny"],
+      "reviews": [
+        { "username": "priya-nair", "rating": 5, "body": "Finally an AI that writes stories like a real PO. The INVEST enforcement is gold.", "created_at": "2026-04-16T09:00:00Z" },
+        { "username": "marie-lenoir", "rating": 5, "body": "We use this in refinement every week. Splitting patterns are spot on.", "created_at": "2026-03-22T09:00:00Z" }
+      ],
+      "installs": { "month": 820, "half": 1000, "year": 700, "older": 200 }
+    },
+    {
+      "author": "scrumkit", "name": "sprint-planner", "featured": null,
+      "versions": [
+        { "version": "1.0.0", "created_at": "2026-03-05T09:00:00Z", "notes": "Initial release: refinement agenda and estimation ontology." }
+      ],
+      "stars": 142,
+      "starred_by": ["priya-nair"],
+      "reviews": [
+        { "username": "priya-nair", "rating": 4, "body": "Neutral facilitation done right. Pairs well with product-owner.", "created_at": "2026-03-28T09:00:00Z" }
+      ],
+      "installs": { "month": 180, "half": 200, "year": 0, "older": 0 }
+    },
+    {
+      "author": "samanthax", "name": "fantasy-worldsmith", "featured": 3,
+      "versions": [
+        { "version": "1.0.0", "created_at": "2026-02-14T09:00:00Z", "notes": "Initial release: world bible, lore rules, plot arc." },
+        { "version": "1.1.0", "created_at": "2026-03-30T09:00:00Z", "notes": "Added chapter-drafting prompt and continuity-editor identity." }
+      ],
+      "stars": 318,
+      "starred_by": ["priya-nair", "imalianny", "marie-lenoir"],
+      "reviews": [
+        { "username": "imalianny", "rating": 5, "body": "The lore-consistency rules keep my drafts honest. Magic always has a cost now.", "created_at": "2026-04-02T09:00:00Z" },
+        { "username": "priya-nair", "rating": 5, "body": "Wonderful for outlining. The originality ethics are thoughtful.", "created_at": "2026-03-31T09:00:00Z" }
+      ],
+      "installs": { "month": 240, "half": 520, "year": 380, "older": 60 }
+    },
+    {
+      "author": "sterixxx", "name": "dnd-gm", "featured": null,
+      "versions": [
+        { "version": "0.1.0", "created_at": "2026-01-28T09:00:00Z", "notes": "Initial release: setting, encounter builder, table-safety ethics." }
+      ],
+      "stars": 47,
+      "starred_by": ["sterixxx"],
+      "reviews": [
+        { "username": "kenji-watanabe", "rating": 4, "body": "Saved my Sunday prep. The encounter twists are genuinely fun.", "created_at": "2026-02-10T09:00:00Z" }
+      ],
+      "installs": { "month": 44, "half": 110, "year": 80, "older": 16 }
+    }
+  ],
+
+  "activity": [
+    { "type": "verified", "author": "hyle-org", "name": "starter", "version": "1.0.4", "actor": "hyle-org", "note": "starter @1.0.4 is verified by the Hylé team.", "created_at": "2026-04-25T09:00:00Z" },
+    { "type": "push", "author": "andrej-kirskyn", "name": "good-java", "version": "1.3.1", "actor": "andrej-kirskyn", "note": "Released patch: dependency updates.", "created_at": "2026-04-22T09:00:00Z" },
+    { "type": "pull", "author": "hyle-org", "name": "starter", "version": "1.0.4", "actor": "marie-lenoir", "note": "Pulled to project findr-api.", "created_at": "2026-04-26T09:00:00Z" },
+    { "type": "pull", "author": "justbob", "name": "python-async", "version": "2.1.0", "actor": "kenji-watanabe", "note": "Pulled to project ml-pipeline.", "created_at": "2026-04-19T09:00:00Z" },
+    { "type": "push", "author": "agileforge", "name": "product-owner", "version": "2.2.0", "actor": "agileforge", "note": "Gherkin acceptance-criteria recipes added.", "created_at": "2026-04-15T09:00:00Z" },
+    { "type": "community", "author": "andrej-kirskyn", "name": "good-java", "version": "", "actor": "andrej-kirskyn", "note": "good-java passed 1000 stars — now flagged Popular.", "created_at": "2026-03-20T09:00:00Z" },
+    { "type": "pull", "author": "samanthax", "name": "fantasy-worldsmith", "version": "1.1.0", "actor": "imalianny", "note": "Pulled to project novel-draft.", "created_at": "2026-04-03T09:00:00Z" },
+    { "type": "push", "author": "imalianny", "name": "react-frontend", "version": "1.5.0", "actor": "imalianny", "note": "Added design token ontology.", "created_at": "2026-04-05T09:00:00Z" },
+    { "type": "verified", "author": "hyle-org", "name": "starter", "version": "1.0.3", "actor": "hyle-org", "note": "starter @1.0.3 verified.", "created_at": "2026-03-01T09:00:00Z" }
+  ]
+}

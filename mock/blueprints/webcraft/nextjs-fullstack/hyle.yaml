@@ -1,0 +1,44 @@
+name: nextjs-fullstack
+author: webcraft
+version: 2.0.0
+description: >-
+  Full-stack Next.js blueprint with App Router, Prisma, and authentication patterns.
+tags: [nextjs, fullstack, typescript, prisma, auth]
+url: https://github.com/webcraft/nextjs-fullstack
+license: MIT
+language: TypeScript
+fork_count: 71
+long_description: >-
+  A full-stack blueprint for Next.js teams. Covers route architecture in the
+  ontology, a fullstack developer identity, and Prisma + NextAuth examples in craft.
+  Updated for Next.js 15 App Router conventions. Extends imalianny/react-frontend for
+  its design-system foundations.
+
+extends:
+  - imalianny/react-frontend
+
+merge_policy:
+  blueprint:
+    ontology: append
+    craft: append
+
+recommendations:
+  universal:
+    - anthropic/claude-sonnet-4-6
+
+dependencies:
+  - name: node
+    version: ">=20.0.0"
+    url: https://nodejs.org
+    install:
+      macos: { manager: brew, pkg: node }
+
+blueprint:
+  ontology:
+    - ontology/routes.md
+  identities:
+    - identities/roles.yaml
+  craft:
+    - craft/examples/schema.prisma
+  ethics:
+    - ethics/privacy.md

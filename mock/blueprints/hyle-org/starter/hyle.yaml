@@ -1,0 +1,35 @@
+name: starter
+author: hyle-org
+version: 1.0.4
+description: >-
+  Official Hylé starter blueprint. Covers all four folders with minimal opinions —
+  recommended as your first blueprint.
+tags: [official, starter, minimal, recommended]
+url: https://github.com/hyle-org/starter
+license: MIT
+language: Markdown
+fork_count: 431
+long_description: >-
+  The official starting point maintained by the Hylé team. Provides a clean,
+  unopinionated scaffold across all four standard folders: ontology, identities,
+  craft, and ethics. Designed to be forked and extended, not used as-is. Fully
+  compatible with every hyle CLI version.
+
+recommendations:
+  universal:
+    - anthropic/claude-sonnet-4-6
+  budget:
+    - anthropic/claude-haiku-4-5
+  offline:
+    - ollama/qwen2.5:14b
+
+blueprint:
+  ontology:
+    - ontology/CLAUDE.md
+    - ontology/glossary.md
+  identities:
+    - identities/AGENTS.md
+  craft:
+    - craft/SKILLS.md
+  ethics:
+    - ethics/policies.md

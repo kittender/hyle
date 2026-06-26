@@ -1,0 +1,20 @@
+version: "1.0"
+policies:
+  - id: no-pii-in-logs
+    severity: critical
+    description: >
+      Agents must never emit PII (emails, names, IDs) to log output, debug
+      statements, or exceptions.
+    applies_to: [developer, reviewer]
+
+  - id: no-raw-sql
+    severity: warning
+    description: >
+      Raw SQL strings are forbidden. Use JPA named queries or QueryDSL.
+    applies_to: [developer]
+
+  - id: gdpr-right-to-erasure
+    severity: critical
+    description: >
+      Every User aggregate must implement purge() to anonymise all personal data.
+    applies_to: [architect, developer]
