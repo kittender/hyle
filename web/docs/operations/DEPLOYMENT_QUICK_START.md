@@ -73,18 +73,16 @@ Then pull + push blueprints as usual.
 
 If you prefer no container overhead.
 
-### 1. Get binary
+> ⚠️ **Pre-release:** prebuilt binaries (`releases.hylé.com`) are
+> [planned](../BACKLOG.md), not published yet. For now, build from source.
+
+### 1. Build the binary
 
 ```bash
-# macOS
-curl -L https://releases.hylé.com/hyle-registry-v0.2.0-macos-arm64 -o hyle-registry
-chmod +x hyle-registry
-
-# Linux
-curl -L https://releases.hylé.com/hyle-registry-v0.2.0-linux-x64 -o hyle-registry
-chmod +x hyle-registry
-
-# Windows: download .exe from https://releases.hylé.com
+git clone https://github.com/kittender/hyle.git && cd hyle
+bun install
+cd registry && bun run build      # produces ./dist/hyle-registry
+cp dist/hyle-registry /usr/local/bin/hyle-registry
 ```
 
 ### 2. Create data directory

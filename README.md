@@ -1,154 +1,188 @@
 # Hylé
 
-Hylé is a **blueprint manager** for LLM-powered projects.  
-Pull best-practice AI workflows, boilerplates and staples; publish your own.
+> ⚠️ **WIP — unreleased.** No public release (CLI `0.1.0`), no package-manager distribution, no hosted registry yet. Run the stack locally to try it → **[QUICKSTART.md](web/docs/QUICKSTART.md)**.
+
+**Blueprint manager for LLM-powered projects** — like Docker Hub for AI agent configs. Pull best-practice AI workflows (CLAUDE.md, agents, policies, MCP configs, docs) or publish your own.
 
 ```bash
-hyle pull claude-java-springboot    # Install latest target blueprint
+hyle pull author/blueprint-name     # Install latest blueprint
 hyle push                           # Publish your own (auto-versioning)
 ```
 
 <img src="design/hylé-lotus.png" width="468" height="468" alt="A golden lotus on green waterlilies leaves, emitting a soft light, on a soft forest green background">
 
-## Why Hylé
-
-**Reusable, packaged, LLM configs** — like Docker for AI agent configs. Pull a published blueprint (CLAUDE.md, agents, policies, MCP configs, docs) or publish your own recipes. From basic framework templates to highly customized setups, see what the community shared. Hylé's core commands (pull, push, init) are programmatic; metadata lives in Hylé's registry; source code on GitHub for open-source trust and transparency.
-
-Hylé requires :
-- *local Git* for pulling
-- *a GitHub account* for public publishing
-
-All the blueprints published through CLI will be automatically visible on the official registry website. Anyone can get visibility by contributing to the registry.
+- **Programmatic core** — `pull` / `push` / `init` need no LLM, work offline.
+- **Registry-indexed** — metadata in Hylé's registry for fast search.
+- **Open source** — source on GitHub for trust + transparency.
+- **From templates to custom setups** — see what the community shares, or share your own.
 
 ---
 
 ## Quick Start
 
-### Install
+No installers yet — build from source and link the `hyle` command:
 
 ```bash
-# macOS
-brew install hyle
-
-# Windows
-choco install hyle
-
-# Linux
-curl -fsSL https://get.hylé.com | sh
+docker compose up --build      # web → :8080, registry → :3000, auth=none
+cd cli && bun run link         # builds dist/hyle.js, links bare `hyle` onto PATH
+hyle --help
 ```
 
-### Use blueprints
+Don't want to link? Run from source: `bun run cli/src/index.ts <command>`.
+
+> ⓘ **Local registry starts empty** — nothing to `pull` until something is published. To try the full loop, `push` a blueprint of your own first, or point `remote_url` at a registry with content.
+
+| Need | Doc |
+|------|-----|
+| Local-test → deploy walkthrough | **[QUICKSTART.md](web/docs/QUICKSTART.md)** |
+| Dev setup | [DEV_QUICK_START.md](web/docs/guides/DEV_QUICK_START.md) |
+| Package-manager installers (brew/choco/apt) | [backlog](web/docs/BACKLOG.md) |
+
+### Prerequisites
+
+| Tool | Min | Why |
+|------|-----|-----|
+| **[Bun](https://bun.sh)** | ≥ 1.0 | Runs CLI + registry |
+| **[Docker](https://docs.docker.com/get-docker/) + Compose** | — | Runs local stack |
+| **Git** | — | Runtime for `pull`; `push` tags releases |
+| **Node** | ≥ 18 | Only to build npm/standalone CLI artifacts |
+
+**Auth is optional.** Self-hosted local registry runs `auth=none` by default — no account needed. Auth applies only when targeting a registry that enabled it. Modes: **GitHub OAuth** (`github`, used by CLI `login`) and **generic OAuth2/OIDC** (`oauth2`, for GitLab etc. via manual config).
+
+---
+
+## Use Blueprints
 
 ```bash
-hyle search java spring tdd                  # Search registry
-hyle search react typescript claude          # You can mix tags + LLM recommandations
-hyle search python anthropic                 
-hyle search fastapi ollama                   
-hyle pull claude-java-springboot             # Install
-hyle pull username/starter@1.0.0 --dry-run  # Preview before applying
+hyle search java spring tdd                       # by tag
+hyle search react typescript claude               # mix tags + LLM recommendations
+hyle pull author/blueprint-name                   # install (name from search)
+hyle pull author/blueprint-name@1.0.0 --dry-run   # preview diff before applying
 ```
 
-On pull: fetch manifest from registry → preview diff → SHA-256 verify → check declared dependencies → apply. Manifests indexed in registry for fast search; source code from GitHub.
+`author/blueprint-name` is a placeholder — substitute a name from `hyle search`.
 
-### Publish blueprints
+**Pull flow:**
+
+```mermaid
+graph LR
+    A[fetch manifest<br/>from registry] --> B[preview diff]
+    B --> C[SHA-256 verify]
+    C --> D[check declared<br/>dependencies]
+    D --> E[apply]
+```
+
+Manifests indexed in registry for search; source code pulled from GitHub.
+
+---
+
+## Publish Blueprints
 
 ```bash
-hyle init                      # Generate hyle.yaml
-hyle push 0.1.0                # First publish (explicit version)
-hyle snapshot                  # Patch bump (WIP)
-hyle push                      # Minor bump (stable)
-hyle release                   # Major bump (stable)
+hyle init             # generate hyle.yaml (version 0.1.0)
+hyle snapshot         # patch bump + "-snapshot" suffix (WIP, unstable)
+hyle push             # minor bump, stable   e.g. 0.1.0 → 0.2.0
+hyle release          # major bump, stable   e.g. 0.2.0 → 1.0.0
+hyle push 1.2.3       # override: publish exact version, no auto-bump
 ```
 
-#### Publish only what matters — your manifest is the allowlist
+| Command | Bump | Stable | Notes |
+|---------|------|--------|-------|
+| `snapshot` | patch + `-snapshot` | ✗ | WIP sharing |
+| `push` | minor | ✓ | Default publish |
+| `release` | major | ✓ | Lower numbers reset to zero |
 
-A blueprint is **not** your whole repo. The `hyle.yaml` manifest lists the exact
-paths to publish, so only files you explicitly point to ship — nothing else.
-This means you can sit inside a 500k-line monorepo, a private product codebase, or
-any messy working tree and still publish a clean, focused blueprint. Source files,
-secrets, build artifacts, and unrelated code stay put because the manifest never
-references them.
+`init` writes `version: 0.1.0`, so first bare `push` → `0.2.0`. Pass an explicit version to set it exactly. New version is written back to `hyle.yaml` after each publish.
 
-You point to precise paths, grouped by the four categories:
+### Your manifest is the allowlist
+
+A blueprint is **not** your whole repo. `hyle.yaml` lists exact paths to publish — only those files ship, nothing else. Sit inside a 500k-line monorepo or private codebase and still publish a clean, focused blueprint. Source, secrets, build artifacts, unrelated code stay put.
+
+Paths group into four categories:
 
 ```yaml
 # hyle.yaml
 name: claude-springboot-tdd
 author: yourname
 
-ontology:                      # knowledge docs
+ontology:                           # knowledge docs
   - CLAUDE.md
   - docs/architecture/overview.md
-craft:                         # technical structure
+craft:                              # technical structure
   - .mcp/servers.json
   - SKILLS.md
-identities:                    # agent roles
+identities:                         # agent roles
   - .claude/agents/reviewer.md
   - .claude/agents/test-writer.md
-ethics:                        # policies & compliance
+ethics:                             # policies & compliance
   - policies/data-access.cedar
 ```
 
-Only those eight files get packaged and pushed. The rest of the codebase — however
-big — is invisible to the blueprint.
-
-Two ways to fill the manifest:
+Only those files get packaged. Two ways to fill the manifest:
 
 - **Manual** — list paths yourself for full control.
-- **Scan helpers** — `hyle ontology [path]`, `hyle craft [path]`, `hyle identities [path]`,
-  `hyle ethics [path]` scan a directory and append matching files to `hyle.yaml`,
-  so you opt files *in* rather than risk shipping the whole tree.
+- **Scan helpers** — `hyle ontology|craft|identities|ethics [path]` scan a directory and append matching files, so you opt files *in*.
 
-Add `.hyleignore` (gitignore-style) as a second guard to exclude API keys, secrets,
-or private docs even if a path or scan would otherwise catch them.
+Add **`.hyleignore`** (gitignore-style) as a second guard to exclude keys, secrets, or private docs even if a path or scan catches them.
 
----
-
-## Self-Hosted & Open Source
-
-Hylé is **free, open-source software**. Run the registry on your own infra (on-premise or cloud). No vendor lock-in. Infrastructure costs only (similar to self-hosted GitLab, Artifactory, or Jenkins).
+Each blueprint also declares `recommendations` (LLMs the author tested — feedback, not enforced) and `dependencies` (node, npm, python…). On `pull`, Hylé verifies dependencies exist before applying.
 
 ---
 
-## How Blueprints Work
+## Architecture
 
-100% flexible. Author publishes CLAUDE.md, agents, policies, or any AI workflow. Registry indexes them for search. Each blueprint declares `recommendations` (which LLMs author tested, not enforced) and `dependencies` (node, npm, python, etc.). On `pull`, Hylé verifies dependencies exist before applying.
+Three services, one docker-compose stack. Same images deploy anywhere (on-prem, AWS/GCP/Azure).
+
+| Service | Stack | Role |
+|---------|-------|------|
+| **CLI** | Bun + TS (`cli/`) | `init` / `pull` / `push` — no LLM, offline-capable |
+| **Registry** | Bun + TS + SQLite (`registry/`) | Blueprint API; enforces `name+author+version` uniqueness; `auth=none` default |
+| **Web** | Angular 21 (`web/`) | Search, blueprint detail, docs viewer |
+
+Auth opt-in (GitHub OAuth / generic OIDC). Details → **[ARCHITECTURE.md](web/docs/reference/ARCHITECTURE.md)**.
+
+**Self-hosted & open source** — free FOSS, run the registry on your own infra. No vendor lock-in; infrastructure costs only (like self-hosted GitLab/Artifactory/Jenkins).
 
 ---
 
 ## Documentation
 
-Detailed guides and reference:
+Layered: **orient → quickstart → guide → reference.** Read down only as far as your task needs. Start with [Core concepts](web/docs/CONCEPTS.md) for the mental model (all diagrams live there).
 
-**Understanding Hylé:**
-- [Core concepts](web/docs/CONCEPTS.md) — User journey, trust tiers, four domains, model fallbacks (with diagrams)
+```mermaid
+graph TD
+    README["README<br/>what + why"] --> CONCEPTS["Core Concepts<br/>mental model + diagrams"]
+    README --> Q{"Your goal?"}
 
-**Getting started:**
-- [Building blueprints](web/docs/guides/BUILDING.md) — step-by-step: from project to published blueprint
-- [Publishing guide](web/docs/guides/PUBLISHING.md) — versioning strategy, costs, security best practices
-- [Example blueprint](web/docs/guides/EXAMPLE_BLUEPRINT.md) — real-world Java Spring Boot + Angular walkthrough
-- [Troubleshooting](web/docs/guides/TROUBLESHOOTING.md) — common errors, edge cases & recovery scenarios
-- [Quick start (dev)](web/docs/guides/DEV_QUICK_START.md) — local setup
-- [Contributing](web/docs/guides/CONTRIBUTING.md) — how to help
+    Q -->|use a blueprint| USE["Quickstart: Find &amp; Pull"]
+    Q -->|publish one| PUB["Quickstart: Publish"]
+    Q -->|self-host| HOST["Quickstart: Self-Host"]
+    Q -->|contribute| DEV["Quickstart: Dev"]
 
-**Reference:**
-- [CLI Commands](web/docs/reference/CLI_COMMANDS.md) — all `hyle` commands (search, pull, push, scan, verify, etc.)
-- [Configuration](web/docs/reference/CONFIG.md) — `hyle.yaml`, `.hyle`, `.hyleignore` — patterns & full reference
-- [Models](web/docs/reference/MODELS.md) — tested models (recommendations), advanced vs basic, cost optimization
-- [Tags](web/docs/reference/TAGS.md) — comprehensive list of suggested tags for discovery (LLM providers, frameworks, capabilities)
-- [Architecture](web/docs/reference/ARCHITECTURE.md) — system design & constraints
-- [Known limitations](web/docs/reference/KNOWN_LIMITATIONS.md) — what doesn't work yet & why
-- [Registry API](web/docs/reference/REGISTRY_API.md) — API endpoints
+    USE -.problem.-> TS["Troubleshooting"]
+    PUB -.walkthrough.-> BUILD["Building + Example"]
+    PUB -.strategy.-> PUBG["Publishing<br/>versioning, trust, cost"]
+    HOST -.production.-> DEPLOY["Deployment"]
 
-**Operations:**
-- [Deployment quick start](web/docs/operations/DEPLOYMENT_QUICK_START.md) — self-hosted in 5 minutes (Docker Compose)
-- [Deployment (production)](web/docs/operations/DEPLOYMENT.md) — HA, monitoring, incident response
-- [Release checklist](web/docs/operations/RELEASE_CHECKLIST.md) — publish & deploy process
+    BUILD -.lookup.-> REF[("Reference<br/>CLI · Config · Models<br/>Tags · API · Architecture")]
+    PUBG -.lookup.-> REF
+    DEPLOY -.lookup.-> REF
+    REF -.audit.-> SEC["Security + Audit"]
 
-**Security:**
-- [Security policy](web/docs/security/SECURITY.md) — threat model, mitigations
-- [Security audit](web/docs/security/SECURITY_AUDIT.md) — checksum verification, supply-chain safety
+    style README fill:#4caf50
+    style CONCEPTS fill:#90a4ae
+    style REF fill:#e3f2fd
+    style SEC fill:#fce4ec
+```
 
-**Roadmap:**
-- [Feature roadmap](web/docs/ROADMAP.md) — planned features & timeline
+| I want to… | Start here | Go deeper |
+|---|---|---|
+| **Understand Hylé** | [Core concepts](web/docs/CONCEPTS.md) | — |
+| **Use a blueprint** | [search & pull](web/docs/reference/CLI_COMMANDS.md) | [Troubleshooting](web/docs/guides/TROUBLESHOOTING.md) |
+| **Publish a blueprint** | [Building](web/docs/guides/BUILDING.md) | [Publishing](web/docs/guides/PUBLISHING.md) · [Example](web/docs/guides/EXAMPLE_BLUEPRINT.md) |
+| **Self-host the registry** | [Self-host quickstart](web/docs/operations/DEPLOYMENT_QUICK_START.md) | [Production deployment](web/docs/operations/DEPLOYMENT.md) |
+| **Contribute code** | [Dev quick start](web/docs/guides/DEV_QUICK_START.md) | [Contributing](web/docs/guides/CONTRIBUTING.md) |
 
+**Reference** (look up, don't read end-to-end): [CLI Commands](web/docs/reference/CLI_COMMANDS.md) · [Configuration](web/docs/reference/CONFIG.md) · [Models](web/docs/reference/MODELS.md) · [Tags](web/docs/reference/TAGS.md) · [Architecture](web/docs/reference/ARCHITECTURE.md) · [Registry API](web/docs/reference/REGISTRY_API.md) · [Known limitations](web/docs/reference/KNOWN_LIMITATIONS.md)
+
+**Security:** [Policy](web/docs/security/SECURITY.md) · [Audit](web/docs/security/SECURITY_AUDIT.md) — **Roadmap:** [Backlog](web/docs/BACKLOG.md)

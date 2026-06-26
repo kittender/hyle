@@ -17,6 +17,17 @@ export class JwtAuth implements IAuth {
   }
 }
 
+/**
+ * Local/dev auth. No SSO, no token verification. Used when HYLE_AUTH_PROVIDER=none.
+ * Identity is taken from the manifest at publish time (see handlePublish).
+ */
+export class NoAuth implements IAuth {
+  readonly disabled = true;
+  async verifyToken(): Promise<null> {
+    return null;
+  }
+}
+
 export class OidcValidator implements IAuth {
   private issuer: string;
   private jwksUri: string;
@@ -91,7 +102,9 @@ export async function verifyJwtToken(token: string, jwtSecret: string): Promise<
   return verifyJwt(token, jwtSecret);
 }
 
-export function createAuthFromEnv(): IAuth {
-  const jwtSecret = process.env.JWT_SECRET || "default-secret";
-  return new JwtAuth(jwtSecret);
+import type { AuthConfig } from "./config";
+
+export function createAuth(cfg: AuthConfig): IAuth {
+  if (cfg.mode === "none") return new NoAuth();
+  return new JwtAuth(cfg.jwtSecret);
 }

@@ -1,15 +1,18 @@
 <div class="docs-layout">
-  <!-- Sidebar -->
+  <!-- Sidebar: every web/docs/** file, grouped by folder -->
   <div class="docs-sidebar">
     <div class="docs-sidebar-label">Documentation</div>
-    @for (s of sections(); track s.id) {
-      <button class="docs-nav-item" [class.active]="active() === s.id" (click)="setActive(s.id)">
-        {{ s.label }}
-      </button>
+    @for (g of groups(); track g.group) {
+      <div class="docs-nav-group">{{ g.group }}</div>
+      @for (s of g.sections; track s.id) {
+        <button class="docs-nav-item" [class.active]="active() === s.id" (click)="setActive(s.id)">
+          {{ s.label }}
+        </button>
+      }
     }
   </div>
 
-  <!-- Content (loaded from markdown → JSON) -->
+  <!-- Content (markdown → HTML, built at compile time) -->
   <div class="docs-content" #contentEl>
     <div [innerHTML]="currentContent()"></div>
   </div>

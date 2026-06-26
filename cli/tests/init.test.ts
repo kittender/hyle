@@ -10,11 +10,11 @@ function makeTmpDir(): string {
 }
 
 describe("loadConfig", () => {
-  test("no .hyle file → returns defaults", () => {
+  test("no .hyle file → returns local default", () => {
     const dir = makeTmpDir();
     try {
       const config = loadConfig(dir);
-      expect(config.remote_url).toBe("https://registry.hyle.eu");
+      expect(config.remote_url).toBe("http://localhost:3000");
     } finally {
       rmSync(dir, { recursive: true });
     }
@@ -36,14 +36,14 @@ describe("loadConfig", () => {
     try {
       writeFileSync(join(dir, ".hyle"), "default_model: claude-opus-4-7\n");
       const config = loadConfig(dir);
-      expect(config.remote_url).toBe("https://registry.hyle.eu");
+      expect(config.remote_url).toBe("http://localhost:3000");
       expect(config.default_model).toBe("claude-opus-4-7");
     } finally {
       rmSync(dir, { recursive: true });
     }
   });
 
-  test("http:// remote_url → throws", () => {
+  test("http:// non-local remote_url → throws", () => {
     const dir = makeTmpDir();
     try {
       writeFileSync(join(dir, ".hyle"), "remote_url: http://insecure.example.com\n");
@@ -63,21 +63,23 @@ describe("loadConfig", () => {
     }
   });
 
-  test("https://localhost remote_url → throws", () => {
+  test("http://localhost remote_url → allowed (local-test path)", () => {
     const dir = makeTmpDir();
     try {
-      writeFileSync(join(dir, ".hyle"), "remote_url: https://localhost/api\n");
-      expect(() => loadConfig(dir)).toThrow(/localhost not allowed/);
+      writeFileSync(join(dir, ".hyle"), "remote_url: http://localhost:3000\n");
+      const config = loadConfig(dir);
+      expect(config.remote_url).toBe("http://localhost:3000");
     } finally {
       rmSync(dir, { recursive: true });
     }
   });
 
-  test("https://127.0.0.1 remote_url → throws", () => {
+  test("http://127.0.0.1 remote_url → allowed (local-test path)", () => {
     const dir = makeTmpDir();
     try {
-      writeFileSync(join(dir, ".hyle"), "remote_url: https://127.0.0.1/api\n");
-      expect(() => loadConfig(dir)).toThrow(/localhost not allowed/);
+      writeFileSync(join(dir, ".hyle"), "remote_url: http://127.0.0.1:3000\n");
+      const config = loadConfig(dir);
+      expect(config.remote_url).toBe("http://127.0.0.1:3000");
     } finally {
       rmSync(dir, { recursive: true });
     }

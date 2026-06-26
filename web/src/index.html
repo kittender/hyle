@@ -8,6 +8,10 @@
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Pinyon+Script&display=swap" rel="stylesheet">
+  <!-- Runtime config. Loaded synchronously before the app boots so the API URL
+       can be set per-deploy without rebuilding the bundle. Overwritten by the
+       Docker entrypoint (envsubst); the checked-in default targets local dev. -->
+  <script src="config.js"></script>
 </head>
 <body>
   <app-root></app-root>

@@ -121,5 +121,5 @@ For security-related questions (not vulnerability reports), open a discussion on
 
 ---
 
-**Last Updated**: 2026-05-21 (Phase 4: added OAuth, email, user account security notes)  
+**Last Updated**: 2026-05-21 (added OAuth, email, user account security notes)  
 **Version**: 1.1

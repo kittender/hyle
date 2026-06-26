@@ -28,14 +28,18 @@ const REVIEWS_GET_RE = /^\/blueprints\/([a-z0-9-]+)\/([a-z0-9-]+)\/reviews$/;
 const AUTHOR_RE = /^\/authors\/([a-z0-9-]+)$/;
 const BUNDLES_RE = /^\/bundles\/(.+\.tar\.gz)$/;
 
+import type { RegistryConfig } from "./config";
+
 export async function route(
   req: Request,
   db: IDatabase,
   storage: IStorage,
   auth: IAuth,
-  baseUrl: string,
-  jwtSecret: string = ""
+  cfg: RegistryConfig,
+  jwtSecret: string = "",
+  authEnabled: boolean = true
 ): Promise<Response> {
+  const baseUrl = cfg.baseUrl;
   const url = new URL(req.url);
   const pathname = url.pathname;
 
@@ -140,7 +144,7 @@ export async function route(
   }
 
   if (pathname === "/blueprints" && req.method === "POST") {
-    return await handlePublish(req, db, storage, auth, jwtSecret);
+    return await handlePublish(req, db, storage, auth, jwtSecret, authEnabled);
   }
 
   if (pathname === "/deps" && req.method === "GET") {

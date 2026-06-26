@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { AuthUser } from '../models/print.model';
 import { Observable, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -71,9 +72,7 @@ export class AuthService {
   }
 
   loginWithGitHub(): void {
-    const baseUrl = window.location.origin.includes('localhost')
-      ? 'http://localhost:3000'
-      : window.location.origin.replace(/:\d+$/, '');
+    const baseUrl = environment.apiBaseUrl;
     window.location.href = `${baseUrl}/auth/github?redirect_uri=${encodeURIComponent(
       window.location.origin + '/auth/callback'
     )}`;
@@ -92,10 +91,7 @@ export class AuthService {
   }
 
   private verifyToken(token: string): Observable<any> {
-    const baseUrl = window.location.origin.includes('localhost')
-      ? 'http://localhost:3000'
-      : window.location.origin.replace(/:\d+$/, '');
-    return this.http.get(`${baseUrl}/auth/me`, {
+    return this.http.get(`${environment.apiBaseUrl}/auth/me`, {
       headers: { Authorization: `Bearer ${token}` },
     });
   }

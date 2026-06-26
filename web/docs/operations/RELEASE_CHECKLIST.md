@@ -1,6 +1,8 @@
-# Hylé Release Checklist v0.2.0+
+# Hylé Release Checklist
 
-Quick reference for shipping releases. See [SECURITY_AUDIT.md](SECURITY_AUDIT.md) for security findings and [DEPLOYMENT.md](DEPLOYMENT.md) for ops readiness.
+Steps to ship the **first public release** (target `v0.2.0`). Hylé is pre-release today
+(CLI `0.1.0`, unreleased) — this is the gate to clear before that changes. See
+[SECURITY_AUDIT.md](SECURITY_AUDIT.md) for security findings and [DEPLOYMENT.md](DEPLOYMENT.md) for ops readiness.
 
 ---
 

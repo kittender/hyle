@@ -1,45 +1,40 @@
-# Quickstart — Install & Pull Blueprints
+# Quickstart — Find & Pull Blueprints
 
-Get started with Hylé in 5 minutes: install the CLI, find blueprints, and pull your first one.
+For people who want to **use** a blueprint. Find one, preview it, apply it. ~5 minutes.
+
+> ⚠️ **Pre-release.** No installers or hosted registry yet — you run the CLI and a
+> local registry from source. Hosted `registry.hylé.com` and `brew`/`curl` installers
+> are [planned](../BACKLOG.md). To publish instead, see [Building](BUILDING.md).
 
 ---
 
-## Install Hylé
+## Get the CLI running
+
+Run it from source against a local registry (see [Quickstart](../QUICKSTART.md)
+for the full stack):
 
 ```bash
-# macOS / Linux
-curl -fsSL https://get.hylé.com | bash
-
-# Or via package manager (if available)
-brew install kittender/hyle/hyle
+docker compose up --build          # registry → :3000, web → :8080
+bun run cli/src/index.ts --help    # run the CLI from source
 ```
 
-Verify installation:
-
-```bash
-hyle --version
-# Output: hyle X.Y.Z
-```
+The CLI talks to `http://localhost:3000` by default. (When packaged, this becomes
+`hyle <command>` — same arguments throughout these docs.)
 
 ---
 
 ## Search & Discover Blueprints
 
-Browse the public registry:
+Browse the registry the CLI targets:
 
 ```bash
-# List all blueprints
-hyle search
-
-# Search by keyword
-hyle search claude
-
-# Filter by tag
-hyle search --tag local
+hyle search                 # list everything
+hyle search claude          # by keyword
+hyle search --tag local     # by tag
 hyle search --tag bedrock
 ```
 
-Or visit [registry.hylé.com](https://registry.hylé.com) in your browser.
+Or open the web UI at [http://localhost:8080](http://localhost:8080).
 
 ---
 

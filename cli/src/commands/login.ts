@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, writeFileSync, readFileSync } from "fs";
 import { join } from "path";
 import { homedir } from "os";
+import { loadConfig } from "../config";
 
 interface AuthConfig {
   access_token?: string;
@@ -117,7 +118,21 @@ export function getStoredAuth(): AuthConfig | null {
 }
 
 export async function runLogin(options: { registryUrl?: string } = {}): Promise<void> {
-  const registryUrl = options.registryUrl || process.env.HYLE_REGISTRY || "https://registry.hylé.com";
+  const registryUrl =
+    options.registryUrl || process.env.HYLE_REGISTRY_URL || loadConfig().remote_url;
+
+  // If the registry runs with auth disabled (local/dev), there is nothing to log in to.
+  try {
+    const res = await fetch(`${registryUrl}/auth/github?cli=1`, { method: "GET", redirect: "manual" });
+    if (res.status === 500) {
+      console.log("ℹ Registry has authentication disabled (local/dev mode).");
+      console.log("  No login needed — publish works anonymously against this registry.");
+      return;
+    }
+  } catch {
+    console.error(`✗ Cannot reach registry at ${registryUrl}`);
+    process.exit(1);
+  }
 
   console.log("Opening browser for authentication...");
   console.log(`Visit: ${registryUrl}/auth/github?cli=1`);

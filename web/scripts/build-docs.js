@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
 /**
- * Build script: Convert /web/docs/*.md to public/docs-data.json
- * Single source of truth: markdown files → JSON data
+ * Build script: convert every Markdown file under /web/docs into public/docs-data.json.
+ * Single source of truth: the docs tree → JSON consumed by the in-app docs viewer.
+ * Each .md becomes one navigable section, grouped by its top-level folder.
  */
 
 import fs from 'fs';
@@ -18,157 +19,121 @@ const __dirname = path.dirname(__filename);
 
 const docsRoot = path.join(__dirname, '..', 'docs');
 const publicDir = path.join(__dirname, '..', 'public');
+const outputFile = path.join(publicDir, 'docs-data.json');
 
 // Configure marked with highlight.js
 marked.use({
   useNewRenderer: true,
   renderer: {
     code({ text, lang }) {
+      // Mermaid blocks are rendered client-side by the docs viewer.
+      // Emit the raw source in a <pre.mermaid> container for mermaid.run() to pick up.
+      if (lang === 'mermaid') {
+        const escaped = text
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+        return `<pre class="mermaid">${escaped}</pre>\n`;
+      }
       try {
         if (lang && hljs.getLanguage(lang)) {
           const highlighted = hljs.highlight(text, { language: lang }).value;
           return `<pre><code class="hljs language-${lang}">${highlighted}</code></pre>\n`;
         }
-        return `<pre><code>${text}</code></pre>\n`;
       } catch (e) {
-        return `<pre><code>${text}</code></pre>\n`;
+        /* fall through to plain */
       }
-    }
-  }
+      return `<pre><code>${text}</code></pre>\n`;
+    },
+  },
 });
-const outputFile = path.join(publicDir, 'docs-data.json');
 
-// Map section IDs to markdown files
-const sectionMap = {
-  quickstart: {
-    label: 'Quickstart',
-    file: 'guides/PUBLISHING_QUICKSTART.md',
-    extractSection: 'step-by-step'
-  },
-  installation: {
-    label: 'Installation',
-    file: 'reference/CLI_COMMANDS.md',
-    extractSection: 'installation'
-  },
-  configuration: {
-    label: 'Configuration',
-    file: 'reference/CONFIG.md',
-    extractSection: null
-  },
-  cli: {
-    label: 'CLI Reference',
-    file: 'reference/CLI_COMMANDS.md',
-    extractSection: null
-  },
-  'best-practices': {
-    label: 'Best Practices',
-    file: 'guides/PUBLISHING_QUICKSTART.md',
-    extractSection: 'best-practices'
-  },
-  publishing: {
-    label: 'Publishing',
-    file: 'guides/PUBLISHING.md',
-    extractSection: null
-  },
-  philosophy: {
-    label: 'Philosophy',
-    file: 'CONCEPTS.md',
-    extractSection: 'core-concepts'
-  }
+// Folder → display group. Order here drives sidebar order; unknown folders append.
+const GROUP_ORDER = ['Overview', 'Guides', 'Reference', 'Operations', 'Security'];
+const FOLDER_LABELS = {
+  '': 'Overview',
+  guides: 'Guides',
+  reference: 'Reference',
+  operations: 'Operations',
+  security: 'Security',
 };
 
-// Extract section from markdown by heading
-function extractSection(content, sectionId) {
-  if (!sectionId) return content;
-
-  const lines = content.split('\n');
-  const result = [];
-  let capturing = false;
-  let foundSection = false;
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-
-    // Look for heading matching section ID (case-insensitive, spaces to hyphens)
-    if (line.match(/^#+\s/) && !foundSection) {
-      const headingText = line.replace(/^#+\s+/, '').toLowerCase().replace(/\s+/g, '-');
-      if (headingText.includes(sectionId.replace(/-/g, '').toLowerCase())) {
-        foundSection = true;
-        capturing = true;
-        result.push(line);
-        continue;
-      }
-    }
-
-    // Stop capturing at next same-level heading
-    if (capturing && foundSection && line.match(/^#+\s/) && !line.match(/^###/)) {
-      // Hit a new top-level section, stop
-      break;
-    }
-
-    if (capturing) {
-      result.push(line);
-    }
-  }
-
-  return result.length > 0 ? result.join('\n') : content;
+// slug "reference/CLI_COMMANDS" — stable id, also used by ?section= deep links.
+function toSlug(relPath) {
+  return relPath.replace(/\.md$/i, '');
 }
 
-// Read and process markdown files
+function groupFor(relPath) {
+  const top = relPath.includes(path.sep) ? relPath.split(path.sep)[0] : '';
+  return FOLDER_LABELS[top] || top.charAt(0).toUpperCase() + top.slice(1);
+}
+
+// Label = first H1, else prettified filename.
+function labelFor(content, relPath) {
+  const h1 = content.match(/^#\s+(.+)$/m);
+  if (h1) return h1[1].trim();
+  return path.basename(relPath, '.md').replace(/[_-]/g, ' ');
+}
+
+// Rewrite relative links to other docs (foo/bar.md#anchor) into in-app ?section= links.
+function rewriteLinks(html, fromSlug) {
+  const fromDir = path.posix.dirname(fromSlug);
+  return html.replace(/href="([^"]+\.md)(#[^"]*)?"/gi, (match, target, anchor = '') => {
+    if (/^[a-z]+:\/\//i.test(target)) return match; // absolute URL
+    let resolved = target.startsWith('/')
+      ? target.slice(1)
+      : path.posix.normalize(path.posix.join(fromDir, target));
+    if (resolved.startsWith('..')) return match; // points outside docs tree (e.g. ../../../README.md)
+    return `href="?section=${toSlug(resolved)}"${anchor}`;
+  });
+}
+
+function walk(dir, base = '') {
+  const files = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const rel = base ? path.join(base, entry.name) : entry.name;
+    if (entry.isDirectory()) {
+      files.push(...walk(path.join(dir, entry.name), rel));
+    } else if (entry.isFile() && entry.name.toLowerCase().endsWith('.md')) {
+      files.push(rel);
+    }
+  }
+  return files;
+}
+
 function buildDocsData() {
   const sections = [];
 
-  for (const [id, config] of Object.entries(sectionMap)) {
-    const filePath = path.join(docsRoot, config.file);
-
-    if (!fs.existsSync(filePath)) {
-      console.warn(`⚠ File not found: ${filePath}`);
-      continue;
-    }
-
+  for (const rel of walk(docsRoot)) {
+    const slug = toSlug(rel).split(path.sep).join('/');
     try {
-      let content = fs.readFileSync(filePath, 'utf8');
-
-      // Extract section if specified
-      if (config.extractSection) {
-        content = extractSection(content, config.extractSection);
-      }
-
-      // Convert markdown to HTML
-      const html = marked(content);
-
+      const raw = fs.readFileSync(path.join(docsRoot, rel), 'utf8');
+      const html = rewriteLinks(marked(raw), slug);
       sections.push({
-        id,
-        label: config.label,
-        content: html
+        id: slug,
+        label: labelFor(raw, rel),
+        group: groupFor(rel),
+        content: html,
       });
-
-      console.log(`✓ ${id}: ${config.file}`);
+      console.log(`✓ ${slug}`);
     } catch (err) {
-      console.error(`✗ Error processing ${config.file}:`, err.message);
+      console.error(`✗ ${rel}:`, err.message);
     }
   }
+
+  // Sort by group order, then by label within a group.
+  sections.sort((a, b) => {
+    const ga = GROUP_ORDER.indexOf(a.group);
+    const gb = GROUP_ORDER.indexOf(b.group);
+    const oa = ga === -1 ? GROUP_ORDER.length : ga;
+    const ob = gb === -1 ? GROUP_ORDER.length : gb;
+    return oa - ob || a.group.localeCompare(b.group) || a.label.localeCompare(b.label);
+  });
 
   return { sections };
 }
 
-// Write JSON file
-function writeDocsData() {
-  const data = buildDocsData();
-
-  // Ensure public directory exists
-  if (!fs.existsSync(publicDir)) {
-    fs.mkdirSync(publicDir, { recursive: true });
-  }
-
-  fs.writeFileSync(outputFile, JSON.stringify(data, null, 2));
-  console.log(`\n✓ Generated: ${outputFile} (${data.sections.length} sections)`);
-}
-
-// Run
-try {
-  writeDocsData();
-} catch (err) {
-  console.error('Build failed:', err);
-  process.exit(1);
-}
+const data = buildDocsData();
+if (!fs.existsSync(publicDir)) fs.mkdirSync(publicDir, { recursive: true });
+fs.writeFileSync(outputFile, JSON.stringify(data, null, 2));
+console.log(`\n✓ Generated ${outputFile} (${data.sections.length} sections)`);

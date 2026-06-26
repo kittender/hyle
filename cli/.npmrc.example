@@ -1,0 +1,14 @@
+# Publish the Hylé CLI to a private registry (e.g. JFrog Artifactory) instead of npmjs.
+# Copy to .npmrc and fill in. For a scoped package, scope the registry line.
+#
+# Official npmjs (default — no .npmrc needed):
+#   npm publish
+#
+# Artifactory / private registry:
+registry=https://your-company.jfrog.io/artifactory/api/npm/npm-local/
+# Auth token (prefer an env var in CI, not a committed file):
+//your-company.jfrog.io/artifactory/api/npm/npm-local/:_authToken=${NPM_TOKEN}
+#
+# Install from the private registry on a developer machine:
+#   npm config set registry https://your-company.jfrog.io/artifactory/api/npm/npm-local/
+#   npm install -g hyle

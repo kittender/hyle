@@ -1,57 +1,46 @@
 import { SQLiteDatabase } from "./db";
 import { LocalStorage } from "./storage";
-import { createAuthFromEnv } from "./auth";
+import { createAuth } from "./auth";
+import { loadRegistryConfig } from "./config";
 import { route } from "./router";
 
-const PORT = parseInt(process.env.PORT || "3000");
-const DB_PATH = process.env.DB_PATH || "./hyle-registry.db";
-const BUNDLES_PATH = process.env.BUNDLES_PATH || "./bundles";
-const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
+const cfg = loadRegistryConfig();
 
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  console.error("ERROR: JWT_SECRET environment variable is required. Generate with: openssl rand -hex 32");
-  process.exit(1);
-}
-
-const db = new SQLiteDatabase(DB_PATH);
-const storage = new LocalStorage(BUNDLES_PATH);
-const auth = createAuthFromEnv();
+const db = new SQLiteDatabase(cfg.dbPath);
+const storage = new LocalStorage(cfg.bundlesPath);
+const auth = createAuth(cfg.auth);
 
 db.init();
 await storage.init();
 
-const corsOrigin = process.env.HYLE_WEB_ORIGIN;
-if (!corsOrigin) {
-  console.error("ERROR: HYLE_WEB_ORIGIN environment variable is required (e.g., https://app.hylé.com)");
-  process.exit(1);
-}
-
 const corsHeaders = {
-  "Access-Control-Allow-Origin": corsOrigin,
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Origin": cfg.webOrigin,
+  "Access-Control-Allow-Methods": "GET, POST, PATCH, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
 const addCorsHeaders = (response: Response): Response => {
-  Object.entries(corsHeaders).forEach(([key, value]) => {
+  for (const [key, value] of Object.entries(corsHeaders)) {
     response.headers.set(key, value);
-  });
+  }
   return response;
 };
 
+const authEnabled = cfg.auth.mode !== "none";
+const jwtSecret = cfg.auth.mode === "none" ? "" : cfg.auth.jwtSecret;
+
 const server = Bun.serve({
-  port: PORT,
+  port: cfg.port,
   fetch: async (req: Request) => {
     if (req.method === "OPTIONS") {
-      const response = new Response(null, { status: 204 });
-      return addCorsHeaders(response);
+      return addCorsHeaders(new Response(null, { status: 204 }));
     }
-    const response = await route(req, db, storage, auth, BASE_URL, JWT_SECRET);
+    const response = await route(req, db, storage, auth, cfg, jwtSecret, authEnabled);
     return addCorsHeaders(response);
   },
 });
 
-console.log(`🚀 Hylé Registry running on ${BASE_URL}`);
-console.log(`📦 Bundles stored in: ${BUNDLES_PATH}`);
-console.log(`🗄️  Database: ${DB_PATH}`);
+console.log(`🚀 Hylé Registry running on ${cfg.baseUrl} (port ${server.port})`);
+console.log(`🔐 Auth: ${cfg.auth.mode}${authEnabled ? "" : " (local/dev — no SSO, publish trusts manifest author)"}`);
+console.log(`📦 Bundles: ${cfg.bundlesPath}`);
+console.log(`🗄️  Database: ${cfg.dbPath}`);

@@ -4,7 +4,7 @@ import type { HyleManifest } from "../../../cli/src/manifest";
 import type { IDatabase } from "../db";
 import type { IStorage } from "../storage";
 import type { IAuth } from "../auth";
-import { scanManifest, scanBundleFiles } from "../scan";
+import { scanManifest, scanBundleFiles, manifestHasFiles } from "../scan";
 import { verifyJwt } from "../jwt";
 
 export async function handlePublish(
@@ -12,31 +12,35 @@ export async function handlePublish(
   db: IDatabase,
   storage: IStorage,
   auth: IAuth,
-  jwtSecret: string = ""
+  jwtSecret: string = "",
+  authEnabled: boolean = true
 ): Promise<Response> {
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return new Response(JSON.stringify({ error: "Missing or invalid Authorization header" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-
-  const token = authHeader.slice(7);
   let manifestAuthorUsername: string | null = null;
 
-  // Verify token using auth system (JWT or OIDC)
-  const authPayload = await auth.verifyToken(token);
-  if (!authPayload) {
-    return new Response(JSON.stringify({ error: "Invalid authentication token" }), {
-      status: 403,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
+  // When auth is enabled, require + verify a token and bind the author to the
+  // authenticated user. When disabled (HYLE_AUTH_PROVIDER=none / local dev),
+  // skip auth entirely and trust the manifest author.
+  if (authEnabled) {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Missing or invalid Authorization header" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
 
-  // Extract username from JWT payload
-  if ("username" in authPayload) {
-    manifestAuthorUsername = authPayload.username;
+    const token = authHeader.slice(7);
+    const authPayload = await auth.verifyToken(token);
+    if (!authPayload) {
+      return new Response(JSON.stringify({ error: "Invalid authentication token" }), {
+        status: 403,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if ("username" in authPayload) {
+      manifestAuthorUsername = authPayload.username;
+    }
   }
 
   let manifest: HyleManifest;
@@ -142,15 +146,8 @@ export async function handlePublish(
 
   // Spam detection: flag if bundle is tiny and has no files
   let isSpam = false;
-  if (bundleData.length < 512) {
-    const hasFiles =
-      (manifest.ontology?.length ?? 0) > 0 ||
-      (manifest.craft?.length ?? 0) > 0 ||
-      (manifest.identities?.length ?? 0) > 0 ||
-      (manifest.ethics?.length ?? 0) > 0;
-    if (!hasFiles) {
-      isSpam = true;
-    }
+  if (bundleData.length < 512 && !manifestHasFiles(manifest)) {
+    isSpam = true;
   }
 
   const isStable = !manifest.version.includes("-snapshot");

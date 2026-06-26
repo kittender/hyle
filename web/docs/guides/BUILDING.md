@@ -55,16 +55,9 @@ git commit -m "docs: add Claude context"
 
 ## Step 2: Organize Into Four Domains
 
-Categorize your files into: **ontology, craft, identities, ethics**.
-
-### Domain breakdown
-
-| Domain | What | Examples |
-|--------|------|----------|
-| **Ontology** | Knowledge: what, why, specs | CLAUDE.md, spec.md,<br>features.md, EXAMPLES.md |
-| **Craft** | Technical: how, practices, tools | ARCHITECTURE.md, package.json,<br>pom.xml, docker-compose.yml,<br>.mcp.json |
-| **Identities** | Personas: who, agent roles | AGENTS.md,<br>.claude/agents/analyzer.md,<br>.claude/agents/responder.md |
-| **Ethics** | Constraints: limits, compliance | policies/*.cedar, audit.md,<br>PRIVACY.md, compliance/*.md |
+Categorize your files into **ontology, craft, identities, ethics**. Each file
+belongs to exactly one — see [Four domains](../CONCEPTS.md#four-domains-what-goes-where)
+for the decision matrix (what goes where, and why).
 
 ### Organize your files
 
@@ -221,38 +214,26 @@ blueprint:
 
 ## Step 6: Add Model Recommendations
 
-### No recommendations yet
-
-```yaml
-# (no recommendations section — users try any model)
-```
-
-### With recommendations (tested models)
+Recommendations = which LLMs you tested (feedback, not enforcement). Optional.
 
 ```yaml
 recommendations:
-  universal:
-    - anthropic/claude-sonnet-4-6
-    - openai/gpt-4o
-  budget:
-    - anthropic/claude-haiku-4-5
-    - openai/gpt-4o-mini
-  offline:
-    - ollama/qwen2.5:14b
+  universal: [anthropic/claude-sonnet-4-6, openai/gpt-4o]
+  budget:    [anthropic/claude-haiku-4-5, openai/gpt-4o-mini]
+  offline:   [ollama/qwen2.5:14b]
 ```
 
-**Decision tree:**
+- First version, untested broadly? **Skip it** — no block means `universal`.
+- Want budget/offline users to find you? **List those categories** + add [tags](../reference/TAGS.md).
 
-- First version? **Skip recommendations for now**
-- Tested with multiple models? **Add recommendations block**
-- Want budget-conscious users to find it? **List in budget category**
-- Want discoverability by model? **Use tags** (e.g., `claude`, `gemini`, `ollama`, `qwen`, `codex`, `local`, `hermes`, `bedrock`)
+Full category list, syntax, and cost guidance: **[Models](../reference/MODELS.md)**.
 
 ---
 
 ## Step 7: Declare Dependencies
 
-What external tools does this blueprint require?
+What external tools does this blueprint require? Declare each with `name`,
+`version`, and official `url`:
 
 ```yaml
 dependencies:
@@ -264,36 +245,9 @@ dependencies:
     url: https://github.com/cedar-policy/cedar
 ```
 
-**Common dependencies:**
-
-```yaml
-# Node.js
-- name: node
-  version: ">=18.0"
-  url: https://nodejs.org
-
-# Python
-- name: python
-  version: ">=3.9"
-  url: https://python.org
-
-# Java
-- name: java
-  version: ">=11"
-  url: https://adoptopenjdk.net
-
-# Docker
-- name: docker
-  version: ">=20.0"
-  url: https://www.docker.com
-
-# Cedar (policy language)
-- name: cedar
-  version: ">=3.0"
-  url: https://github.com/cedar-policy/cedar
-```
-
-**On pull:** Hylé checks each tool exists + version matches. If not, warns user.
+**On pull:** Hylé checks each tool exists + version matches; warns if not (install
+still proceeds). Field reference, resolution order, and per-OS overrides:
+**[Configuration → Dependencies](../reference/CONFIG.md#dependencies)**.
 
 ---
 
@@ -433,114 +387,15 @@ Post to community:
 
 ## Common Patterns
 
-### Pattern: Team Library
-
-```yaml
-name: team-lib
-author: acme-platform
-# Multiple teams can depend on this base
-
-blueprint:
-  ontology:
-    - docs/standards.md
-  ethics:
-    - policies/*.cedar
-```
-
-Other teams extend it:
-
-```yaml
-# In their project
-extends:
-  - acme-platform/team-lib@1.0.0
-```
-
-### Pattern: Language-Specific Starter
-
-```yaml
-name: claude-python-fastapi
-author: your-name
-tags: [python, fastapi, claude, agents]
-
-dependencies:
-  - name: python
-    version: ">=3.10"
-    url: https://python.org
-  - name: pip
-    version: ">=21"
-    url: https://pip.pypa.io
-
-blueprint:
-  ontology:
-    - CLAUDE.md
-  craft:
-    - ARCHITECTURE.md
-    - pyproject.toml
-    - requirements.txt
-  identities:
-    - AGENTS.md
-```
-
-### Pattern: Enterprise with Compliance
-
-```yaml
-name: secure-agent-base
-author: mycompany-platform
-
-blueprint:
-  ontology:
-    - docs/compliance.md
-  craft:
-    - ARCHITECTURE.md
-  identities:
-    - AGENTS.md
-  ethics:
-    - policies/data-handling.cedar
-    - policies/logging.cedar
-    - PRIVACY.md
-```
+Full manifest recipes — team library (`extends`), language starters, enterprise
+compliance, multi-provider — live in **[Configuration → Patterns & Use Cases](../reference/CONFIG.md#patterns--use-cases)**.
 
 ---
 
-## Troubleshooting
+## Hit an error?
 
-### "name + author already exists"
-
-Someone else published a blueprint with same name. Choose different name:
-
-```yaml
-name: my-awesome-project-v2
-# or
-name: my-awesome-project-template
-```
-
-### "[flagged] — contains hardcoded credentials"
-
-Security scan detected secrets:
-
-```bash
-# Find & remove
-grep -r "sk-" . --include="*.md" --include="*.yaml"
-
-# Add to .hyleignore
-echo "*.key" >> .hyleignore
-
-# Recommit & re-publish
-git add . && git commit -m "security: remove secrets"
-git push
-hyle push  # New version not flagged
-```
-
-### "Git remote not found"
-
-```bash
-# Add GitHub repo as remote
-git remote add origin https://github.com/you/your-project
-git push -u origin main
-
-# Re-publish
-hyle push
-```
+Publish-time errors (`name + author already exists`, `[flagged]`, `Git remote not
+found`, checksum mismatch) with fixes: **[Troubleshooting](TROUBLESHOOTING.md)**.
 
 ---
 

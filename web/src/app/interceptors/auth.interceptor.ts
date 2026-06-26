@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from '../services/auth.service';
+import { environment } from '../../environments/environment';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
@@ -9,7 +10,8 @@ export class AuthInterceptor implements HttpInterceptor {
 
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     const token = this.authService.getToken();
-    if (token && (req.url.includes('localhost:3000') || req.url.includes('/api'))) {
+    // Only attach the token to calls to our own registry API.
+    if (token && req.url.startsWith(environment.apiBaseUrl)) {
       req = req.clone({
         setHeaders: {
           Authorization: `Bearer ${token}`,

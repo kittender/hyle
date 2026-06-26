@@ -3,7 +3,7 @@
 Architectural principles, design trade-offs, and known issues.
 
 **Quick Links:**
-- [ROADMAP.md](ROADMAP.md) — Roadmap, phases (unreleased)
+- [BACKLOG.md](../BACKLOG.md) — Possible evolutions (unreleased / WIP)
 - [SECURITY_AUDIT.md](SECURITY_AUDIT.md) — Threat model, P0-P10 findings
 - [DEPLOYMENT.md](DEPLOYMENT.md) — Operations, monitoring, runbooks
 - [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) — Pre-ship checklist
@@ -41,12 +41,51 @@ graph LR
 
 ---
 
----
+## Data Model
 
-## See Also
+What the registry actually stores. Key principle: **the registry holds metadata +
+checksums only — file content lives on the author's GitHub** and is verified against
+`sha256` on every pull.
 
-- [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) — Current constraints + known issues (what doesn't work yet)
-- [SECURITY_AUDIT.md](SECURITY_AUDIT.md) — Threat model, P0-P10 findings, verification checklist
+```mermaid
+erDiagram
+    AUTHOR ||--o{ BLUEPRINT : publishes
+    BLUEPRINT ||--|{ VERSION : has
+    VERSION ||--|{ FILE : lists
+    VERSION ||--o{ DEPENDENCY : requires
+    VERSION ||--o| VERSION : extends
+
+    AUTHOR {
+        string name PK
+        string trust_tier "unverified | community | verified"
+        string oauth_id
+    }
+    BLUEPRINT {
+        string name PK
+        string author FK
+        string url "GitHub repo"
+    }
+    VERSION {
+        string semver PK
+        bool stable
+        bool flagged
+        string git_tag "hyle-v{semver}"
+    }
+    FILE {
+        string path PK
+        string domain "ontology | craft | identities | ethics"
+        string sha256 "content lives on GitHub, verified on pull"
+    }
+    DEPENDENCY {
+        string name PK
+        string version_constraint
+        string url
+    }
+```
+
+- `name + author + semver` is the uniqueness key the registry enforces.
+- `extends` is self-referential and capped at depth 2 (no grandparent chains).
+- `FILE.domain` is exactly one of the four — see [Four domains](../CONCEPTS.md#four-domains-what-goes-where).
 
 ---
 
@@ -63,44 +102,11 @@ graph LR
 
 ---
 
-## Tested Models (Recommendations)
-
-Blueprints declare recommendations: which LLMs author tested.
-
-```yaml
-recommendations:
-  universal:
-    - anthropic/claude-sonnet-4-6
-    - openai/gpt-4o
-    - ollama/qwen2.5:14b
-  
-  budget:
-    - anthropic/claude-haiku-4-5
-    - openai/gpt-4o-mini
-    - ollama/qwen2.5:7b
-  
-  offline:
-    - ollama/qwen2.5:14b
-  
-  harness:
-    - bedrock/anthropic.claude-3-sonnet
-    - cursor/claude-sonnet-4-6
-```
-
-Users choose their LLM freely. Recommendations help discover tested setups. `hyle search` filters by tag (e.g., `--tag budget`, `--tag bedrock`) — authors should tag blueprints to match their recommendation categories.
-
----
-
----
-
 ## See Also
 
-- [README.md](../README.md) — Product overview
-- [CONFIG.md](CONFIG.md) — Configuration reference
-- [ROADMAP.md](../ROADMAP.md) — Roadmap, phases, implemented features
-- [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) — Current constraints
-- [SECURITY_AUDIT.md](../security/SECURITY_AUDIT.md) — Threat model, findings
-- [DEPLOYMENT_QUICK_START.md](../operations/DEPLOYMENT_QUICK_START.md) — 5-minute setup
-- [DEPLOYMENT.md](../operations/DEPLOYMENT.md) — Production operations
-- [CONTRIBUTING.md](../guides/CONTRIBUTING.md) — Dev setup, testing
-- [RELEASE_CHECKLIST.md](../operations/RELEASE_CHECKLIST.md) — Pre-ship checklist
+- [Core concepts](../CONCEPTS.md) — diagrams: pull/publish flows, domains, trust, models
+- [CONFIG.md](CONFIG.md) — configuration + manifest field reference
+- [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) — current constraints
+- [SECURITY_AUDIT.md](../security/SECURITY_AUDIT.md) — threat model, P0–P10 findings
+- [DEPLOYMENT.md](../operations/DEPLOYMENT.md) — operations (incl. quick start)
+- [BACKLOG.md](../BACKLOG.md) — possible evolutions

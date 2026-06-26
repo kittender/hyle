@@ -1,0 +1,27 @@
+# Production / on-prem / cloud override.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Enables real SSO and public URLs. All values come from .env (or your secret
+# store / orchestrator). Same images as local — only configuration changes.
+services:
+  registry:
+    environment:
+      # Public HTTPS URLs (terminate TLS at a reverse proxy in front of these).
+      HYLE_REGISTRY_URL: "${HYLE_REGISTRY_URL:?set in .env}"
+      HYLE_WEB_ORIGIN: "${HYLE_WEB_URL:?set in .env}"
+      # SSO. "github" uses GitHub OAuth; "oauth2" is generic (GitLab/Keycloak/etc).
+      HYLE_AUTH_PROVIDER: "${HYLE_AUTH_PROVIDER:?set github or oauth2}"
+      JWT_SECRET: "${JWT_SECRET:?generate with openssl rand -hex 32}"
+      HYLE_AUTH_CLIENT_ID: "${HYLE_AUTH_CLIENT_ID:?required}"
+      HYLE_AUTH_CLIENT_SECRET: "${HYLE_AUTH_CLIENT_SECRET:?required}"
+      # Only needed for HYLE_AUTH_PROVIDER=oauth2 (GitLab/Bitbucket/Keycloak/...):
+      HYLE_AUTH_AUTHORIZE_URL: "${HYLE_AUTH_AUTHORIZE_URL:-}"
+      HYLE_AUTH_TOKEN_URL: "${HYLE_AUTH_TOKEN_URL:-}"
+      HYLE_AUTH_USERINFO_URL: "${HYLE_AUTH_USERINFO_URL:-}"
+      HYLE_WEB_URL: "${HYLE_WEB_URL:?set in .env}"
+    # ports are typically not published directly in prod — a reverse proxy
+    # (Caddy/Traefik/nginx) fronts these. Remove the public mapping if so.
+
+  web:
+    environment:
+      HYLE_REGISTRY_URL: "${HYLE_REGISTRY_URL:?set in .env}"

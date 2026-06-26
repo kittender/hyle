@@ -624,7 +624,7 @@ curl -s "https://registry.hylé.com/blueprints/author/name/1.0.0" | \
 
 ## Changelog
 
-### API v2.0.0 (Current – Phase 4)
+### API v2.0.0 (Current)
 
 - All core endpoints from v1.0.0
 - **New**: Stars, reviews, ratings

@@ -1,0 +1,32 @@
+# Hylé — local stack. Clone, then: `docker compose up`.
+# Defaults to auth=none + SQLite so it runs with zero secrets for local testing.
+# For staging/prod, layer docker-compose.prod.yml on top (see DEPLOYMENT.md).
+services:
+  registry:
+    build: ./registry
+    environment:
+      # URL the registry advertises and the web/CLI talk to.
+      HYLE_REGISTRY_URL: ${HYLE_REGISTRY_URL:-http://localhost:3000}
+      # CORS: which web origin may call the API.
+      HYLE_WEB_ORIGIN: ${HYLE_WEB_URL:-http://localhost:8080}
+      # Auth provider: none = local/dev (no SSO, publish trusts manifest author).
+      HYLE_AUTH_PROVIDER: ${HYLE_AUTH_PROVIDER:-none}
+    ports:
+      - "${REGISTRY_PORT:-3000}:3000"
+    volumes:
+      - registry-data:/data
+    restart: unless-stopped
+
+  web:
+    build: ./web
+    environment:
+      # Injected into config.js at container start — the URL the browser uses.
+      HYLE_REGISTRY_URL: ${HYLE_REGISTRY_URL:-http://localhost:3000}
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      - registry
+    restart: unless-stopped
+
+volumes:
+  registry-data:

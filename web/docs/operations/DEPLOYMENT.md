@@ -1,11 +1,57 @@
 # Hylé Deployment Guide
 
-Self-host Hylé registry. Three proven setups, from simple to industrial-grade.
+Self-host the full Hylé stack (registry + web). The **same Docker images** run
+locally and in any remote environment — only configuration changes between them.
 
-**Choose your path:**
-- **5-minute test?** → [DEPLOYMENT_QUICK_START.md](DEPLOYMENT_QUICK_START.md) (Docker + SQLite, local only)
-- **Production (teams <500)?** → [Tier 2](#tier-2-intermediate-teamsprodu) (VPS + PostgreSQL)
-- **High availability (500+ users)?** → [Tier 3](#tier-3-enterprise-high-scale) (multi-node, replicated DB)
+> **Just want a registry running in 5 minutes?** Use the
+> [Self-host quickstart](DEPLOYMENT_QUICK_START.md). This guide is the production
+> reference: URL matrix, hosted-platform recipes, scaling, monitoring, incident response.
+
+## Start here: Docker Compose (any environment)
+
+Local evaluation, on-prem, AWS/GCP/Azure — all the same two commands, different
+`.env`:
+
+```bash
+# Local test — SQLite + auth=none, zero secrets:
+docker compose up --build
+
+# Staging / pre-prod / prod — real SSO + public URLs:
+cp .env.example .env   # set URLs, provider, secrets
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
+
+See [/QUICKSTART.md](../QUICKSTART.md) for the end-to-end walkthrough and
+[CONFIG.md](../reference/CONFIG.md#self-hosting-environment-variables) for every
+variable.
+
+### Per-environment URL matrix
+
+| Target     | `HYLE_REGISTRY_URL`              | `HYLE_WEB_URL`               | `HYLE_AUTH_PROVIDER` | DB |
+|------------|----------------------------------|------------------------------|----------------------|----|
+| Local test | `http://localhost:3000`          | `http://localhost:8080`      | `none`               | SQLite (volume) |
+| Staging    | `https://registry.staging.acme`  | `https://hyle.staging.acme`  | `github` / `oauth2`  | SQLite (volume) |
+| Prod       | `https://registry.acme.com`      | `https://hyle.acme.com`      | `github` / `oauth2`  | SQLite (volume) |
+
+> Authentication is **opt-in** and pluggable. `github` = GitHub OAuth; `oauth2`
+> = generic OAuth2/OIDC pointed at GitLab, Bitbucket, Keycloak, Okta, etc. via
+> `HYLE_AUTH_*` URLs. Terminate TLS at a reverse proxy (Caddy/Traefik/nginx) in
+> front of the registry and web containers.
+
+> **Scaling note:** SQLite on a mounted volume is fine for evaluation, on-prem,
+> and small teams. PostgreSQL and multi-node HA are not bundled yet — the
+> database is behind an interface (`IDatabase`) so a Postgres adapter can be
+> added without touching handlers. The tiers below describe target topologies
+> for that future.
+
+---
+
+## Production tiers (hosted platforms & scale)
+
+The compose flow above is the recommended path for most users. These tiers are
+reference topologies for specific needs: managed-platform hosting (Tier 1),
+single-VPS production (Tier 2), and high-scale HA (Tier 3). Pick by team size and
+load — see the [decision tree](#quick-decision-tree).
 
 ---
 

@@ -1,5 +1,25 @@
 import type { HyleManifest } from "../../../cli/src/manifest";
 
+/**
+ * True if the manifest declares any blueprint files. Files live under
+ * manifest.blueprint.* in the current schema; older manifests put them at the
+ * top level, so check both.
+ */
+export function manifestHasFiles(manifest: HyleManifest): boolean {
+  const bp = (manifest as { blueprint?: Record<string, unknown> }).blueprint;
+  const len = (v: unknown) => (Array.isArray(v) ? v.length : 0);
+  return (
+    len(bp?.ontology) > 0 ||
+    len(bp?.craft) > 0 ||
+    len(bp?.identities) > 0 ||
+    len(bp?.ethics) > 0 ||
+    len(manifest.ontology) > 0 ||
+    len(manifest.craft) > 0 ||
+    len(manifest.identities) > 0 ||
+    len(manifest.ethics) > 0
+  );
+}
+
 export interface ScanFinding {
   severity: "critical" | "warning" | "info";
   category: "suspicious_pattern" | "spam" | "invalid_url" | "behavioral_keyword";
@@ -114,12 +134,10 @@ export function scanManifest(manifest: HyleManifest, bundleSize: number): ScanRe
     });
   }
 
-  // Empty file arrays spam detection
-  const hasFiles =
-    (manifest.ontology?.length ?? 0) > 0 ||
-    (manifest.craft?.length ?? 0) > 0 ||
-    (manifest.identities?.length ?? 0) > 0 ||
-    (manifest.ethics?.length ?? 0) > 0;
+  // Empty file arrays spam detection.
+  // Files live under manifest.blueprint.* (current schema); fall back to
+  // top-level for older manifests.
+  const hasFiles = manifestHasFiles(manifest);
 
   if (!hasFiles && bundleSize < 512) {
     findings.push({

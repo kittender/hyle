@@ -1,6 +1,16 @@
 # Core Concepts
 
-Visual guides to key Hylé concepts.
+The mental model for Hylé, in diagrams. **This is the single home for these
+concepts** — guides and reference link back here instead of repeating them.
+
+| Concept | Jump to |
+|---|---|
+| How a pull works | [Pull, step by step](#pull-step-by-step) |
+| How a publish works | [Publish, step by step](#publish-step-by-step) |
+| The four file domains | [Four domains](#four-domains-what-goes-where) |
+| Versioning commands | [snapshot vs push vs release](#publish-decision-tree-snapshot-vs-push-vs-release) |
+| Author trust | [Trust tiers](#trust-tiers-how-authors-build-credibility) |
+| Choosing an LLM | [Model compatibility](#model-compatibility-choosing-your-llm) |
 
 ---
 
@@ -38,6 +48,61 @@ graph LR
 - `hyle pull --dry-run` — shows diff WITHOUT applying (inspect before committing)
 - `git diff` — see exact changes (git history preserved)
 - `hyle verify` — sanity check (deps, checksums, models available)
+
+---
+
+## Pull, Step by Step
+
+What `hyle pull` actually does. The registry only holds metadata + checksums; file
+content comes from the author's GitHub, verified against SHA-256.
+
+```mermaid
+sequenceDiagram
+    actor U as You
+    participant CLI as hyle CLI
+    participant Reg as Registry
+    participant GH as GitHub (source)
+
+    U->>CLI: hyle pull author/name
+    CLI->>Reg: fetch manifest + checksums
+    Reg-->>CLI: hyle.yaml + SHA-256
+    CLI->>GH: fetch referenced files
+    GH-->>CLI: file contents
+    CLI->>CLI: verify SHA-256
+    CLI->>CLI: check declared dependencies
+    CLI-->>U: show diff + paid-service warnings
+    U->>CLI: approve
+    CLI->>CLI: apply files to project
+```
+
+---
+
+## Publish, Step by Step
+
+What `hyle push` does. Your `hyle.yaml` is the **allowlist** — only files it names
+ship; the registry stores checksums, never your files.
+
+```mermaid
+sequenceDiagram
+    actor A as Author
+    participant CLI as hyle CLI
+    participant Git as Git / GitHub
+    participant Reg as Registry
+
+    A->>CLI: hyle init
+    CLI-->>A: hyle.yaml (name+author unique)
+    A->>CLI: hyle ontology / craft / identities / ethics
+    CLI-->>A: manifest populated (the allowlist)
+    A->>CLI: hyle push
+    CLI->>Git: verify files committed + pushed
+    CLI->>Git: tag hyle-v{version}
+    CLI->>Reg: register manifest + per-file SHA-256
+    Reg->>Reg: async security scan
+    Reg-->>A: listed (or [flagged])
+```
+
+See [snapshot vs push vs release](#publish-decision-tree-snapshot-vs-push-vs-release)
+for which command bumps which version.
 
 ---
 

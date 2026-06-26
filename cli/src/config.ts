@@ -8,8 +8,10 @@ export interface HyleConfig {
 	[key: string]: unknown;
 }
 
+// Default to a local registry so `docker compose up` + CLI works out of the box.
+// Point at a remote registry by setting remote_url in .hyle or HYLE_REGISTRY_URL.
 const DEFAULTS: HyleConfig = {
-	remote_url: "https://registry.hyle.eu",
+	remote_url: "http://localhost:3000",
 };
 
 export function loadConfig(cwd = process.cwd()): HyleConfig {
@@ -23,13 +25,22 @@ export function loadConfig(cwd = process.cwd()): HyleConfig {
 		}
 	}
 
-	// Allow env var override for development/testing
+	// Env override (CI, scripts, multi-env workflows).
 	if (process.env.HYLE_REGISTRY_URL) {
 		merged.remote_url = process.env.HYLE_REGISTRY_URL;
 	}
 
 	validateRemoteUrl(merged.remote_url);
 	return merged;
+}
+
+function isLoopback(hostname: string): boolean {
+	return (
+		hostname === "localhost" ||
+		hostname === "127.0.0.1" ||
+		hostname === "::1" ||
+		hostname === "0.0.0.0"
+	);
 }
 
 function validateRemoteUrl(url: string): void {
@@ -43,19 +54,15 @@ function validateRemoteUrl(url: string): void {
 	}
 
 	const allowInsecure = process.env.HYLE_ALLOW_INSECURE === "1";
+	const loopback = isLoopback(parsed.hostname);
 
-	if (parsed.protocol !== "https:" && !allowInsecure) {
+	// Loopback over http is always fine — that's the local-test path.
+	// Non-loopback must use https unless explicitly overridden.
+	if (parsed.protocol !== "https:" && !loopback && !allowInsecure) {
 		throw new Error(
-			`Invalid remote_url in .hyle config: must use https (got "${parsed.protocol}")`,
-		);
-	}
-
-	if (
-		(parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") &&
-		!allowInsecure
-	) {
-		throw new Error(
-			"Invalid remote_url in .hyle config: localhost not allowed (set HYLE_ALLOW_INSECURE=1 for development)",
+			`Invalid remote_url in .hyle config: must use https for non-local hosts ` +
+				`(got "${parsed.protocol}//${parsed.hostname}"). ` +
+				`Set HYLE_ALLOW_INSECURE=1 to override.`,
 		);
 	}
 }

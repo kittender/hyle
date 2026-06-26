@@ -308,62 +308,25 @@ recommendations:                        # Optional: LLMs you tested
     - cursor/claude-sonnet-4-6
 ```
 
-**Recommendation categories:** (freeform, define as needed)
-- `universal` — Tested with any LLM
-- `budget` — Works with cheap/small models
-- `offline` — Works with local models (Ollama, etc.)
-- `advanced` — Requires capable model (Sonnet+)
-- `harness` — Platform-specific (Bedrock, Cursor, Hermès)
-
-**If no `recommendations` block:** Blueprint has no recommendations yet.
+Categories (`universal`, `budget`, `offline`, `advanced`, `harness`) are freeform —
+define as needed. Meanings, model identifiers, and cost guidance: **[Models](MODELS.md)**.
+No block = no recommendations (users try any model).
 
 ---
 
 ### Tags & Search Discoverability
 
-Tags help users find blueprints by technology stack and LLM preferences. Use both framework/language tags and LLM provider tags.
+`tags`: array, max 20, 1–100 chars each. Mix tech, LLM provider, and capability terms
+so `hyle search` finds you. Keep them simple and searchable:
 
 ```yaml
-tags:
-  # Tech stack tags
-  - java
-  - spring-boot
-  - react
-  - typescript
-  
-  # LLM provider/model tags (simple, not exact model versions)
-  - claude          # Any Claude model
-  - anthropic       # Anthropic family
-  - openai          # OpenAI family
-  - gemini          # Google Gemini
-  - gemma           # Google Gemma
-  - ollama          # Local/offline models
-  
-  # Capability tags
-  - tdd
-  - testing
-  - security
-  - offline         # Works without internet
+tags: [java, spring, claude, tdd, testing]       # ✓ tech + LLM + capability
+tags: [anthropic/claude-sonnet-4-6]              # ✗ too specific (use `claude`)
+tags: [works-great, my-favorite]                 # ✗ not searchable
 ```
 
-**Tag guidance:**
-- **LLM tags:** Use provider name (`claude`, `anthropic`, `openai`, `gemini`, `gemma`, `ollama`) not full model string
-- **Tech tags:** Language, framework, tool (java, spring, react, typescript, tdd, testing, etc.)
-- **Capability tags:** What the blueprint does (security, compliance, offline, budget, advanced)
-- **Keep simple:** Users search with `hyle search claude java` — tags should match common search terms, not be overly specific
-
-**Examples of good tags:**
-```yaml
-tags: [java, spring, claude, tdd, testing]       # ✓ Mix LLM + tech
-tags: [python, anthropic, openai, offline]       # ✓ Multiple LLM providers
-tags: [typescript, react, gemini, api]           # ✓ Clear searchable terms
-```
-
-**Examples to avoid:**
-```yaml
-tags: [anthropic/claude-sonnet-4-6]              # ✗ Too specific
-tags: [works-great, my-favorite, needs-node-18] # ✗ Not searchable
-```
+Full vetted tag catalogue (providers, languages, frameworks, capabilities) +
+combination recipes: **[Tags](TAGS.md)**.
 
 ---
 
@@ -529,8 +492,59 @@ blueprint:
 
 ---
 
+## Self-Hosting Environment Variables
+
+These configure the **registry** and **web** services (set via `.env` / compose /
+your orchestrator). The registry parses them once at startup. New names are
+preferred; legacy aliases still work for one release.
+
+### Registry
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `HYLE_REGISTRY_URL` | `http://localhost:3000` | Public URL the API advertises (alias: `BASE_URL`) |
+| `HYLE_WEB_URL` | `http://localhost:4200` | Web UI URL, used for post-login redirects (alias: `FRONTEND_URL`) |
+| `HYLE_WEB_ORIGIN` | = `HYLE_WEB_URL` | CORS origin allowed to call the API |
+| `PORT` | `3000` | Listen port |
+| `DB_PATH` | `./hyle-registry.db` | SQLite file (use a mounted volume) |
+| `BUNDLES_PATH` | `./bundles` | Blueprint blob storage dir |
+| `HYLE_RATE_LIMIT` | `10` | Max publishes per author per hour |
+| `HYLE_AUTH_PROVIDER` | `none` | `none` \| `github` \| `oauth2` |
+
+### Auth (only when `HYLE_AUTH_PROVIDER` ≠ `none`)
+
+| Variable | Purpose |
+|----------|---------|
+| `JWT_SECRET` | **Required.** Signs session JWTs. `openssl rand -hex 32`. Boot fails if unset or `default-secret`. |
+| `HYLE_AUTH_CLIENT_ID` / `_CLIENT_SECRET` | OAuth app credentials (aliases: `GITHUB_CLIENT_ID` / `_SECRET`) |
+| `HYLE_AUTH_AUTHORIZE_URL` / `_TOKEN_URL` / `_USERINFO_URL` | OAuth2 endpoints (auto-filled for `github`; **required** for `oauth2`) |
+| `HYLE_AUTH_ID_FIELD` / `_LOGIN_FIELD` / `_EMAIL_FIELD` / `_AVATAR_FIELD` | Map provider userinfo JSON → user fields |
+
+**Safety rails:**
+- `HYLE_AUTH_PROVIDER=none` refuses to boot when `HYLE_REGISTRY_URL` is **not**
+  loopback, unless `HYLE_ALLOW_INSECURE=1`. Keeps the convenient local default
+  from leaking into a real deployment.
+- Auth being `none` makes publishing **anonymous** — only use it on machines you
+  trust (local evaluation, isolated CI).
+
+### Web
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `HYLE_REGISTRY_URL` | `http://localhost:3000` | Injected into `config.js` at container start; the URL the browser calls. One image, any environment — no rebuild. |
+
+### CLI
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `HYLE_REGISTRY_URL` | `remote_url` from `.hyle`, else `http://localhost:3000` | Registry to target |
+| `HYLE_ALLOW_INSECURE` | unset | Allow `http://` to non-loopback hosts |
+
+---
+
 ## Need Help?
 
 - **Config not working?** See [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md)
 - **How to publish?** See [PUBLISHING.md](../guides/PUBLISHING.md)
+- **Run/deploy the stack?** See [/QUICKSTART.md](../QUICKSTART.md) and [DEPLOYMENT.md](../operations/DEPLOYMENT.md)
 - **Architecture decisions?** See [ARCHITECTURE.md](ARCHITECTURE.md)

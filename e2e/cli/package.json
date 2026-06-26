@@ -1,0 +1,13 @@
+{
+  "name": "hyle-e2e-cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "End-to-end tests for the Hylé CLI against a live registry",
+  "scripts": {
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "bun-types": "latest"
+  }
+}

@@ -32,12 +32,8 @@ blueprint:
 
 ## 2. Scan and organize files
 
-Hylé covers four domains:
-
-- `ontology` — What? Specifications, goals, features, examples, data
-- `craft` — How? Architecture, design, practices, recipes
-- `identities` — Who? Agent personas, model behavior specs
-- `ethics` — Limits: constraints, compliance, security, privacy
+Hylé groups files into four domains — ontology (what), craft (how), identities (who),
+ethics (limits). [Which file goes where](../CONCEPTS.md#four-domains-what-goes-where).
 
 Auto-scan your project:
 
@@ -156,53 +152,23 @@ On publish, Hylé will:
 
 Default registry: [registry.hylé.com](https://registry.hylé.com)
 
-### Three Publish Tiers: Decision Tree
+### Which command? snapshot / push / release
 
-```
-Is this production-ready?
-├─ No → hyle snapshot (patch: 0.1.0 → 0.1.1)
-│       WIP sharing, no SLA, not in stable registry
-│       Use: "testing", "team feedback"
-│
-├─ Yes, backward compatible → hyle push (minor: 0.1.0 → 0.2.0)
-│       Listed in public registry as stable
-│       Use: "new features", "improvements"
-│
-└─ Yes, breaking changes → hyle release (major: 0.1.0 → 1.0.0)
-        Incompatible with previous versions
-        Use: "major restructure", "removed/renamed agents"
-```
-
-**Decision aid:**
-
-| Question | Answer | Use |
-|----------|--------|-----|
-| Only docs changed? | Yes | `hyle push` (minor) |
-| New feature, old code still works? | Yes | `hyle push` (minor) |
-| Removed agent or renamed config? | Yes | `hyle release` (major) |
-| Breaking API change? | Yes | `hyle release` (major) |
-| Still testing, not ready? | Yes | `hyle snapshot` (patch) |
-
-**Command syntax:**
+| Command | Bump | Stable? | Visibility | When |
+|---|---|---|---|---|
+| `hyle snapshot` | patch `x.x.+1` | ⚠️ No | Teams only | WIP, experimental, no SLA |
+| `hyle push` | minor `x.+1.0` | ✅ Yes | Public registry | Tested, backward compatible |
+| `hyle release` | major `+1.0.0` | ✅ Yes | Public registry | Breaking changes |
 
 ```bash
-# Auto-increment patch/minor/major
 hyle snapshot        # 0.1.0 → 0.1.1-snapshot (WIP)
 hyle push            # 0.1.0 → 0.2.0 (stable)
 hyle release         # 0.1.0 → 1.0.0 (major)
-
-# Or override version explicitly
-hyle push 1.5.0
-hyle release 2.0.0
+hyle push 1.5.0      # or override the version explicitly
 ```
 
-### Three publish tiers explained
-
-| Command | Version | Stable? | Visibility | When to use |
-|---|---|---|---|---|
-| `hyle snapshot` | patch `x.x.+1` | ⚠️ No | Teams only | WIP sharing, experimental, no SLA |
-| `hyle push` | minor `x.+1.0` | ✅ Yes | Public registry | Tested & working, backward compatible |
-| `hyle release` | major `+1.0.0` | ✅ Yes | Public registry | Milestone or breaking changes |
+Unsure which fits a given change? See the
+[decision tree](../CONCEPTS.md#publish-decision-tree-snapshot-vs-push-vs-release).
 
 ### On any publish
 
@@ -213,20 +179,12 @@ hyle release 2.0.0
 
 ## Registry Safety & Trust
 
-### Trust Tiers
+Authors carry a trust tier (Unverified → Community → Verified) — see
+[Trust tiers](../CONCEPTS.md#trust-tiers-how-authors-build-credibility) for criteria.
 
-Every author is assigned a trust tier. Users can see it when evaluating a blueprint:
-
-| Tier | Criteria | What it means |
-|------|----------|---|
-| 🆕 **Unverified** | New author | No history yet; assume caution |
-| ✅ **Community** | 50+ pulls, 6+ months, no flags | Vetted by usage + time |
-| 🛡️ **Verified** | OAuth + manual review | Hylé team approved |
-
-**Build trust:**
-- Publish your first version (patience — tier auto-updates in 6 months)
-- Or email team for manual verification (faster)
-- Maintain clean publish history (no flagged versions)
+**Build yours faster:**
+- Publish + maintain a clean history (no flagged versions) — auto-promotes in 6 months.
+- Or email the team for manual verification (faster).
 
 ### Safety Signals
 
@@ -307,117 +265,21 @@ Before `hyle push`, verify:
 
 ---
 
-## Cost Model & Model Selection
+## Communicate Cost
 
-Blueprint publishers should consider **cost implications** of their model choices and communicate them clearly.
+Your model choices cost *your users* money. Make it visible so they can decide before
+adopting. Two things to do:
 
-### Cost Tiers
-
-**High cost ($$):**
-- Claude Sonnet — $3 / 1M input, $15 / 1M output
-- GPT-4o — $5 / 1M input, $15 / 1M output
-- Claude Opus (if used)
-
-**Medium cost ($):**
-- Claude Haiku — $0.80 / 1M input, $4 / 1M output
-- GPT-4o mini
-- Most cloud LLMs
-
-**Free/low cost (¢):**
-- Ollama local models — $0 (your compute)
-- Open-source models (Llama, Mistral, Qwen)
-
-### Declaring Cost in Blueprint
-
-**In blueprint description:**
+**1. State it in the `description`** — default model + rough per-run cost + any fallback:
 
 ```yaml
-description: Java Spring Boot agents. Uses Claude Sonnet by default (~$0.50/agent run). 
-             Falls back to local Ollama (free) if quota exhausted.
+description: Java Spring Boot agents. Claude Sonnet by default (~$0.50/agent run);
+             falls back to local Ollama (free) if quota exhausted.
 ```
 
-**Share what you tested:**
+**2. Declare what you tested** in `recommendations`, so budget/offline users can find you
+via `hyle search --tag budget`.
 
-```yaml
-recommendations:
-  universal:
-    - anthropic/claude-sonnet-4-6
-    - openai/gpt-4o
-  
-  budget:
-    - anthropic/claude-haiku-4-5
-    - openai/gpt-4o-mini
-    - ollama/qwen2.5:7b
-  
-  offline:
-    - ollama/qwen2.5:14b
-```
-
-Users filter by tag: `hyle search java spring --tag budget` (find blueprints tested with budget models).
-
-### Publishing Strategy by Audience
-
-**Option 1: Accuracy-first (cloud-only)**
-
-Tested with: Anthropic cloud models + high-capability alternatives.
-
-```yaml
-recommendations:
-  universal:
-    - anthropic/claude-sonnet-4-6
-    - openai/gpt-4o
-  advanced:
-    - anthropic/claude-sonnet-4-6@>=4.6
-```
-
-**Option 2: Budget-conscious (any model fine)**
-
-Tested with: local + cheap cloud models.
-
-```yaml
-recommendations:
-  universal:
-    - ollama/qwen2.5:14b
-    - anthropic/claude-haiku-4-5
-    - openai/gpt-4o-mini
-  budget:
-    - anthropic/claude-haiku-4-5
-    - openai/gpt-4o-mini
-    - ollama/qwen2.5:7b
-  offline:
-    - ollama/qwen2.5:14b
-```
-
-**Option 3: Hybrid (tested with everything)**
-
-Tested across: cloud, budget, local, harness.
-
-```yaml
-recommendations:
-  universal:
-    - anthropic/claude-sonnet-4-6
-    - openai/gpt-4o
-    - ollama/qwen2.5:14b
-  budget:
-    - anthropic/claude-haiku-4-5
-    - openai/gpt-4o-mini
-    - ollama/qwen2.5:7b
-  offline:
-    - ollama/qwen2.5:14b
-  harness:
-    - bedrock/anthropic.claude-3-sonnet
-```
-
-### Cost Estimation
-
-Users estimate costs before adopting. If you tested with budget/offline models, mention them:
-
-```
-Estimated costs (1000 calls/day):
-- Claude Sonnet: ~$2.88/day / ~$86/month
-- Or: Claude Haiku: ~$0.44/day / ~$13/month
-- Or: Ollama (local): $0/day
-```
-
-**Good practice:** Include cost ranges + tested models in README or blueprint description.
+Category list, recommendation syntax, per-model pricing, and worked cost estimates:
+**[Models](../reference/MODELS.md)**.
 
