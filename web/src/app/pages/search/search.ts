@@ -1,7 +1,8 @@
-import { Component, OnInit, signal, effect, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, signal, effect, ChangeDetectionStrategy, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ApiService, BlueprintResponse } from '../../services/api.service';
 import { BadgeListComponent } from '../../components/badge-list/badge-list';
 
@@ -27,6 +28,7 @@ export class SearchComponent implements OnInit {
   hasMore = signal(false);
   limit = 20;
   private initialized = false;
+  private destroyRef = inject(DestroyRef);
 
   constructor(
     private router: Router,
@@ -47,13 +49,17 @@ export class SearchComponent implements OnInit {
 
   ngOnInit() {
     // Load all tags for filter
-    this.apiService.getTags().subscribe({
-      next: (tags) => this.allTags.set(tags),
-      error: () => {} // Silently fail tag loading
-    });
+    this.apiService.getTags()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (tags) => this.allTags.set(tags),
+        error: () => {} // Silently fail tag loading
+      });
 
     // Load initial params from URL synchronously first
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
       const q = params['q'] || '';
       const sort = params['sort'] || 'recent';
       const tags = params['tags'] ? params['tags'].split(',').filter((t: string) => t) : [];
@@ -88,7 +94,9 @@ export class SearchComponent implements OnInit {
       sort: this.sort(),
       offset: this.offset(),
       limit: requestLimit,
-    }).subscribe({
+    })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
       next: (results) => {
         // Check if we got more than limit (indicates hasMore)
         this.hasMore.set(results.length > this.limit);

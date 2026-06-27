@@ -1284,16 +1284,16 @@
     line-height: 1.6;
   }
 
-  .docs-table {
+  .docs-content table {
     width: 100%;
     border-collapse: collapse;
     margin: 12px 0 20px;
     font-size: 13px;
   }
 
-  .docs-table th {
+  .docs-content th {
     text-align: left;
-    padding: 8px 12px;
+    padding: 10px 16px;
     background: var(--subtle);
     border: 1px solid var(--border);
     font-weight: 600;
@@ -1301,14 +1301,19 @@
     color: var(--muted-text);
   }
 
-  .docs-table td {
-    padding: 8px 12px;
+  .docs-content td {
+    padding: 10px 16px;
     border: 1px solid var(--border);
     color: var(--muted-text);
     vertical-align: top;
   }
 
-  .docs-table td code {
+  /* Zebra rows — extra visual separator between rows. */
+  .docs-content tbody tr:nth-child(even) td {
+    background: var(--gold-a08);
+  }
+
+  .docs-content td code {
     font-size: 12px;
   }
 

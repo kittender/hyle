@@ -1,6 +1,7 @@
-import { Component, Input, Output, EventEmitter, OnInit, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, signal, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ApiService, Review } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
 
@@ -19,8 +20,10 @@ import { AuthService } from '../../services/auth.service';
             <button
               *ngFor="let r of [1,2,3,4,5]"
               class="star-input"
-              [class.selected]="rating() === r"
-              (click)="rating.set(r)">
+              [class.selected]="r <= (hoverRating() || rating())"
+              (click)="rating.set(r)"
+              (mouseenter)="hoverRating.set(r)"
+              (mouseleave)="hoverRating.set(0)">
               ★
             </button>
           </div>
@@ -224,8 +227,10 @@ export class ReviewFormComponent implements OnInit {
 
   reviews = signal<Review[]>([]);
   rating = signal(0);
+  hoverRating = signal(0);
   reviewText = '';
   submitting = signal(false);
+  private destroyRef = inject(DestroyRef);
 
   constructor(
     private apiService: ApiService,
@@ -237,18 +242,22 @@ export class ReviewFormComponent implements OnInit {
   }
 
   loadReviews() {
-    this.apiService.getReviews(this.author, this.name).subscribe({
-      next: (data) => {
-        this.reviews.set(data);
-      }
-    });
+    this.apiService.getReviews(this.author, this.name)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (data) => {
+          this.reviews.set(data);
+        }
+      });
   }
 
   submitReview() {
     if (this.rating() === 0) return;
 
     this.submitting.set(true);
-    this.apiService.submitReview(this.author, this.name, this.rating(), this.reviewText).subscribe({
+    this.apiService.submitReview(this.author, this.name, this.rating(), this.reviewText)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
       next: (review) => {
         this.reviews.set([review, ...this.reviews()]);
         this.rating.set(0);

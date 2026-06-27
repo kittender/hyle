@@ -93,6 +93,15 @@ All manifests are validated against a strict schema on load:
    - Refresh tokens stored locally; treat like passwords
    - Automatic token refresh before expiry
 
+## Pre-Release Audit (2026-05-20)
+
+Full-stack audit found 6 critical issues, all fixed before release: auth-interceptor
+logic error (credential leak to third-party domains), hardcoded API URL, CORS wildcard
+default, JWT secret default, async (non-blocking) security scan, OAuth code passed via
+URL parameter. 4 lower-severity items (plaintext token storage, missing CSP headers,
+no read-side rate limiting, manifest not schema-validated) are tracked as known debt —
+see [backlog.md](../contribute/backlog.md#known-debts-tracked-not-blocking).
+
 ## Security Best Practices
 
 For Hylé users:
@@ -121,5 +130,5 @@ For security-related questions (not vulnerability reports), open a discussion on
 
 ---
 
-**Last Updated**: 2026-05-21 (added OAuth, email, user account security notes)  
-**Version**: 1.1
+**Last Updated**: 2026-06-27 (folded pre-release audit history into this policy)
+**Version**: 1.2

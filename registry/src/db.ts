@@ -296,14 +296,18 @@ export class SQLiteDatabase implements IDatabase {
 
   search(query: SearchQuery): RegistryRecord[] {
     // Only the latest stable version of each blueprint appears in browse/search.
+    // Dedup by picking a single row id per (author,name) so versions that share a
+    // created_at timestamp can never produce duplicate cards.
     let sql = `
       SELECT id, author, name, version, description, tags, is_stable, is_flagged, flag_reason, checksum, bundle_path, manifest_json, created_at
       FROM blueprints
       WHERE is_stable = 1 AND is_flagged = 0
-        AND created_at = (
-          SELECT MAX(b2.created_at) FROM blueprints b2
+        AND id = (
+          SELECT b2.id FROM blueprints b2
           WHERE b2.author = blueprints.author AND b2.name = blueprints.name
             AND b2.is_stable = 1 AND b2.is_flagged = 0
+          ORDER BY b2.created_at DESC, b2.id DESC
+          LIMIT 1
         )
     `;
     const params: any[] = [];
@@ -378,10 +382,12 @@ export class SQLiteDatabase implements IDatabase {
       SELECT id, author, name, version, description, tags, is_stable, is_flagged, flag_reason, checksum, bundle_path, manifest_json, created_at
       FROM blueprints
       WHERE is_stable = 1 AND is_flagged = 0
-        AND created_at = (
-          SELECT MAX(b2.created_at) FROM blueprints b2
+        AND id = (
+          SELECT b2.id FROM blueprints b2
           WHERE b2.author = blueprints.author AND b2.name = blueprints.name
             AND b2.is_stable = 1 AND b2.is_flagged = 0
+          ORDER BY b2.created_at DESC, b2.id DESC
+          LIMIT 1
         )
       ORDER BY created_at DESC
       LIMIT ?
@@ -396,10 +402,12 @@ export class SQLiteDatabase implements IDatabase {
       SELECT id, author, name, version, description, tags, is_stable, is_flagged, flag_reason, checksum, bundle_path, manifest_json, created_at
       FROM blueprints
       WHERE author = ? AND is_stable = 1 AND is_flagged = 0
-        AND created_at = (
-          SELECT MAX(b2.created_at) FROM blueprints b2
+        AND id = (
+          SELECT b2.id FROM blueprints b2
           WHERE b2.author = blueprints.author AND b2.name = blueprints.name
             AND b2.is_stable = 1 AND b2.is_flagged = 0
+          ORDER BY b2.created_at DESC, b2.id DESC
+          LIMIT 1
         )
       ORDER BY created_at DESC
     `);
@@ -744,13 +752,14 @@ export class SQLiteDatabase implements IDatabase {
              (SELECT COUNT(*) FROM install_events ie
                 WHERE ie.blueprint_author = b.author AND ie.blueprint_name = b.name ${windowClause}) AS pull_count
       FROM blueprints b
-      JOIN (
-        SELECT author, name, MAX(created_at) AS latest
-        FROM blueprints
-        WHERE is_stable = 1 AND is_flagged = 0
-        GROUP BY author, name
-      ) latest ON latest.author = b.author AND latest.name = b.name AND latest.latest = b.created_at
       WHERE b.is_stable = 1 AND b.is_flagged = 0
+        AND b.id = (
+          SELECT b2.id FROM blueprints b2
+          WHERE b2.author = b.author AND b2.name = b.name
+            AND b2.is_stable = 1 AND b2.is_flagged = 0
+          ORDER BY b2.created_at DESC, b2.id DESC
+          LIMIT 1
+        )
       ORDER BY pull_count DESC, b.created_at DESC
       LIMIT ?
     `;
@@ -826,13 +835,14 @@ export class SQLiteDatabase implements IDatabase {
              b.is_flagged, b.flag_reason, b.checksum, b.bundle_path, b.manifest_json, b.created_at
       FROM blueprints b
       JOIN featured f ON f.blueprint_author = b.author AND f.blueprint_name = b.name
-      JOIN (
-        SELECT author, name, MAX(created_at) AS latest
-        FROM blueprints
-        WHERE is_stable = 1 AND is_flagged = 0
-        GROUP BY author, name
-      ) latest ON latest.author = b.author AND latest.name = b.name AND latest.latest = b.created_at
       WHERE b.is_stable = 1 AND b.is_flagged = 0
+        AND b.id = (
+          SELECT b2.id FROM blueprints b2
+          WHERE b2.author = b.author AND b2.name = b.name
+            AND b2.is_stable = 1 AND b2.is_flagged = 0
+          ORDER BY b2.created_at DESC, b2.id DESC
+          LIMIT 1
+        )
       ORDER BY f.rank ASC
     `;
     const rows = this.db.prepare(sql).all() as any[];

@@ -1,8 +1,8 @@
 # Hylé
 
-> ⚠️ **WIP — unreleased.** No public release (CLI `0.1.0`), no package-manager distribution, no hosted registry yet. Run the stack locally to try it → **[QUICKSTART.md](web/docs/1_QUICKSTART.md)**.
+> ⚠️ **WIP — unreleased.** No public release (CLI `0.1.0`), no package-manager distribution, no hosted registry yet.
 
-**Blueprint manager for LLM-powered projects** — like Docker Hub for AI agent configs. Pull best-practice AI workflows (CLAUDE.md, agents, policies, MCP configs, docs) or publish your own.
+**Blueprint manager for LLM-powered projects** — like Docker Hub for AI agent configs. Pull best-practice AI workflows (CLAUDE.md, agents, policies, MCP configs, docs) from the community or publish your own.
 
 ```bash
 hyle pull author/blueprint-name     # Install latest blueprint
@@ -11,14 +11,15 @@ hyle push                           # Publish your own (auto-versioning)
 
 <img src="design/hylé-lotus.png" width="468" height="468" alt="A golden lotus on green waterlilies leaves, emitting a soft light, on a soft forest green background">
 
-- **Programmatic core** — `pull` / `push` / `init` need no LLM, work offline.
-- **Registry-indexed** — metadata in Hylé's registry for fast search.
-- **Open source** — source on GitHub for trust + transparency.
-- **From templates to custom setups** — see what the community shares, or share your own.
+---
+
+- **Pull blueprints** — `hyle pull` installs configs that can range from context scaffolding to full workflow
+- **Push your own** — `hyle push` versions and publishes your own recipes to the registry as first-class, versioned artifacts
+- **Layer & extend** — compose by stacking blueprints, build custom workflows from community patterns
 
 ---
 
-## Quick Start
+## Quick Start (local)
 
 No installers yet — build from source and link the `hyle` command:
 
@@ -28,20 +29,15 @@ cd cli && bun run link         # builds dist/hyle.js, links bare `hyle` onto PAT
 hyle --help
 ```
 
-To preview how it works with mock data:
-```bash
-docker compose --profile mock up --build
-```
-
 Don't want to link? Run from source: `bun run cli/src/index.ts <command>`.
 
 > ⓘ **Local registry starts empty** — nothing to `pull` until something is published. To try the full loop, `push` a blueprint of your own first, or point `remote_url` at a registry with content.
 
 | Need | Doc |
 |------|-----|
-| Local-test → deploy walkthrough | **[quickstart.md](web/docs/quickstart.md)** |
-| Dev setup | [DEV_QUICK_START.md](web/docs/contribute/DEV_QUICK_START.md) |
-| Package-manager installers (brew/choco/apt) | [backlog](web/docs/contribute/BACKLOG.md) |
+| Local test walkthrough | **[quickstart.md](web/docs/quickstart.md)** |
+| Preview with mock data (optional) | [quickstart-mock-data.md](web/docs/quickstart-mock-data.md) |
+| Contributor setup | [contributing.md](web/docs/contribute/contributing.md) |
 
 ### Prerequisites
 
@@ -144,7 +140,7 @@ Three services, one docker-compose stack. Same images deploy anywhere (on-prem, 
 | **Registry** | Bun + TS + SQLite (`registry/`) | Blueprint API; enforces `name+author+version` uniqueness; `auth=none` default |
 | **Web** | Angular 21 (`web/`) | Search, blueprint detail, docs viewer |
 
-Auth opt-in (GitHub OAuth / generic OIDC). Details → **[ARCHITECTURE.md](web/docs/knowledge/ARCHITECTURE.md)**.
+Auth opt-in (GitHub OAuth / generic OIDC). Details → **[architecture.md](web/docs/knowledge/architecture.md)**.
 
 **Self-hosted & open source** — free FOSS, run the registry on your own infra. No vendor lock-in; infrastructure costs only (like self-hosted GitLab/Artifactory/Jenkins).
 
@@ -159,9 +155,9 @@ Layered: **orient → quickstart → guide → reference.** Start with [Core con
 | **Understand Hylé** | [Concepts](web/docs/concepts.md) (mental models + diagrams) | — |
 | **Use a blueprint** | [Quickstart](web/docs/quickstart.md) (find & pull) | [CLI reference](web/docs/cli-reference.md) · [Troubleshooting](web/docs/troubleshooting.md) |
 | **Publish my own** | [Publishing](web/docs/publish/index.md) (quick start + full guide) | [Config reference](web/docs/publish/config.md) · [Example](web/docs/publish/example.md) |
-| **Self-host registry** | [Deploy quickstart](web/docs/deploy/quickstart.md) (5 min, local) | [Production guide](web/docs/deploy/production.md) · [CLI distribution](web/docs/deploy/CLI_DISTRIBUTION.md) |
-| **Contribute code** | [Dev setup](web/docs/contribute/DEV_QUICK_START.md) | [Contributing](web/docs/contribute/CONTRIBUTING.md) |
+| **Self-host registry** | [Deploy quickstart](web/docs/deploy/quickstart.md) (5 min, local) | [Production guide](web/docs/deploy/production.md) · [CLI distribution](web/docs/deploy/cli-distribution.md) |
+| **Contribute code** | [Contributing](web/docs/contribute/contributing.md) | [Registry API](web/docs/contribute/registry-api.md) |
 
-**Reference (look up as needed):** [CLI commands](web/docs/cli-reference.md#core-commands) · [Config files](web/docs/publish/config.md) · [Models & pricing](web/docs/knowledge/MODELS_RECOMMENDATIONS.md) · [Tags](web/docs/knowledge/CHOOSING_TAGS.md) · [Registry API](web/docs/contribute/REGISTRY_API.md) · [Architecture](web/docs/knowledge/ARCHITECTURE.md)
+**Reference (look up as needed):** [CLI commands](web/docs/cli-reference.md#core-commands) · [Config files](web/docs/publish/config.md) · [Tags & models](web/docs/knowledge/metadata.md) · [Architecture](web/docs/knowledge/architecture.md)
 
-**Security:** [Policy](web/docs/security/SECURITY.md) · [Audit](web/docs/security/SECURITY_AUDIT.md) · **Roadmap:** [Backlog](web/docs/contribute/BACKLOG.md)
+**Security:** [Policy](web/docs/security/security.md) · **Roadmap:** [Backlog](web/docs/contribute/backlog.md)

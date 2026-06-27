@@ -237,15 +237,14 @@ function seedSocialGraph(blueprints: GeneratedBlueprint[]): void {
   db.exec("PRAGMA journal_mode = WAL;");
   db.exec("PRAGMA busy_timeout = 5000;");
 
-  // Clear existing data for fresh seed
-  console.log("[seed] clearing existing blueprints...");
+  // Clear existing social graph data for fresh seed
+  console.log("[seed] clearing existing social data...");
   db.exec("DELETE FROM stars");
   db.exec("DELETE FROM reviews");
   db.exec("DELETE FROM install_events");
   db.exec("DELETE FROM install_counts");
   db.exec("DELETE FROM featured");
   db.exec("DELETE FROM activity_events");
-  db.exec("DELETE FROM blueprints");
 
   const now = Date.now();
   const rng = new SeededRandom(42);
@@ -270,18 +269,22 @@ function seedSocialGraph(blueprints: GeneratedBlueprint[]): void {
     const mockUserBio = "Mock user for local testing and development";
     insertUser.run("mock-user", "mock-user", "mock@localhost", "https://avatars.githubusercontent.com/u/0?v=4", mockUserBio, "", "{}");
 
+    // Create authenticated user for andrej-kirskyn (good-java author)
+    const andrejBio = "Passionate Java architect and blueprint creator";
+    insertUser.run("andrej-github", "andrej-kirskyn", "andrej@example.com", "https://avatars.githubusercontent.com/u/1?v=4", andrejBio, "", "{}");
+
     let stargazerSeq = 0;
     const idOf = (username: string): number | null => {
       const row = userId.get(username) as any;
       return row ? row.id : null;
     };
 
-    // Have mock-user star good-java
-    const mockUserId = idOf("mock-user");
-    if (mockUserId) {
+    // Have andrej-kirskyn star their own good-java blueprint
+    const andrejUserId = idOf("andrej-kirskyn");
+    if (andrejUserId) {
       const goodJava = blueprints.find(b => b.author === "andrej-kirskyn" && b.name === "good-java");
       if (goodJava) {
-        insertStar.run(mockUserId, goodJava.author, goodJava.name);
+        insertStar.run(andrejUserId, goodJava.author, goodJava.name);
       }
     }
 
@@ -318,11 +321,30 @@ function seedSocialGraph(blueprints: GeneratedBlueprint[]): void {
       // Activity event for each blueprint
       insertActivity.run("push", bp.author, bp.name, bp.versions[bp.versions.length - 1].version, `Released ${bp.versions[bp.versions.length - 1].version}`, bp.author, new Date(now - 7 * DAY).toISOString());
     }
+
+    // Mark featured blueprints for "Hylé team picks". Curate hyle-org/starter first,
+    // then fill to at least three picks with the most-starred remaining blueprints.
+    const setFeatured = db.prepare("INSERT OR REPLACE INTO featured (blueprint_author, blueprint_name, rank) VALUES (?, ?, ?)");
+    const picks: GeneratedBlueprint[] = [];
+    const starter = blueprints.find(b => b.author === "hyle-org" && b.name === "starter");
+    if (starter) picks.push(starter);
+    for (const bp of [...blueprints].sort((a, b) => b.stars - a.stars)) {
+      if (picks.length >= 3) break;
+      if (!picks.includes(bp)) picks.push(bp);
+    }
+    picks.forEach((bp, rank) => setFeatured.run(bp.author, bp.name, rank));
   });
 
   tx();
   db.close();
   console.log("[seed] social graph written");
+}
+
+async function clearRegistryBlueprints(): Promise<void> {
+  const db = new Database(DB_PATH);
+  db.exec("DELETE FROM security_scans");
+  db.exec("DELETE FROM blueprints");
+  db.close();
 }
 
 async function main(): Promise<void> {
@@ -339,6 +361,7 @@ async function main(): Promise<void> {
   console.log(`[seed] generated mock data for ${generated.length} blueprints`);
 
   await waitForRegistry();
+  await clearRegistryBlueprints();
   await publishAll(generated, discoveredMap);
   seedSocialGraph(generated);
   console.log("[seed] done ✓");

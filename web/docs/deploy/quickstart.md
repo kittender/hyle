@@ -1,4 +1,6 @@
-# Quick Start: Self-Hosted Registry (5 Minutes)
+# Quick Start
+
+_Self-Hosted Registry — 5 Minutes_
 
 Minimal setup for a **single-node registry** on a $5-10 VPS. Good for testing, small teams, or on-premise pilot.
 
@@ -74,7 +76,7 @@ Then pull + push blueprints as usual.
 If you prefer no container overhead.
 
 > ⚠️ **Pre-release:** prebuilt binaries (`releases.hylé.com`) are
-> [planned](../BACKLOG.md), not published yet. For now, build from source.
+> [planned](../contribute/backlog.md), not published yet. For now, build from source.
 
 ### 1. Build the binary
 
@@ -293,29 +295,9 @@ docker compose up  # or: systemctl start hyle-registry
 
 ## Next Steps
 
-✅ **Registry running locally?** Now decide:
+Registry running locally? Sharing with a team or going public needs durability and
+TLS — back up the SQLite file, then follow [Tier 2 or Tier 3](production.md#quick-decision-tree)
+(VPS + PostgreSQL, or full HA).
 
-### Option A: Stay Local (Testing/Development)
-- Keep this single-node SQLite setup
-- Set up automated backups ([see Backup section](#backup--recovery))
-- Test restore monthly: verify backups actually work
-
-### Option B: Upgrade to Production (Tier 2)
-**When:** Sharing with team, need durability, public internet access
-
-Steps:
-1. **Backup your SQLite database:** `docker compose cp registry:/data/hyle-registry.db ./hyle-backup.db`
-2. **Follow [Tier 2 setup](DEPLOYMENT.md#tier-2-intermediate-teamsprodu)** (VPS + PostgreSQL): takes ~1-2 hours
-3. **Migrate data:** Export blueprints from local registry → push to Tier 2 registry
-4. **Update CLI config:** Point to new registry URL (`~/.hyle`)
-
-**Cost:** $15-40/month (DigitalOcean, Linode, Hetzner)
-
-### Option C: Go Full HA (Tier 3)
-**When:** Team >500, need 99.5% uptime SLA, incident response on-call
-
-See [Tier 3 setup](DEPLOYMENT.md#tier-3-enterprise-high-scale) (Docker Compose or Kubernetes with replicated PostgreSQL).
-
----
-
-**Questions?** See [TROUBLESHOOTING.md](../troubleshooting.md) or file an issue on [GitHub](https://github.com/kittender/hyle).
+Questions? [Troubleshooting](../troubleshooting.md) or file an issue on
+[GitHub](https://github.com/kittender/hyle).

@@ -1,11 +1,7 @@
 # Publishing Blueprints
 
-👇 **Which are you?**
-
-- **New to Hylé, just want to try?** → [5-min quick start](#quick-start)
-- **Publishing your first real blueprint?** → [Complete walkthrough](#complete-guide)
-- **Configuring hyle.yaml, .hyle, .hyleignore?** → [Config reference](config.md)
-- **Need a real example to copy from?** → [Example blueprint](example.md)
+Package a tested project into a versioned, shareable blueprint. Field-by-field config:
+[Configuration reference](config.md). Full worked example: [example.md](example.md).
 
 ---
 
@@ -47,7 +43,7 @@ hyle push                        # publish (minor bump, stable)
 Requirements:
 - Git repository with at least one commit
 - CLAUDE.md (even minimal)
-- At least one other Claude-related file (AGENTS.md, ARCHITECTURE.md, package.json, etc.)
+- At least one other Claude-related file (AGENTS.md, architecture.md, package.json, etc.)
 
 Verify:
 
@@ -86,7 +82,7 @@ Categorize files into **ontology, craft, identities, ethics**. Each file belongs
 | File type | Domain | Why |
 |-----------|--------|-----|
 | CLAUDE.md, specs, features, diagrams | **Ontology** | Knowledge (what to know) |
-| SKILLS.md, ARCHITECTURE.md, package.json, MCP configs | **Craft** | Technical (how to build) |
+| SKILLS.md, architecture.md, package.json, MCP configs | **Craft** | Technical (how to build) |
 | AGENTS.md, .claude/agents/*.md | **Identities** | Agent roles (who does what) |
 | .cedar policies, PRIVACY.md, evals | **Ethics** | Constraints (what's not allowed) |
 
@@ -100,7 +96,7 @@ Let Hylé auto-detect files matching patterns, or specify paths:
 
 ```bash
 hyle ontology                    # scan all — CLAUDE.md, *.md, docs/, spec/, architecture/
-hyle craft                       # scan all — package.json, ARCHITECTURE.md, .mcp/, config/
+hyle craft                       # scan all — package.json, architecture.md, .mcp/, config/
 hyle identities                  # scan all — AGENTS.md, .claude/agents/*.md
 hyle ethics                      # scan all — .cedar, evals/, PRIVACY.md
 
@@ -119,28 +115,17 @@ hyle ontology --dry-run          # print, don't modify hyle.yaml
 
 ### Step 4: Add .hyleignore
 
-Prevent accidental secrets from being published:
+Prevent accidental secrets from being published (git-style patterns):
 
 ```
-# Environment & secrets
 .env
-.env.local
-.env.*.local
 *.pem
 *.key
 credentials.json
-
-# Build artifacts
 node_modules/
-dist/
-build/
-
-# IDE
-.vscode/
-.idea/
 ```
 
-Git-style patterns, same as `.gitignore`.
+Full exclusion list + rationale: [Config reference](config.md#pattern-6-secrets--exclusions).
 
 ---
 
@@ -179,7 +164,7 @@ blueprint:
     - CLAUDE.md
     - docs/**/*.md
   craft:
-    - ARCHITECTURE.md
+    - architecture.md
     - package.json
     - .mcp/servers.json
   identities:
@@ -206,30 +191,18 @@ blueprint:
 
 ### Step 6: Declare Dependencies (if any)
 
-**What:** External tools your blueprint requires (Cedar, Node, Java, CLI tools, databases).
-
-**Why:** When users `hyle pull` your blueprint, Hylé auto-detects missing tools and warns. Users still pull (doesn't fail), but they're alerted upfront.
-
-**How:** Add `dependencies` block. Hylé uses `url` to find official install commands per OS. Don't write install commands yourself — Hylé maintains a shared database keyed by source URL.
+External tools your blueprint requires (Cedar, Node, Java, CLI tools, databases). On
+`hyle pull`, Hylé checks each is installed and warns if not (doesn't block the pull).
 
 ```yaml
 dependencies:
-  - name: cedar                  # tool identifier (for PATH lookup + version check)
-    version: ">=3.0"             # semver constraint (>=3.0, ^2.1, latest)
+  - name: cedar
+    version: ">=3.0"
     url: https://github.com/cedar-policy/cedar
-    install.macos: brew install cedar    # (optional) override if auto-detect fails
-    install.linux: apt-get install cedar
-    install.windows: choco install cedar
 ```
 
-**Resolution on pull (in order):**
-1. Check Hylé's local cache for known install command (URL + OS)
-2. Query registry DB (community-contributed, URL-keyed)
-3. Fetch URL and extract install instructions
-4. Fall back to `install.<os>` override if provided
-5. Ask user to install manually if nothing works
-
-**Best practice:** Prefer official package managers (brew, apt, npm) over `curl | bash` pipes — safer and verifiable.
+Resolution order, per-OS install overrides, and best practices:
+[Config reference → Dependencies](config.md#dependencies).
 
 ---
 
@@ -390,13 +363,6 @@ recommendations:
 
 Users can then search: `hyle search --tag budget` to find budget-friendly blueprints.
 
-Full model list + pricing: [Models & Recommendations](../knowledge/MODELS_RECOMMENDATIONS.md)
+Full tag + model catalogue: [Metadata: tags & models](../knowledge/metadata.md).
 
----
-
-## Next Steps
-
-- **Need to tweak config?** → [Configuration reference](config.md)
-- **See a full example?** → [Example blueprint](example.md)
-- **Troubleshooting publish errors?** → [Troubleshooting](../troubleshooting.md)
-- **Want a deeper guide?** → [Detailed walkthrough](detailed-guide.md)
+Publish errors? → [Troubleshooting](../troubleshooting.md).

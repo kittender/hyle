@@ -1,5 +1,7 @@
-import { Component, Input, OnChanges, SimpleChanges, ElementRef, ViewChild, AfterViewChecked, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges, ElementRef, ViewChild, AfterViewChecked, ChangeDetectionStrategy, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { ApiService } from '../../services/api.service';
 import { CopyButtonComponent } from '../copy-button/copy-button';
 
@@ -36,13 +38,13 @@ declare const Prism: any;
               <div>{{ $index + 1 }}</div>
             }
           </div>
-          <pre class="code-content"><code #codeEl [class]="'language-' + displayLang">{{ displayContent }}</code></pre>
+          <pre class="code-content"><code #codeEl></code></pre>
         </div>
       </div>
     }
   `,
 })
-export class FileViewerComponent implements OnChanges, AfterViewChecked {
+export class FileViewerComponent implements OnChanges, AfterViewChecked, OnDestroy {
   @Input() filePath: string | null = null;
   @Input() content: string | null = null;
   @Input() lang: string = 'plain';
@@ -56,6 +58,7 @@ export class FileViewerComponent implements OnChanges, AfterViewChecked {
   lines: string[] = [];
   pathParts: { text: string }[] = [];
   private needsHighlight = false;
+  private destroy$ = new Subject<void>();
 
   constructor(private apiService: ApiService, private cdr: ChangeDetectorRef) {}
 
@@ -68,26 +71,44 @@ export class FileViewerComponent implements OnChanges, AfterViewChecked {
       this.pathParts = [{ text: 'manifest.yaml' }];
       this.needsHighlight = true;
       this.cdr.markForCheck();
-    } else if (changes['filePath'] && this.filePath && this.author && this.name) {
-      // Fetch the real file content from the registry bundle.
-      const path = this.filePath;
-      this.pathParts = path.split('/').map(t => ({ text: t }));
-      this.apiService.getFileContent(this.author, this.name, path, this.version).subscribe(file => {
-        this.displayContent = file.content || `# ${path}\n# (empty or unavailable)`;
-        this.displayLang = file.language || 'plain';
-        this.lines = this.displayContent.split('\n');
-        this.needsHighlight = true;
-        this.cdr.markForCheck();
-      });
+    } else if (changes['filePath']) {
+      // Cancel any pending file requests when path changes.
+      this.destroy$.next();
+
+      if (this.filePath && this.author && this.name) {
+        // Fetch the real file content from the registry bundle.
+        const path = this.filePath;
+        this.pathParts = path.split('/').map(t => ({ text: t }));
+        this.apiService.getFileContent(this.author, this.name, path, this.version)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe(file => {
+            this.displayContent = file.content || `# ${path}\n# (empty or unavailable)`;
+            this.displayLang = file.language || 'plain';
+            this.lines = this.displayContent.split('\n');
+            this.needsHighlight = true;
+            this.cdr.markForCheck();
+          });
+      }
     }
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   ngAfterViewChecked() {
     if (this.needsHighlight && this.codeEl) {
       this.needsHighlight = false;
+      // Render content imperatively: Prism rewrites the <code> element's children,
+      // so an Angular interpolation binding there would be clobbered and stop
+      // updating on later file switches. Set textContent + class ourselves instead.
+      const el = this.codeEl.nativeElement as HTMLElement;
+      el.className = 'language-' + this.displayLang;
+      el.textContent = this.displayContent;
       try {
         if (typeof Prism !== 'undefined') {
-          Prism.highlightElement(this.codeEl.nativeElement);
+          Prism.highlightElement(el);
         }
       } catch {
         // Prism not available

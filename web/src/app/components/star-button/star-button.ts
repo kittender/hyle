@@ -1,5 +1,6 @@
-import { Component, Input, Output, EventEmitter, OnInit, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, signal, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
 
@@ -68,6 +69,7 @@ export class StarButtonComponent implements OnInit {
   starred = signal(false);
   count = signal(0);
   loading = signal(false);
+  private destroyRef = inject(DestroyRef);
 
   constructor(
     private apiService: ApiService,
@@ -79,12 +81,14 @@ export class StarButtonComponent implements OnInit {
   }
 
   loadStarStatus() {
-    this.apiService.getStars(this.author, this.name).subscribe({
-      next: (data) => {
-        this.count.set(data.count);
-        this.starred.set(data.viewer_starred);
-      }
-    });
+    this.apiService.getStars(this.author, this.name)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (data) => {
+          this.count.set(data.count);
+          this.starred.set(data.viewer_starred);
+        }
+      });
   }
 
   onStar() {
@@ -94,7 +98,9 @@ export class StarButtonComponent implements OnInit {
     }
 
     this.loading.set(true);
-    this.apiService.toggleStar(this.author, this.name).subscribe({
+    this.apiService.toggleStar(this.author, this.name)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
       next: (data) => {
         this.starred.set(data.starred);
         this.count.set(data.count);

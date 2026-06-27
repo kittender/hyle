@@ -1,7 +1,8 @@
-import { Component, OnInit, signal, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, signal, ElementRef, ViewChild, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DocsService, DocGroup } from '../../services/docs.service';
 
 @Component({
@@ -17,6 +18,7 @@ export class DocsComponent implements OnInit {
   currentContent = signal<SafeHtml>('');
 
   @ViewChild('contentEl') contentEl?: ElementRef;
+  private destroyRef = inject(DestroyRef);
 
   constructor(
     private route: ActivatedRoute,
@@ -25,18 +27,22 @@ export class DocsComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.docsService.getGroups().subscribe(groups => {
-      this.groups.set(groups);
-      // Default to the requested section, else the first available one.
-      const requested = this.route.snapshot.queryParams['section'];
-      const first = groups[0]?.sections[0]?.id;
-      if (!this.active()) this.setActive(requested || first || '');
-    });
+    this.docsService.getGroups()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(groups => {
+        this.groups.set(groups);
+        // Default to the requested section, else the first available one.
+        const requested = this.route.snapshot.queryParams['section'];
+        const first = groups[0]?.sections[0]?.id;
+        if (!this.active()) this.setActive(requested || first || '');
+      });
 
     // Watch for section changes from URL (in-app doc links use ?section=).
-    this.route.queryParams.subscribe(params => {
-      if (params['section']) this.setActive(params['section']);
-    });
+    this.route.queryParams
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        if (params['section']) this.setActive(params['section']);
+      });
   }
 
   setActive(id: string) {
@@ -47,7 +53,9 @@ export class DocsComponent implements OnInit {
   }
 
   private loadSection(id: string) {
-    this.docsService.getSection(id).subscribe(section => {
+    this.docsService.getSection(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(section => {
       if (section) {
         this.currentContent.set(this.sanitizer.bypassSecurityTrustHtml(section.content));
         this.renderDiagrams();

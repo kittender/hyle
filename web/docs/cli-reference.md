@@ -2,8 +2,6 @@
 
 Complete guide to all `hyle` CLI commands.
 
-👇 **Quick jump:**
-
 | I want to… | Jump to |
 |---|---|
 | Initialize a new blueprint | [hyle init](#hyle-init) |
@@ -15,17 +13,6 @@ Complete guide to all `hyle` CLI commands.
 | Fix missing dependencies | [hyle verify](#hyle-verify) |
 | Check for updates | [hyle outdated](#hyle-outdated) |
 | See all config options | [Configuration files](#configuration-files) |
-
-👇 **By category:**
-- [Core commands](#core-commands) — everyday use
-- [Scan commands](#scan-commands) — auto-populate blueprint domains
-- [Validation & verification](#validation--verification) — check your work
-- [Version management](#dependency--version-management) — updates & upgrades
-- [Extensions](#extension-commands) — LLM-powered features (optional)
-- [Global options](#global-options) — available on any command
-- [Config files](#configuration-files) — hyle.yaml, .hyle, .hyleignore
-- [Environment variables](#environment-variables) — override behavior
-- [Common workflows](#tips--common-workflows) — step-by-step examples
 
 ---
 
@@ -181,7 +168,7 @@ hyle craft --add package.json     # Add single file
 
 **Patterns matched:**
 - `package.json`, `tsconfig.json`, `pom.xml`, `Cargo.toml` (dependency/build files)
-- `ARCHITECTURE.md`, `SKILLS.md` (technical docs)
+- `architecture.md`, `SKILLS.md` (technical docs)
 - `.claude/**/*.md` (harness config)
 - `config/**/*.json` (configuration)
 - `.eslintrc*`, `.prettierrc*`, `biome.json` (linting/formatting)
@@ -359,14 +346,14 @@ blueprint:
     - docs/**/*.md
   craft:
     - package.json
-    - ARCHITECTURE.md
+    - architecture.md
   identities:
     - AGENTS.md
   ethics:
     - policies/*.cedar
 ```
 
-See [CONFIG.md](CONFIG.md) for full reference.
+See [Config reference](publish/config.md) for the full field list.
 
 ---
 
@@ -380,7 +367,7 @@ remote_url: https://registry.hylé.com      # Registry URL
 
 Auth is handled separately by `hyle login` (stores an OAuth token in `~/.hyle/auth.json`), not via this file.
 
-See [CONFIG.md](publish/config.md) for full reference.
+See [Config reference](publish/config.md) for the full field list.
 
 ---
 
@@ -402,7 +389,7 @@ config/local.*
 .idea/
 ```
 
-See [CONFIG.md](publish/config.md) for full reference.
+See [Config reference](publish/config.md) for the full field list.
 
 ---
 
@@ -413,62 +400,4 @@ See [CONFIG.md](publish/config.md) for full reference.
 | `HYLE_REGISTRY_URL` | Override registry URL | `export HYLE_REGISTRY_URL=http://localhost:3000` |
 | `HYLE_ALLOW_INSECURE` | Allow non-HTTPS / localhost `remote_url` (dev only) | `export HYLE_ALLOW_INSECURE=1` |
 
----
-
-## Tips & Common Workflows
-
-### Publishing Your First Blueprint
-
-```bash
-# 1. Create blueprint structure
-hyle init                          # Generate hyle.yaml
-
-# 2. Populate domains with your files
-hyle ontology                      # Scan knowledge files
-hyle craft                         # Scan technical files
-hyle identities                    # Scan agent definitions
-hyle ethics                        # Scan policies
-
-# 3. Review & refine
-vim hyle.yaml                      # Edit if needed
-hyle validate hyle.yaml            # Check syntax
-
-# 4. Publish
-hyle login                         # GitHub OAuth
-hyle push --dry-run                # Preview what will publish
-hyle push                          # Publish as minor version (stable)
-```
-
-### Keeping Dependencies Updated
-
-```bash
-# Check for updates
-hyle outdated
-
-# Upgrade all blueprints
-hyle upgrade --yes
-
-# Or upgrade one at a time
-hyle upgrade my-blueprint
-```
-
-### Local Registry Testing
-
-```bash
-# Use local dev registry
-export HYLE_REGISTRY_URL=http://localhost:3000
-
-# Operations now use local registry
-hyle search my-test-blueprint
-hyle pull my-test-blueprint
-hyle push                          # Publish to local
-```
-
----
-
-## See Also
-
-- [Publishing guide](publish/index.md) — Full walkthrough from idea to registry
-- [Config reference](publish/config.md) — Detailed `hyle.yaml`, `.hyle`, `.hyleignore`
-- [Troubleshooting](troubleshooting.md) — Common errors & fixes
-- [Concepts](concepts.md) — Mental models: pull flow, publish flow, four domains
+First-time publishing walkthrough: [Publishing guide](publish/index.md). Errors: [Troubleshooting](troubleshooting.md).

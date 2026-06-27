@@ -315,7 +315,7 @@ If unsure: `grep version hyle.yaml` to see current version, then — docs-only c
 
 **Good options**:
 1. **Minor issues (typos, docs)**: fix locally, commit, push to GitHub, then `hyle push` (auto-increments). Users upgrade with `hyle upgrade org/blueprint`.
-2. **Security issues (secrets, credentials)**: follow [SECURITY.md](../security/SECURITY.md) to contact registry operators — they'll flag the version as `[security-issue]`; publish a patched version.
+2. **Security issues (secrets, credentials)**: follow [security.md](security/security.md) to contact registry operators — they'll flag the version as `[security-issue]`; publish a patched version.
 3. **Breaking bugs**: assess how many pulls happened. <10 → publish a fix + update docs. >100 → consider a major release with a migration guide, and notify users if the system tracks pulls.
 
 **Prevention**: `hyle push --dry-run` and `hyle verify` before publishing; test compatible models + dependencies; have a teammate review before publish.
@@ -389,7 +389,7 @@ hyle --version
 
 **Cause**: `hyle.yaml` missing required field (name, author, version).
 
-**Fix**: See [Configuration Reference](../reference/CONFIG.md).
+**Fix**: See [Configuration Reference](publish/config.md).
 
 Minimal `hyle.yaml`:
 ```yaml
@@ -436,4 +436,4 @@ If you've narrowed it down and need help, file an issue at [kittender/hyle/issue
 - Check [Configuration Reference](publish/config.md) for all valid fields
 - Read [Example Blueprint](publish/example.md) for a real project layout
 - Check registry at `https://registry.hylé.com` for examples
-- [Security policy](security/SECURITY.md) — for security incidents specifically
+- [Security policy](security/security.md) — for security incidents specifically

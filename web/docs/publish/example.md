@@ -1,4 +1,6 @@
-# Real Example: Java Spring Boot + Angular Monorepo
+# Real Example
+
+_Java Spring Boot + Angular Monorepo_
 
 Complete walkthrough of packaging a production Java/Spring Boot + Angular project as a Hylé blueprint.
 
@@ -247,7 +249,7 @@ Show key dependencies.
 
 ---
 
-## Step 5: Create ARCHITECTURE.md (Craft)
+## Step 5: Create architecture.md (Craft)
 
 Technical design.
 
@@ -357,7 +359,7 @@ Answers:
 
 ```bash
 hyle ontology    # Finds CLAUDE.md, README.md, docs/
-hyle craft       # Finds pom.xml, docker-compose.yml, ARCHITECTURE.md
+hyle craft       # Finds pom.xml, docker-compose.yml, architecture.md
 hyle identities  # Finds AGENTS.md, .claude/agents/
 hyle ethics      # Finds policies/*.cedar
 ```
@@ -412,7 +414,7 @@ blueprint:
     - docs/api-spec.md
     - docs/architecture.md
   craft:
-    - ARCHITECTURE.md
+    - architecture.md
     - pom.xml
     - frontend/package.json
     - frontend/angular.json
@@ -456,41 +458,13 @@ hyle search acme-product-service
 
 ## How Others Use This Blueprint
 
-### Step 1: Pull
-
 ```bash
 hyle pull acme-platform-team/acme-product-service
+hyle verify             # checks Maven, Node, Docker, Cedar
 ```
 
-### Step 2: Review diff
-
-```bash
-git diff HEAD origin/main
-# Shows: CLAUDE.md, AGENTS.md, policies/, etc.
-```
-
-### Step 3: Install dependencies
-
-```bash
-hyle verify  # Checks Maven, Node, Docker, Cedar
-# Install missing: brew install cedar (etc.)
-```
-
-### Step 4: Adapt for their project
-
-```bash
-# Copy CLAUDE.md as template
-cp CLAUDE.md CLAUDE.md.template
-
-# Edit for their context
-vim CLAUDE.md
-
-# Add their agent specs
-vim .claude/agents/custom-agent.md
-
-# Re-publish under their name
-hyle push my-org/product-service
-```
+Then adapt `CLAUDE.md` and `.claude/agents/` for their project before re-publishing under
+their own name. Full pull/verify mechanics: [CLI reference](../cli-reference.md#hyle-pull).
 
 ---
 

@@ -1,6 +1,6 @@
 # Registry API Documentation
 
-Complete reference for the Hylé Registry backend API. See [DEPLOYMENT.md](../operations/DEPLOYMENT.md) for hosting options (Tier 1-3).
+Complete reference for the Hylé Registry backend API. See [Deployment guide](../deploy/production.md) for hosting options (Tier 1-3).
 
 ## Base URL
 

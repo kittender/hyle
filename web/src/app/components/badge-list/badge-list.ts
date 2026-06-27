@@ -21,16 +21,19 @@ export interface Badge {
   styles: [`
     .badge-list {
       display: flex;
-      gap: 0.5rem;
+      gap: 0.4rem;
       flex-wrap: wrap;
+      margin-top: 10px;
     }
 
     .badge {
-      display: inline-block;
-      padding: 0.25rem 0.75rem;
-      font-size: 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 9px;
+      font-size: 10px;
+      line-height: 1.4;
       font-weight: 600;
-      border-radius: 4px;
+      border-radius: 20px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       white-space: nowrap;

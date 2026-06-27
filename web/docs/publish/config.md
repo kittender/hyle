@@ -189,11 +189,7 @@ blueprint:
 ```
 
 **When to use:** Framework-heavy projects, security-critical workflows, complex tech stacks.
-
-**Install resolution:** On `hyle pull`, Hylé checks each dependency:
-1. Local PATH lookup
-2. Version check (matches constraint?)
-3. If missing, warn user + suggest install command
+Resolution order on pull: [Dependencies](#dependencies) below.
 
 ---
 
@@ -273,7 +269,7 @@ hyle push --dry-run  # See what hyle will publish
 | `recommendations` | — | object | LLMs tested with this blueprint, grouped by category. See Model Recommendations section below. |
 | `dependencies` | — | array of objects | External tools required to use this blueprint. See Dependencies section below. |
 | `blueprint.ontology` | — | array of strings | Knowledge files: CLAUDE.md, specs, features, diagrams, examples. Glob patterns allowed. |
-| `blueprint.craft` | — | array of strings | Technical structure: SKILLS.md, ARCHITECTURE.md, package.json, build configs, MCP setups. Glob patterns. |
+| `blueprint.craft` | — | array of strings | Technical structure: SKILLS.md, architecture.md, package.json, build configs, MCP setups. Glob patterns. |
 | `blueprint.identities` | — | array of strings | Agent definitions: AGENTS.md, `.claude/agents/*.md`, persona configs. Glob patterns. |
 | `blueprint.ethics` | — | array of strings | Policies + constraints: `.cedar` files, TruLens/Ragas evals, compliance docs. Glob patterns. |
 | `blueprint.overrides` | — | array of strings | Files in child that fully replace parent's version (instead of merging). |
@@ -309,8 +305,9 @@ recommendations:                        # Optional: LLMs you tested
 ```
 
 Categories (`universal`, `budget`, `offline`, `advanced`, `harness`) are freeform —
-define as needed. Meanings, model identifiers, and cost guidance: **[Models](MODELS.md)**.
-No block = no recommendations (users try any model).
+define as needed. Meanings, model identifiers, and cost guidance:
+**[Metadata: tags & models](../knowledge/metadata.md)**. No block = no recommendations
+(users try any model).
 
 ---
 
@@ -326,7 +323,7 @@ tags: [works-great, my-favorite]                 # ✗ not searchable
 ```
 
 Full vetted tag catalogue (providers, languages, frameworks, capabilities) +
-combination recipes: **[Tags](CHOOSING_TAGS.md)**.
+combination recipes: **[Metadata: tags & models](../knowledge/metadata.md)**.
 
 ---
 
@@ -492,50 +489,6 @@ blueprint:
 
 ---
 
-## Self-Hosting Environment Variables
-
-These configure the **registry** and **web** services (set via `.env` / compose /
-your orchestrator). The registry parses them once at startup. New names are
-preferred; legacy aliases still work for one release.
-
-### Registry
-
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `HYLE_REGISTRY_URL` | `http://localhost:3000` | Public URL the API advertises (alias: `BASE_URL`) |
-| `HYLE_WEB_URL` | `http://localhost:4200` | Web UI URL, used for post-login redirects (alias: `FRONTEND_URL`) |
-| `HYLE_WEB_ORIGIN` | = `HYLE_WEB_URL` | CORS origin allowed to call the API |
-| `PORT` | `3000` | Listen port |
-| `DB_PATH` | `./hyle-registry.db` | SQLite file (use a mounted volume) |
-| `BUNDLES_PATH` | `./bundles` | Blueprint blob storage dir |
-| `HYLE_RATE_LIMIT` | `10` | Max publishes per author per hour |
-| `HYLE_AUTH_PROVIDER` | `none` | `none` \| `github` \| `oauth2` |
-
-### Auth (only when `HYLE_AUTH_PROVIDER` ≠ `none`)
-
-| Variable | Purpose |
-|----------|---------|
-| `JWT_SECRET` | **Required.** Signs session JWTs. `openssl rand -hex 32`. Boot fails if unset or `default-secret`. |
-| `HYLE_AUTH_CLIENT_ID` / `_CLIENT_SECRET` | OAuth app credentials (aliases: `GITHUB_CLIENT_ID` / `_SECRET`) |
-| `HYLE_AUTH_AUTHORIZE_URL` / `_TOKEN_URL` / `_USERINFO_URL` | OAuth2 endpoints (auto-filled for `github`; **required** for `oauth2`) |
-| `HYLE_AUTH_ID_FIELD` / `_LOGIN_FIELD` / `_EMAIL_FIELD` / `_AVATAR_FIELD` | Map provider userinfo JSON → user fields |
-
-**Safety rails:**
-- `HYLE_AUTH_PROVIDER=none` refuses to boot when `HYLE_REGISTRY_URL` is **not**
-  loopback, unless `HYLE_ALLOW_INSECURE=1`. Keeps the convenient local default
-  from leaking into a real deployment.
-- Auth being `none` makes publishing **anonymous** — only use it on machines you
-  trust (local evaluation, isolated CI).
-
-### Web
-
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `HYLE_REGISTRY_URL` | `http://localhost:3000` | Injected into `config.js` at container start; the URL the browser calls. One image, any environment — no rebuild. |
-
-### CLI
-
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `HYLE_REGISTRY_URL` | `remote_url` from `.hyle`, else `http://localhost:3000` | Registry to target |
-| `HYLE_ALLOW_INSECURE` | unset | Allow `http://` to non-loopback hosts |
+Self-hosting the registry/web services has its own environment variables (`JWT_SECRET`,
+`HYLE_AUTH_PROVIDER`, etc.) — those configure the server, not a blueprint. See
+[Deployment guide → Environment Variables](../deploy/production.md#environment-variables).

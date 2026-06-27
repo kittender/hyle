@@ -4,7 +4,7 @@ Self-host the full Hylé stack (registry + web). The **same Docker images** run
 locally and in any remote environment — only configuration changes between them.
 
 > **Just want a registry running in 5 minutes?** Use the
-> [Self-host quickstart](DEPLOYMENT_QUICK_START.md). This guide is the production
+> [Self-host quickstart](quickstart.md). This guide is the production
 > reference: URL matrix, hosted-platform recipes, scaling, monitoring, incident response.
 
 > **Never deploy mock data.** The `mock` compose profile and the `mock/` folder
@@ -27,9 +27,8 @@ cp .env.example .env   # set URLs, provider, secrets
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
-See [/quickstart.md](../quickstart.md) for the end-to-end walkthrough and
-[CONFIG.md](../reference/CONFIG.md#self-hosting-environment-variables) for every
-variable.
+See [/quickstart.md](../quickstart.md) for the end-to-end walkthrough. Every variable:
+[Environment Variables](#environment-variables) below.
 
 ### Per-environment URL matrix
 
@@ -572,7 +571,53 @@ Or horizontally scale (add more replicas in Kubernetes).
 
 ---
 
-## Next Steps
+## Environment Variables
 
-- **Need help?** Open an issue at [github.com/kittender/hyle/issues](https://github.com/kittender/hyle/issues)
-- **Contributing deployment templates?** PR welcome at [github.com/kittender/hyle](https://github.com/kittender/hyle)
+Configures the **registry** and **web** services (set via `.env` / compose / your
+orchestrator). Parsed once at startup; legacy aliases work for one release.
+
+### Registry
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `HYLE_REGISTRY_URL` | `http://localhost:3000` | Public URL the API advertises (alias: `BASE_URL`) |
+| `HYLE_WEB_URL` | `http://localhost:4200` | Web UI URL, used for post-login redirects (alias: `FRONTEND_URL`) |
+| `HYLE_WEB_ORIGIN` | = `HYLE_WEB_URL` | CORS origin allowed to call the API |
+| `PORT` | `3000` | Listen port |
+| `DB_PATH` | `./hyle-registry.db` | SQLite file (use a mounted volume) |
+| `BUNDLES_PATH` | `./bundles` | Blueprint blob storage dir |
+| `HYLE_RATE_LIMIT` | `10` | Max publishes per author per hour |
+| `HYLE_AUTH_PROVIDER` | `none` | `none` \| `github` \| `oauth2` |
+
+### Auth (only when `HYLE_AUTH_PROVIDER` ≠ `none`)
+
+| Variable | Purpose |
+|----------|---------|
+| `JWT_SECRET` | **Required.** Signs session JWTs. `openssl rand -hex 32`. Boot fails if unset or `default-secret`. |
+| `HYLE_AUTH_CLIENT_ID` / `_CLIENT_SECRET` | OAuth app credentials (aliases: `GITHUB_CLIENT_ID` / `_SECRET`) |
+| `HYLE_AUTH_AUTHORIZE_URL` / `_TOKEN_URL` / `_USERINFO_URL` | OAuth2 endpoints (auto-filled for `github`; **required** for `oauth2`) |
+| `HYLE_AUTH_ID_FIELD` / `_LOGIN_FIELD` / `_EMAIL_FIELD` / `_AVATAR_FIELD` | Map provider userinfo JSON → user fields |
+
+**Safety rails:**
+- `HYLE_AUTH_PROVIDER=none` refuses to boot when `HYLE_REGISTRY_URL` is **not**
+  loopback, unless `HYLE_ALLOW_INSECURE=1`. Keeps the convenient local default
+  from leaking into a real deployment.
+- Auth being `none` makes publishing **anonymous** — only use it on machines you
+  trust (local evaluation, isolated CI).
+
+### Web
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `HYLE_REGISTRY_URL` | `http://localhost:3000` | Injected into `config.js` at container start; the URL the browser calls. One image, any environment — no rebuild. |
+
+### CLI
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `HYLE_REGISTRY_URL` | `remote_url` from `.hyle`, else `http://localhost:3000` | Registry to target |
+| `HYLE_ALLOW_INSECURE` | unset | Allow `http://` to non-loopback hosts |
+
+---
+
+Need help? Open an issue at [github.com/kittender/hyle/issues](https://github.com/kittender/hyle/issues).

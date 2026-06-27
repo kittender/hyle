@@ -1,157 +1,112 @@
 # Core Concepts
 
-The mental model for Hylé, in diagrams. **This is the single home for these
-concepts** — guides and reference link back here instead of repeating them.
+_Blueprints as Refined AI Knowledge_
 
-| Concept | Jump to |
+## From Experiment to Blueprint
+
+For traditional software, you write code, compile, ship. For AI-powered projects, you
+write **natural language files**: CLAUDE.md contexts, agent definitions, specs, policies. This verbatim
+is your **framework** — it shapes how the AI behaves, what it knows, what it can do.
+
+But natural language requires something code doesn't: **iteration through dialogue**. You draft a
+CLAUDE.md, talk to the AI, watch how it behaves, refine the text. Repeat. The verbatim
+gets better. The AI's behavior converges toward what you want. When it's polished — when
+you know it works — that's when it's worth sharing.
+
+A **blueprint** is this refined, tested framework. It's the artifact after the trial and
+error. Tested by its author. Vetted by the community. Ready to give other developers a
+head start.
+
+## Quick Navigation
+
+| Concept | See |
 |---|---|
-| How a pull works | [Pull, step by step](#pull-step-by-step) |
-| How a publish works | [Publish, step by step](#publish-step-by-step) |
-| The four file domains | [Four domains](#four-domains-what-goes-where) |
-| Versioning commands | [snapshot vs push vs release](#publish-decision-tree-snapshot-vs-push-vs-release) |
-| Author trust | [Trust tiers](#trust-tiers-how-authors-build-credibility) |
-| Choosing an LLM | [Model compatibility](#model-compatibility-choosing-your-llm) |
+| What a blueprint IS | [From experiment to blueprint](#from-experiment-to-blueprint) |
+| Why four domains matter | [Four domains](#four-domains-what-goes-where) |
+| How to get started | [Blueprint → Your project](#blueprint--your-project) |
+| Publishing your work | [Publishing guide](publish/index.md) |
+| Building trust | [Community credibility](#community-credibility-tiers) |
+| LLM choice | [Model compatibility](#model-compatibility-what-you-tested) |
+| When to bump versions | [Publish decision tree](#publish-decision-tree-snapshot-vs-push-vs-release) |
 
----
-
-## User Journey: Search → Pull → Apply
-
-How blueprints flow from registry to your project.
+## Blueprint → Your Project
 
 ```mermaid
 graph LR
-    Search["🔍 Search<br/>hyle search java"]
-    Registry["📦 Registry"]
-    Results["📋 Results<br/>Pick blueprint"]
-    DryRun["🔎 Preview<br/>hyle pull --dry-run"]
-    Review["👁️ Review<br/>Inspect diff"]
+    Find["🔍 Find<br/>hyle search"]
+    Blueprint["📦 Blueprint<br/>author/name"]
+    Preview["🔎 Preview<br/>--dry-run"]
+    Review["👁️ Read diff<br/>Understand"]
     Apply["✅ Apply<br/>hyle pull"]
-    Verify["🔐 Verify<br/>Deps & checksums"]
-    Done["✨ Ready<br/>Blueprint loaded"]
+    Work["🚀 Work<br/>Customize"]
     
-    Search -->|query| Registry
-    Registry -->|matches| Results
-    Results -->|select| DryRun
-    DryRun -->|show| Review
-    Review -->|approve| Apply
-    Apply -->|run| Verify
-    Verify -->|ok| Done
+    Find -->|registry| Blueprint
+    Blueprint -->|fetch| Preview
+    Preview -->|show changes| Review
+    Review -->|trust| Apply
+    Apply -->|merge| Work
     
-    style Registry fill:#90a4ae
-    style Apply fill:#4caf50
-    style Verify fill:#2196f3
-    style Done fill:#4caf50
+    style Blueprint fill:#4caf50
+    style Apply fill:#2196f3
+    style Work fill:#9c27b0
 ```
 
-**Key moments:**
-- `hyle search` — queries registry metadata (fast, local cache)
-- `hyle pull --dry-run` — shows diff WITHOUT applying (inspect before committing)
-- `git diff` — see exact changes (git history preserved)
-- `hyle verify` — sanity check (deps, checksums, models available)
+You're not installing a binary. You're **adopting curated specifications**. You review it
+before merging. You understand what's changing. You keep it in git history.
 
 ---
 
-## Pull, Step by Step
+## Community Credibility Tiers
 
-What `hyle pull` actually does. The registry only holds metadata + checksums; file
-content comes from the author's GitHub, verified against SHA-256.
-
-```mermaid
-sequenceDiagram
-    actor U as You
-    participant CLI as hyle CLI
-    participant Reg as Registry
-    participant GH as GitHub (source)
-
-    U->>CLI: hyle pull author/name
-    CLI->>Reg: fetch manifest + checksums
-    Reg-->>CLI: hyle.yaml + SHA-256
-    CLI->>GH: fetch referenced files
-    GH-->>CLI: file contents
-    CLI->>CLI: verify SHA-256
-    CLI->>CLI: check declared dependencies
-    CLI-->>U: show diff + paid-service warnings
-    U->>CLI: approve
-    CLI->>CLI: apply files to project
-```
-
----
-
-## Publish, Step by Step
-
-What `hyle push` does. Your `hyle.yaml` is the **allowlist** — only files it names
-ship; the registry stores checksums, never your files.
-
-```mermaid
-sequenceDiagram
-    actor A as Author
-    participant CLI as hyle CLI
-    participant Git as Git / GitHub
-    participant Reg as Registry
-
-    A->>CLI: hyle init
-    CLI-->>A: hyle.yaml (name+author unique)
-    A->>CLI: hyle ontology / craft / identities / ethics
-    CLI-->>A: manifest populated (the allowlist)
-    A->>CLI: hyle push
-    CLI->>Git: verify files committed + pushed
-    CLI->>Git: tag hyle-v{version}
-    CLI->>Reg: register manifest + per-file SHA-256
-    Reg->>Reg: async security scan
-    Reg-->>A: listed (or [flagged])
-```
-
-See [snapshot vs push vs release](#publish-decision-tree-snapshot-vs-push-vs-release)
-for which command bumps which version.
-
----
-
-## Trust Tiers: How Authors Build Credibility
+As an author shares blueprints, the community validates your work. This isn't gatekeeping.
+It's the same way developers trust well-maintained open-source libraries: track record,
+usage, community feedback.
 
 ```mermaid
 graph TD
-    New["🆕 Unverified"]
-    Time["⏳ 6mo history"]
-    Pulls["📥 50+ pulls"]
-    NoFlags["✅ No flags"]
-    Community["✅ Community"]
-    Email["📧 Request"]
-    Manual["🛡️ Verified"]
+    New["🆕 New Author"]
+    Time["⏳ Published 6+ months"]
+    Community["✅ Community Trusted<br/>50+ active pulls"]
+    Team["🛡️ Verified<br/>Hylé team"]
     
     New -->|publish| Time
-    Time -->|also| Pulls
-    Pulls -->|and| NoFlags
-    NoFlags -->|auto| Community
-    New -->|or| Email
-    Email -->|team review| Manual
+    Time -->|+ community use| Community
+    Community -->|or request| Team
+    Team -->|official review| Team
     
     style New fill:#ff9800
     style Community fill:#2196f3
-    style Manual fill:#4caf50
+    style Team fill:#4caf50
 ```
 
-**What unlocks at each tier:**
+**What each tier means for you as a user:**
 
-| Tier | Requirements | Means |
-|------|---|---|
-| 🆕 **Unverified** | New author | No history; assume caution |
-| ✅ **Community** | 50+ pulls + 6mo + no flags | Auto-promoted; trusted by community |
-| 🛡️ **Verified** | OAuth + manual Hylé team review | Official endorsement |
+- **🆕 New** — First blueprint. No usage data yet. Review more carefully. Author is
+  learning.
+- **✅ Community** — 50+ developers are using this. It's been tested in production.
+  Author responds to feedback. Safe to depend on.
+- **🛡️ Verified** — Hylé team reviewed. Author maintains actively. You can cite this
+  in team decisions, RFCs, architectural docs. Enterprise-grade.
+
+**Building trust as an author?** See the [Publishing guide](publish/index.md#registry-safety--trust)
+for the concrete checklist — publish cadence, responding to flags, documentation.
 
 ---
 
-## Four Domains: What Goes Where?
+## Four Domains: What Goes Where
 
-Blueprint splits files into 4 orthogonal categories. Each file belongs to exactly one.
+When you iterate on markdown, you're actually refining four different kinds of
+knowledge. Blueprints organize these separately so they can be reused, combined,
+and tested independently.
 
 ```mermaid
 graph TB
     Blueprint["📦 Blueprint"]
     
-    Ontology["📚 Ontology<br/>Knowledge: What"]
-    Craft["🔧 Craft<br/>Technical: How"]
-    Identities["👤 Identities<br/>Personas: Who"]
-    Ethics["🔐 Ethics<br/>Constraints: Limits"]
+    Ontology["📚 Ontology<br/>Domain Knowledge"]
+    Craft["🔧 Craft<br/>Technical Setup"]
+    Identities["👤 Identities<br/>Agent Behaviors"]
+    Ethics["🔐 Ethics<br/>Constraints"]
     
     Blueprint --> Ontology
     Blueprint --> Craft
@@ -164,141 +119,96 @@ graph TB
     style Ethics fill:#fce4ec
 ```
 
-**Decision matrix: Where does each file go?**
+### Ontology: What the AI Needs to Know
 
-| File | Domain | Why |
-|------|--------|-----|
-| CLAUDE.md | Ontology | Describes project context (knowledge) |
-| AGENTS.md | Identities | Defines agent roles + personas |
-| ARCHITECTURE.md | Craft | Technical design (how to build) |
-| package.json | Craft | Dependencies + build config (how) |
-| .cedar policies | Ethics | Access control + constraints (limits) |
-| spec.pdf | Ontology | Domain knowledge (what) |
-| .mcp.json | Craft | Tool integration (how to wire) |
-| PRIVACY.md | Ethics | Data handling policy (limits) |
+Context, specs, patterns, domain knowledge. Anything that teaches the AI about your
+problem space.
 
-**Key principle:** Domains are **orthogonal** — no overlap. A file goes in ONE place.
+- CLAUDE.md — Project background, constraints, decisions
+- spec.pdf — API contract, business rules
+- architecture.md — System design, key components
+- architecture patterns — Domain-specific techniques
+
+### Craft: How to Build It
+
+Dependencies, tools, infrastructure, integrations. Technical setup.
+
+- package.json — Dependencies (language, frameworks)
+- .mcp.json — MCP server config (what the AI can call)
+- Dockerfile / deployment scripts — How to run it
+- CI/CD workflow — How to test
+
+### Identities: Who the AI Is
+
+Agent definitions, personas, behavioral constraints, role-specific instructions.
+
+- AGENTS.md — Agent descriptions, capabilities
+- .claude/agents/*.md — Specific agent personalities + guardrails
+- prompt templates — Role-specific patterns (code reviewer, architect, etc.)
+
+### Ethics: What the AI Cannot Do
+
+Policies, compliance, data handling, legal constraints.
+
+- PRIVACY.md — Data retention, anonymization rules
+- .cedar files — Access control policies
+- Security audit — Compliance checklist
+- Content policies — What's off-limits
+
+**Key principle:** Domains are **orthogonal**. A file belongs in exactly one. This
+separation matters because:
+
+- You can **reuse ontology** (Java coding knowledge) across different craft setups
+  (Gradle, Maven, etc.).
+- You can **swap identities** (switch from "code reviewer" to "architect") without
+  changing domain knowledge.
+- Ethics **layers on top** — same constraints whether identity is a reviewer or mentor.
+
+When you pull a blueprint, you're often mixing: you want *their* Java ontology, *your*
+craft setup, *a different* identity. The four domains make this surgical.
 
 ---
 
-## Model Compatibility: Choosing Your LLM
+## Model Compatibility: What You Tested
 
-Blueprint declares recommended LLMs (tested, not enforced). Users choose which to use.
+Your markdown was refined and tested against specific models. When you pull a blueprint,
+you're not just getting someone's code — you're leveraging the testing they did.
 
-```mermaid
-graph LR
-    Blueprint["📋 Blueprint"]
-    Universal["Universal<br/>Any LLM"]
-    Budget["Budget<br/>Small models"]
-    Offline["Offline<br/>Local"]
-    Harness["Harness<br/>Bedrock"]
-    
-    User["👤 User picks"]
-    Cost["💰 Cost"]
-    Privacy["🔒 Privacy"]
-    Setup["⚙️ Setup"]
-    
-    Blueprint --> Universal
-    Blueprint --> Budget
-    Blueprint --> Offline
-    Blueprint --> Harness
-    
-    User --> Cost
-    User --> Privacy
-    User --> Setup
-    
-    Cost -.->|budget| Budget
-    Privacy -.->|local| Offline
-    Setup -.->|cloud| Harness
-    
-    style Blueprint fill:#90a4ae
-    style Universal fill:#4caf50
-    style Budget fill:#2196f3
-    style Offline fill:#ff9800
-    style Harness fill:#9c27b0
-```
+"I tested this agent definition with Claude Sonnet, and it's solid" is valuable
+information. Different models have different strengths. An agent prompt tuned for
+reasoning might excel on Opus but stumble on Haiku.
 
-**How to declare:**
+Blueprint authors declare which LLMs they tested via a `recommendations` block —
+categories (universal, budget, offline, advanced, harness), declaration syntax, and
+how to search by tag: [Metadata: tags & models](knowledge/metadata.md).
 
-```yaml
-recommendations:
-  universal:
-    - anthropic/claude-sonnet-4-6
-    - openai/gpt-4o
-    - ollama/qwen2.5:14b
-  
-  budget:
-    - anthropic/claude-haiku-4-5
-    - openai/gpt-4o-mini
-  
-  offline:
-    - ollama/qwen2.5:14b
-  
-  harness:
-    - bedrock/anthropic.claude-3-sonnet
-    - cursor/claude-sonnet-4-6
-```
-
-**Search & filter:**
-```bash
-hyle search --tag budget       # Only blueprints tagged budget-friendly
-hyle search --tag bedrock      # Only blueprints tagged Bedrock-compatible
-```
-
-**If no `recommendations` block:** Assumes `universal` (works everywhere).
+**Why this matters:** You're not guessing whether a blueprint will work with your model
+choice. The author already knows. If they tested it, trust compounds. If they didn't
+test on your target model, you know to validate yourself before depending on it.
 
 ---
 
 ## Publish Decision Tree: snapshot vs push vs release
 
-When should you use each command?
+Your blueprint evolves. So does how you share it.
 
-```mermaid
-graph TD
-    Start["Ready?"]
-    Stable{"Stable &<br/>tested?"}
-    Breaking{"Breaking<br/>changes?"}
-    
-    No["❌ Not ready"]
-    Snapshot["snapshot<br/>patch WIP"]
-    
-    Yes["✅ Stable"]
-    NoBreaking["✅ Compatible"]
-    Push["push<br/>minor"]
-    
-    HasBreaking["❌ Breaking"]
-    Release["release<br/>major"]
-    
-    Start --> Stable
-    Stable -->|No| No
-    No --> Snapshot
-    
-    Stable -->|Yes| Yes
-    Yes --> Breaking
-    Breaking -->|No| NoBreaking
-    NoBreaking --> Push
-    
-    Breaking -->|Yes| HasBreaking
-    HasBreaking --> Release
-    
-    style Snapshot fill:#ff9800
-    style Push fill:#4caf50
-    style Release fill:#2196f3
-```
+**`hyle snapshot`** — You're still refining. Not ready for production use. Useful for
+asking for early feedback in your team or from trusted reviewers. Not listed on the
+public registry.
 
-**Quick checklist:**
+**`hyle push`** — You've tested. Documented. Fixed bugs. API is stable. Other
+developers can depend on it. Backwards-compatible. Bump minor version. List on registry.
+
+**`hyle release`** — Breaking change. You removed an agent, renamed core files, or
+rewired the craft layer in a way old blueprints can't use directly. Developers upgrading
+need to know. Bump major version. Announce migration path.
+
+**Quick reference:**
 
 ```
-Only docs changed? → hyle push (minor)
-New feature, old code works? → hyle push (minor)
-Removed/renamed agent? → hyle release (major)
-Still testing? → hyle snapshot (patch, WIP)
+Only docs/examples changed?          → hyle push (stable, minor bump)
+New agent added, old still work?     → hyle push (feature, minor bump)
+Removed an agent or renamed files?   → hyle release (breaking, major bump)
+Still experimenting, not ready?      → hyle snapshot (WIP, not listed)
 ```
 
----
-
-## See Also
-
-- [Publishing guide](publish/index.md) — Full walkthrough + strategy
-- [Config reference](publish/config.md) — Configuration patterns + all fields
-- [CLI reference](cli-reference.md) — All commands with examples

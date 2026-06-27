@@ -1,13 +1,8 @@
-# Hylé Architecture & Design Decisions
+# Architecture
+
+_Hylé design decisions & trade-offs_
 
 Architectural principles, design trade-offs, and known issues.
-
-**Quick Links:**
-- [BACKLOG.md](../BACKLOG.md) — Possible evolutions (unreleased / WIP)
-- [SECURITY_AUDIT.md](SECURITY_AUDIT.md) — Threat model, P0-P10 findings
-- [DEPLOYMENT.md](DEPLOYMENT.md) — Operations, monitoring, runbooks
-- [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) — Pre-ship checklist
-- [CONTRIBUTING.md](CONTRIBUTING.md) — Dev setup, testing, PR workflow
 
 ---
 

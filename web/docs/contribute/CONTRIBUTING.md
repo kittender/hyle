@@ -1,12 +1,7 @@
 # Contributing to Hylé
 
-Start with [DEV_QUICK_START.md](DEV_QUICK_START.md) (2-min setup).
-
----
-
-## Code of Conduct
-
-Read and follow our [Code of Conduct](CODE_OF_CONDUCT.md) when participating.
+Be respectful and constructive in issues, PRs, and discussions — standard open-source
+conduct.
 
 ---
 
@@ -15,13 +10,37 @@ Read and follow our [Code of Conduct](CODE_OF_CONDUCT.md) when participating.
 ```bash
 git clone https://github.com/kittender/hyle.git
 cd hyle
-bun install
+bun install                    # installs all workspaces (cli, web, registry)
 cd cli
-bun run build
-bun test
+bun run build                  # compiles to dist/hyle
+bun test                       # 102+ tests, 2-3 sec
 ```
 
 **Time:** ~5 min.
+
+### Project Structure
+
+```
+cli/
+  src/
+    commands/        # init, pull, push, publish, etc.
+    manifest.ts       # hyle.yaml validation
+    config.ts         # .hyle file parsing
+  tests/
+    fixtures/          # valid, invalid, malicious test cases
+
+web/
+  src/app/            # Angular components
+  src/app/api/        # Registry API routes
+```
+
+### Local Registry (Mock)
+
+```bash
+bun scripts/mock-registry.ts --port 3001    # Terminal 1
+hyle search test                            # Terminal 2 — should list mock blueprints
+hyle pull org/test-blueprint                # should extract files
+```
 
 ---
 
@@ -62,23 +81,20 @@ Types: `feat`, `fix`, `docs`, `test`, `refactor`, `chore`, `security`
 ## Testing
 
 ```bash
-# Run tests
-bun test
-
-# Match pattern
-bun test --grep "validateManifest"
-
-# Coverage
+bun test                          # run all
+bun test --grep "validateManifest"  # match pattern
 bun test --coverage
-
-# Offline (no network)
-bun test --offline
-
-# Mock registry
-bun scripts/mock-registry.ts --port 3001
+bun test --offline                # no network
 ```
 
-Test fixtures: `cli/tests/fixtures/` (valid, invalid, malicious cases)
+Test fixtures: `cli/tests/fixtures/` (valid, invalid, malicious cases).
+
+| Task | Command |
+|------|---------|
+| Lint | `bun run lint` |
+| Security audit | `bun audit --production` |
+| Debug logs | `DEBUG=hyle:* bun run build` |
+| Test one file | `bun test cli/src/manifest.test.ts` |
 
 ---
 
@@ -90,16 +106,16 @@ Before submitting:
 - `bun audit --production`
 - `bun run lint` passes
 
-**Reporting:** See [SECURITY.md](SECURITY.md) for responsible disclosure.
+**Reporting:** See [security.md](../security/security.md) for responsible disclosure.
 
 ---
 
 ## Documentation Updates
 
 Update docs when:
-- Adding CLI command → [PUBLISHING.md](PUBLISHING.md) or [README.md](README.md)
-- Changing manifest schema → [CONFIG.md](CONFIG.md)
-- Major architectural change → [ARCHITECTURE.md](ARCHITECTURE.md)
+- Adding a CLI command → [cli-reference.md](../cli-reference.md)
+- Changing manifest schema → [Config reference](../publish/config.md)
+- Major architectural change → [architecture.md](../knowledge/architecture.md)
 
 Keep examples up-to-date with schema.
 
@@ -126,4 +142,4 @@ GitHub Actions auto-publishes.
 
 - Design: [GitHub Discussions](https://github.com/kittender/hyle/discussions)
 - Bugs: [Issues](https://github.com/kittender/hyle/issues)
-- Security: [SECURITY.md](../security/SECURITY.md)
+- Security: [Security policy](../security/security.md)

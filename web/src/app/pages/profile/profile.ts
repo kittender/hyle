@@ -1,7 +1,8 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../services/auth.service';
 import { ApiService, ActivityEvent } from '../../services/api.service';
 import { Print, ActivityItem, blueprintToprint } from '../../models/print.model';
@@ -50,6 +51,7 @@ export class ProfileComponent implements OnInit {
   myPrints: Print[] = [];
   starredPrints: Print[] = [];
   activity: ActivityItem[] = [];
+  private destroyRef = inject(DestroyRef);
 
   constructor(
     public authService: AuthService,
@@ -59,20 +61,24 @@ export class ProfileComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.route.url.subscribe(segments => {
-      this.isPublic = segments.some(s => s.path === 'public');
-      // The public profile demo falls back to a known seeded author.
-      const username = this.authService.user()?.username ?? (this.isPublic ? 'andrej-kirskyn' : null);
-      if (username) {
-        this.loadAuthorProfile(username);
-        this.loadStarred(username);
-        this.loadActivity(username);
-      }
-    });
+    this.route.url
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(segments => {
+        this.isPublic = segments.some(s => s.path === 'public');
+        // The public profile demo falls back to a known seeded author.
+        const username = this.authService.user()?.username ?? (this.isPublic ? 'andrej-kirskyn' : null);
+        if (username) {
+          this.loadAuthorProfile(username);
+          this.loadStarred(username);
+          this.loadActivity(username);
+        }
+      });
   }
 
   loadAuthorProfile(username: string) {
-    this.apiService.getAuthor(username).subscribe({
+    this.apiService.getAuthor(username)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
       next: (profile) => {
         this.myPrints = profile.blueprints.map(blueprintToprint);
         if (profile.bio) this.bio.set(profile.bio);
@@ -87,13 +93,17 @@ export class ProfileComponent implements OnInit {
   }
 
   loadStarred(username: string) {
-    this.apiService.getUserStars(username).subscribe(results => {
-      this.starredPrints = results.map(blueprintToprint);
-    });
+    this.apiService.getUserStars(username)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(results => {
+        this.starredPrints = results.map(blueprintToprint);
+      });
   }
 
   loadActivity(username: string) {
-    this.apiService.getActivity(username, 20).subscribe(events => {
+    this.apiService.getActivity(username, 20)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(events => {
       this.activity = events.map((e: ActivityEvent): ActivityItem => ({
         type: e.type,
         print: `${e.blueprint_author}/${e.blueprint_name}`,
