@@ -39,7 +39,7 @@ Don't want to link? Run from source: `bun run cli/src/index.ts <command>`.
 
 | Need | Doc |
 |------|-----|
-| Local-test → deploy walkthrough | **[QUICKSTART.md](web/docs/1_QUICKSTART.md)** |
+| Local-test → deploy walkthrough | **[quickstart.md](web/docs/quickstart.md)** |
 | Dev setup | [DEV_QUICK_START.md](web/docs/contribute/DEV_QUICK_START.md) |
 | Package-manager installers (brew/choco/apt) | [backlog](web/docs/contribute/BACKLOG.md) |
 
@@ -152,42 +152,16 @@ Auth opt-in (GitHub OAuth / generic OIDC). Details → **[ARCHITECTURE.md](web/d
 
 ## Documentation
 
-Layered: **orient → quickstart → guide → reference.** Read down only as far as your task needs. Start with [Core concepts](web/docs/2_CONCEPTS.md) for the mental model (all diagrams live there).
-
-```mermaid
-graph TD
-    README["README<br/>what + why"] --> CONCEPTS["Core Concepts<br/>mental model + diagrams"]
-    README --> Q{"Your goal?"}
-
-    Q -->|use a blueprint| USE["Quickstart: Find &amp; Pull"]
-    Q -->|publish one| PUB["Quickstart: Publish"]
-    Q -->|self-host| HOST["Quickstart: Self-Host"]
-    Q -->|contribute| DEV["Quickstart: Dev"]
-
-    USE -.problem.-> TS["Troubleshooting"]
-    PUB -.walkthrough.-> BUILD["Building + Example"]
-    PUB -.strategy.-> PUBG["Publishing<br/>versioning, trust, cost"]
-    HOST -.production.-> DEPLOY["Deployment"]
-
-    BUILD -.lookup.-> REF[("Reference<br/>CLI · Config · Models<br/>Tags · API · Architecture")]
-    PUBG -.lookup.-> REF
-    DEPLOY -.lookup.-> REF
-    REF -.audit.-> SEC["Security + Audit"]
-
-    style README fill:#4caf50
-    style CONCEPTS fill:#90a4ae
-    style REF fill:#e3f2fd
-    style SEC fill:#fce4ec
-```
+Layered: **orient → quickstart → guide → reference.** Start with [Core concepts](web/docs/concepts.md) for the mental model.
 
 | I want to… | Start here | Go deeper |
 |---|---|---|
-| **Understand Hylé** | [Core concepts](web/docs/2_CONCEPTS.md) | — |
-| **Use a blueprint** | [search & pull](web/docs/3_CLI_COMMANDS.md) | [Troubleshooting](web/docs/4_TROUBLESHOOTING.md) |
-| **Publish a blueprint** | [Building](web/docs/publish/1_BUILDING.md) | [Publishing](web/docs/knowledge/HOW_TO_PUBLISH.md) · [Example](web/docs/publsih/3_EXAMPLE_BLUEPRINT.md) |
-| **Self-host the registry** | [Self-host quickstart](web/docs/deploy/DEPLOYMENT_QUICK_START.md) | [Production deployment](web/docs/deploy/DEPLOYMENT.md) |
-| **Contribute code** | [Dev quick start](web/docs/contribute/DEV_QUICK_START.md) | [Contributing](web/docs/guides/CONTRIBUTING.md) |
+| **Understand Hylé** | [Concepts](web/docs/concepts.md) (mental models + diagrams) | — |
+| **Use a blueprint** | [Quickstart](web/docs/quickstart.md) (find & pull) | [CLI reference](web/docs/cli-reference.md) · [Troubleshooting](web/docs/troubleshooting.md) |
+| **Publish my own** | [Publishing](web/docs/publish/index.md) (quick start + full guide) | [Config reference](web/docs/publish/config.md) · [Example](web/docs/publish/example.md) |
+| **Self-host registry** | [Deploy quickstart](web/docs/deploy/quickstart.md) (5 min, local) | [Production guide](web/docs/deploy/production.md) · [CLI distribution](web/docs/deploy/CLI_DISTRIBUTION.md) |
+| **Contribute code** | [Dev setup](web/docs/contribute/DEV_QUICK_START.md) | [Contributing](web/docs/contribute/CONTRIBUTING.md) |
 
-**Reference** (look up, don't read end-to-end): [CLI Commands](web/docs/3_CLI_COMMANDS.md) · [Configuration](web/docs/publish/2_CONFIG.md) · [Models](web/docs/knowledge/MODELS_RECOMMENDATIONS.md) · [Tags](web/docs/knowledge/CHOOSING_TAGS.md) · [Architecture](web/docs/knowledge/ARCHITECTURE.md) · [Registry API](web/docs/contribute/REGISTRY_API.md)
+**Reference (look up as needed):** [CLI commands](web/docs/cli-reference.md#core-commands) · [Config files](web/docs/publish/config.md) · [Models & pricing](web/docs/knowledge/MODELS_RECOMMENDATIONS.md) · [Tags](web/docs/knowledge/CHOOSING_TAGS.md) · [Registry API](web/docs/contribute/REGISTRY_API.md) · [Architecture](web/docs/knowledge/ARCHITECTURE.md)
 
-**Security:** [Policy](web/docs/security/SECURITY.md) · [Audit](web/docs/security/SECURITY_AUDIT.md) — **Roadmap:** [Backlog](web/docs/contribute/BACKLOG.md)
+**Security:** [Policy](web/docs/security/SECURITY.md) · [Audit](web/docs/security/SECURITY_AUDIT.md) · **Roadmap:** [Backlog](web/docs/contribute/BACKLOG.md)

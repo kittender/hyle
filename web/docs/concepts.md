@@ -299,6 +299,6 @@ Still testing? → hyle snapshot (patch, WIP)
 
 ## See Also
 
-- [CONFIG.md](publish/2_CONFIG.md) — Domains explained in detail + patterns
-- [PUBLISHING_QUICKSTART.md](publish/PUBLISHING_QUICKSTART.md) — Step-by-step walkthrough
-- [PUBLISHING.md](knowledge/HOW_TO_PUBLISH.md) — Publishing strategy + trust model
+- [Publishing guide](publish/index.md) — Full walkthrough + strategy
+- [Config reference](publish/config.md) — Configuration patterns + all fields
+- [CLI reference](cli-reference.md) — All commands with examples

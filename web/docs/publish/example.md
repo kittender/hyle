@@ -50,7 +50,7 @@ acme-product-service/
 
 ### Categorize into 4 domains
 
-Applied to this repo (general rule: [Four domains](../CONCEPTS.md#four-domains-what-goes-where)):
+Applied to this repo (general rule: [Four domains](../concepts.md#four-domains-what-goes-where)):
 
 | File(s) | Domain | Why |
 |---------|--------|-----|

@@ -2,6 +2,31 @@
 
 Complete guide to all `hyle` CLI commands.
 
+👇 **Quick jump:**
+
+| I want to… | Jump to |
+|---|---|
+| Initialize a new blueprint | [hyle init](#hyle-init) |
+| Find a blueprint | [hyle search](#hyle-search) |
+| Install a blueprint | [hyle pull](#hyle-pull) |
+| Publish my own | [hyle push / release](#hyle-publish--hyle-push--hyle-release) |
+| Auto-populate domains | [Scan commands](#scan-commands) (ontology, craft, identities, ethics) |
+| Check my manifest | [hyle validate](#hyle-validate) |
+| Fix missing dependencies | [hyle verify](#hyle-verify) |
+| Check for updates | [hyle outdated](#hyle-outdated) |
+| See all config options | [Configuration files](#configuration-files) |
+
+👇 **By category:**
+- [Core commands](#core-commands) — everyday use
+- [Scan commands](#scan-commands) — auto-populate blueprint domains
+- [Validation & verification](#validation--verification) — check your work
+- [Version management](#dependency--version-management) — updates & upgrades
+- [Extensions](#extension-commands) — LLM-powered features (optional)
+- [Global options](#global-options) — available on any command
+- [Config files](#configuration-files) — hyle.yaml, .hyle, .hyleignore
+- [Environment variables](#environment-variables) — override behavior
+- [Common workflows](#tips--common-workflows) — step-by-step examples
+
 ---
 
 ## Core Commands
@@ -355,7 +380,7 @@ remote_url: https://registry.hylé.com      # Registry URL
 
 Auth is handled separately by `hyle login` (stores an OAuth token in `~/.hyle/auth.json`), not via this file.
 
-See [CONFIG.md](publish/2_CONFIG.md) for full reference.
+See [CONFIG.md](publish/config.md) for full reference.
 
 ---
 
@@ -377,7 +402,7 @@ config/local.*
 .idea/
 ```
 
-See [CONFIG.md](publish/2_CONFIG.md) for full reference.
+See [CONFIG.md](publish/config.md) for full reference.
 
 ---
 
@@ -443,7 +468,7 @@ hyle push                          # Publish to local
 
 ## See Also
 
-- [CONFIG.md](publish/2_CONFIG.md) — Detailed config file reference
-- [PUBLISHING_QUICKSTART.md](publish/6_PUBLISHING_QUICKSTART.md) — Step-by-step walkthrough
-- [PUBLISHING.md](knowledge/HOW_TO_PUBLISH.md) — Publishing best practices & versioning
-- [TROUBLESHOOTING.md](4_TROUBLESHOOTING.md) — Common errors & fixes
+- [Publishing guide](publish/index.md) — Full walkthrough from idea to registry
+- [Config reference](publish/config.md) — Detailed `hyle.yaml`, `.hyle`, `.hyleignore`
+- [Troubleshooting](troubleshooting.md) — Common errors & fixes
+- [Concepts](concepts.md) — Mental models: pull flow, publish flow, four domains

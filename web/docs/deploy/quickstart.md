@@ -318,4 +318,4 @@ See [Tier 3 setup](DEPLOYMENT.md#tier-3-enterprise-high-scale) (Docker Compose o
 
 ---
 
-**Questions?** See [TROUBLESHOOTING.md](../4_TROUBLESHOOTING.md) or file an issue on [GitHub](https://github.com/kittender/hyle).
+**Questions?** See [TROUBLESHOOTING.md](../troubleshooting.md) or file an issue on [GitHub](https://github.com/kittender/hyle).

@@ -9,7 +9,7 @@ locally and in any remote environment — only configuration changes between the
 
 > **Never deploy mock data.** The `mock` compose profile and the `mock/` folder
 > are a local-only demo aid (see
-> [QUICKSTART](../QUICKSTART.md#1b-populate-with-mock-data-optional)). Production
+> [QUICKSTART](../quickstart.md#1b-populate-with-mock-data-optional)). Production
 > runs `docker compose up` **without** `--profile mock`, so the `seed` service
 > never starts.
 
@@ -27,7 +27,7 @@ cp .env.example .env   # set URLs, provider, secrets
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
-See [/QUICKSTART.md](../QUICKSTART.md) for the end-to-end walkthrough and
+See [/quickstart.md](../quickstart.md) for the end-to-end walkthrough and
 [CONFIG.md](../reference/CONFIG.md#self-hosting-environment-variables) for every
 variable.
 

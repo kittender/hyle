@@ -433,7 +433,7 @@ If you've narrowed it down and need help, file an issue at [kittender/hyle/issue
 
 ## Still Stuck?
 
-- Check [Configuration Reference](publish/2_CONFIG.md) for all valid fields
-- Read [Example Blueprint](publish/3_EXAMPLE_BLUEPRINT.md) for a real project layout
+- Check [Configuration Reference](publish/config.md) for all valid fields
+- Read [Example Blueprint](publish/example.md) for a real project layout
 - Check registry at `https://registry.hylé.com` for examples
 - [Security policy](security/SECURITY.md) — for security incidents specifically

@@ -63,7 +63,7 @@ cd mock && bun install
 HYLE_REGISTRY_URL=http://localhost:3000 DB_PATH=<path-to>/hyle-registry.db bun run seed.ts
 ```
 
-See [`mock/README.md`](../../mock/README.md) for the dataset layout, the
+See [`mock/README.md`](../../mock/README.md) for dataset layout, the
 `seed-data.json` schema, and how to add your own mock blueprints.
 
 ## 2. Use the CLI against your local registry
@@ -77,7 +77,7 @@ cd cli && bun install && bun run link    # registers the bare `hyle` command
 
 (Or skip the link and run any command through `bun run dev -- <command>` from
 `cli/` — same CLI, no PATH entry.) Full options:
-[CLI distribution](deploy/CLI_DISTRIBUTION.md).
+[CLI distribution](deploy/CLI_DISTRIBUTION.md) — build npm/standalone packages.
 
 > After linking, confirm `hyle` resolves to the bundle you just built — a shell
 > function, alias, or another `hyle` earlier on PATH will silently shadow it:
@@ -132,8 +132,8 @@ Pick the URL set per environment:
 
 Auth is **opt-in**. `github` uses GitHub OAuth; `oauth2` is a generic
 OAuth2/OIDC provider you point at GitLab, Bitbucket, Keycloak, Okta, etc. — see
-[Configuration](publish/2_CONFIG.md#self-hosting-environment-variables)
-and [Deployment](deploy/DEPLOYMENT.md).
+[Configuration](publish/config.md#self-hosting-environment-variables)
+and [Deployment](deploy/production.md).
 
 The CLI can be published to **npmjs** or a private registry like **Artifactory**
-— see [CLI distribution](deploy/CLI_DISTRIBUTION.md).
+— see [CLI distribution](deploy/CLI_DISTRIBUTION.md) — build npm/standalone packages.

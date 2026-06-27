@@ -85,7 +85,7 @@ erDiagram
 
 - `name + author + semver` is the uniqueness key the registry enforces.
 - `extends` is self-referential and capped at depth 2 (no grandparent chains).
-- `FILE.domain` is exactly one of the four — see [Four domains](../CONCEPTS.md#four-domains-what-goes-where).
+- `FILE.domain` is exactly one of the four — see [Four domains](../concepts.md#four-domains-what-goes-where).
 
 ---
 

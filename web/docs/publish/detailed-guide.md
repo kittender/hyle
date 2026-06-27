@@ -56,7 +56,7 @@ git commit -m "docs: add Claude context"
 ## Step 2: Organize Into Four Domains
 
 Categorize your files into **ontology, craft, identities, ethics**. Each file
-belongs to exactly one — see [Four domains](../CONCEPTS.md#four-domains-what-goes-where)
+belongs to exactly one — see [Four domains](../concepts.md#four-domains-what-goes-where)
 for the decision matrix (what goes where, and why).
 
 ### Organize your files
