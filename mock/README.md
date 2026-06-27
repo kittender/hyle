@@ -16,8 +16,7 @@ activity feed.
 mock/
   blueprints/<author>/<name>/   real blueprint sources: hyle.yaml + referenced
                                 ontology/ identities/ craft/ ethics/ files
-  seed-data.json                the social graph + per-blueprint metadata
-  seed.ts                       Bun ingestion script
+  seed.ts                       Bun ingestion script (auto-discovers + generates)
   Dockerfile                    one-shot seeder image (compose `seed` service)
   package.json                  seeder deps (js-yaml, tar)
 ```
@@ -30,9 +29,20 @@ From the repo root:
 docker compose --profile mock up --build
 ```
 
-The `seed` service waits for the registry to be healthy, publishes the blueprints
-through the API, then writes the social graph into the shared `registry-data`
-volume. It is idempotent; to re-seed from scratch, `docker compose down -v` first.
+The `seed` service:
+1. Auto-discovers all blueprints in `blueprints/<author>/<name>/`.
+2. Generates mock stats (stars, reviews, installs) and version history (2–3
+   versions per blueprint).
+3. Publishes all versions through the public API.
+4. Writes the social graph to SQLite (mock user, stars, reviews, install events,
+   activity feed).
+
+Seeding is **non-idempotent**: re-running clears old data and generates fresh mock
+stats. To re-seed:
+
+```bash
+docker compose down -v && docker compose --profile mock up --build
+```
 
 Run it manually against a running registry:
 
@@ -44,70 +54,31 @@ HYLE_REGISTRY_URL=http://localhost:3000 DB_PATH=<path>/hyle-registry.db bun run 
 Env vars: `HYLE_REGISTRY_URL` (default `http://localhost:3000`), `DB_PATH`
 (default `/data/hyle-registry.db`), `MOCK_DIR` (default the script's folder).
 
-## What gets published vs. written directly
+## Mock Data Generation
 
-- **Via the public API** (`POST /blueprints`): every blueprint version. The
-  publish handler stores the manifest JSON verbatim, so author-presentation extras
-  (`license`, `language`, `long_description`, `fork_count`) survive the round-trip
-  and are returned to the UI without any schema change.
-- **Directly into SQLite** (the publish API can't set these without auth): users +
-  socials, stars, reviews, timestamped `install_events`, `featured` picks, the
-  activity feed, and backdated `created_at` per version for realistic ordering.
+The seeder auto-discovers all blueprints and generates:
 
-## `seed-data.json` schema
+- **Multiple versions** (2–3 per blueprint) with different manifest content to
+  create real diffs.
+- **Seeded random stats** for reproducibility: stars (50–2000), reviews (1–4 per
+  blueprint), install events distributed across time buckets (month, half-year,
+  year, older).
+- **Mock user account** (`mock-user`) for testing auth flows; stars
+  `andrej-kirskyn/good-java` and owns `mock-user/test-blueprint`.
+- **Activity feed** with push events for each blueprint's latest version.
 
-```jsonc
-{
-  "users": [
-    { "username", "github_id", "email", "avatar_url", "bio", "website",
-      "socials": { "github": "...", "x": "...", "linkedin": "..." } }
-  ],
-  "blueprints": [
-    {
-      "author", "name",
-      "featured": 1,                 // curated rank (or null) → /stats/team-picks
-      "versions": [                  // published oldest→newest; last = latest
-        { "version", "created_at", "notes", "stable": true }
-      ],
-      "stars": 2890,                 // target count; synthetic stargazers fill the gap
-      "starred_by": ["username"],    // named users who star it (drive "Starred" tabs)
-      "reviews": [ { "username", "rating", "body", "created_at" } ],
-      "installs": { "month", "half", "year", "older" }  // events per time bucket
-    }
-  ],
-  "activity": [
-    { "type": "push|pull|verified|community",
-      "author", "name", "version", "actor", "note", "created_at" }
-  ]
-}
+## Adding a Blueprint
+
+Drop `blueprints/<author>/<name>/hyle.yaml` with referenced files:
+
+```
+blueprints/<author>/<name>/
+  hyle.yaml
+  ontology/*.md
+  craft/*.md
+  ethics/*.md
+  identities/*.md
 ```
 
-### Badge thresholds
-
-Star/rating targets are chosen to cross the thresholds in
-[`registry/src/handlers/badges.ts`](../registry/src/handlers/badges.ts):
-
-- **Verified** — author is `hyle-org` (or `anthropic`).
-- **Popular** — ≥ 1000 stars.
-- **Community Loved** — ≥ 100 stars **and** ≥ 4.0 average rating.
-
-### Install buckets → period rankings
-
-`installs` expands to individual `install_events` rows with timestamps spread
-across each window. The homepage "Most pulled" filter and `/stats/most-pulled`
-count events per period, so:
-
-- `month` → events in the last 30 days
-- `half` → +31–182 days, `year` → +183–365 days, `older` → > 365 days
-
-`This month / 6 months / This year / All time` are cumulative over these buckets.
-
-## Adding a blueprint
-
-1. Create `blueprints/<author>/<name>/hyle.yaml` plus the files it references under
-   `ontology/`, `identities/`, `craft/`, `ethics/`. The manifest must satisfy the
-   CLI's `validateManifest` (lowercase-slug name/author, semver version).
-2. Add a matching entry under `blueprints` in `seed-data.json` (versions, stars,
-   reviews, installs, optional `featured`).
-3. If new authors/reviewers appear, add them to `users`.
-4. Re-seed: `docker compose down -v && docker compose --profile mock up --build`.
+The seeder auto-discovers it on the next run. No manual edits to `seed-data.json`
+needed — stats are generated automatically with seeded randomness.

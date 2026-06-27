@@ -1,0 +1,22 @@
+name: test-blueprint
+author: mock-user
+version: 1.0.0
+description: A test blueprint for local development and mock data generation.
+tags: [testing, mock, local]
+url: https://github.com/example/test-blueprint
+license: MIT
+language: TypeScript
+
+recommendations:
+  universal:
+    - anthropic/claude-sonnet-4-6
+
+blueprint:
+  ontology:
+    - ontology/README.md
+  identities:
+    - identities/AGENTS.md
+  craft:
+    - craft/conventions.md
+  ethics:
+    - ethics/policy.md
